@@ -1,5 +1,5 @@
+<!-- index.html -->
 <!doctype html>
-
 <html lang="de">
 <head>
   <meta charset="utf-8" />
@@ -9,13 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{ --bg:#f5f7f8; --card:#ffffff; --muted:#7a869a; --ink:#1f2937; --accent:#3b82f6; --shadow:0 10px 20px rgba(0,0,0,.04); --radius:20px; }
+    :root{ --bg:#f5f7f8; --card:#ffffff; --muted:#7a869a; --ink:#1f2937; --shadow:0 10px 20px rgba(0,0,0,.04); --radius:20px; }
     *{box-sizing:border-box}
     html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
     .wrap{max-width:1200px;margin:40px auto;padding:0 20px;}
     h1{font-weight:800;letter-spacing:.3px;margin:0 0 16px}
     .sub{color:var(--muted);font-size:.95rem;margin:0 0 24px}
-    .section{background:var(--card);border-radius:var(--radius);padding:24px;margin:18px 0;box-shadow:var(--shadow)}
+    .section{background:var(--card);border-radius:20px;padding:24px;margin:18px 0;box-shadow:var(--shadow)}
     .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
     .section h2{margin:0;font-size:1.35rem}
     .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
@@ -32,110 +32,118 @@
     tr{box-shadow:var(--shadow);border-radius:12px}
     tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
     tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
-    .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+    .card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:16px}
     @media (max-width: 960px){.kpis{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Combined Campaign Reporting <span style="background:#eef2ff;border-radius:999px;padding:6px 10px">2025</span></h1>
-    <p class="sub">Statisches Dashboard – GitHub Pages ready. Daten aus externer Datei <code>data.js</code>. Filterbar nach Channel (Onsite/Offsite) und Typ (CPM/CPC).</p><section class="section" id="performance">
-  <div class="section-header"><h2>Performance Total</h2>
-    <div class="filters" id="filters-total">
-      <span class="filter active" data-filter="all">Alle</span>
-      <span class="filter" data-filter="Onsite">Onsite</span>
-      <span class="filter" data-filter="Offsite">Offsite</span>
-      <span class="filter" data-filter="CPM">CPM</span>
-      <span class="filter" data-filter="CPC">CPC</span>
-    </div>
-  </div>
-  <div>
-    <div class="kpis" id="kpis-total"></div>
-    <div class="kpi badge" id="last-year-badge" style="margin-top:12px">
-      <div class="label">vs. Last Year Performance</div>
-      <div class="value" id="vs-last-year">+0%</div>
-    </div>
-    <div class="card" style="margin-top:16px;height:260px">
-      <canvas id="trendMonthly"></canvas>
-    </div>
-    <div class="section-header" style="margin:16px 0 8px 0"><h2>Split per Month</h2></div>
-    <div class="card" style="overflow:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>Monat</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Sales</th><th>Revenue</th><th>ROAS</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-months"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
+    <p class="sub">Statisches Dashboard – Daten aus <code>data.js</code>. Filterbar nach Channel (Onsite/Offsite) und Typ (CPM/CPC).</p>
 
-<section class="section" id="campaigns-overview">
-  <div class="section-header"><h2>Campaigns Overview</h2>
-    <div class="filters" id="filters-campaigns">
-      <span class="filter active" data-filter="all">Alle</span>
-      <span class="filter" data-filter="Onsite">Onsite</span>
-      <span class="filter" data-filter="Offsite">Offsite</span>
-    </div>
-  </div>
-  <div class="kpis" id="kpis-campaigns"></div>
-</section>
+    <!-- SECTION 1 -->
+    <section class="section" id="performance">
+      <div class="section-header"><h2>Performance Total</h2>
+        <div class="filters" id="filters-total">
+          <span class="filter active" data-filter="all">Alle</span>
+          <span class="filter" data-filter="Onsite">Onsite</span>
+          <span class="filter" data-filter="Offsite">Offsite</span>
+          <span class="filter" data-filter="CPM">CPM</span>
+          <span class="filter" data-filter="CPC">CPC</span>
+        </div>
+      </div>
+      <div>
+        <div class="kpis" id="kpis-total"></div>
+        <div class="kpi badge" id="last-year-badge" style="margin-top:12px">
+          <div class="label">vs. Last Year Performance</div>
+          <div class="value" id="vs-last-year">+0%</div>
+        </div>
+        <div class="card" style="margin-top:16px;height:260px">
+          <canvas id="trendMonthly"></canvas>
+        </div>
+        <div class="section-header" style="margin:16px 0 8px 0"><h2>Split per Month</h2></div>
+        <div class="card" style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Monat</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Sales</th><th>Revenue</th><th>ROAS</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-months"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-<section class="section" id="campaign-performance">
-  <div class="section-header"><h2>Campaign Performance</h2></div>
-  <div class="card" style="overflow:auto">
-    <table>
-      <thead>
-        <tr>
-          <th>Campaign</th><th>Brand</th><th>Placement</th><th>Type</th><th>Targeting</th><th>Start</th><th>Ende</th><th>Booking</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>Sales</th><th>Revenue</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-campaigns"></tbody>
-    </table>
-  </div>
-</section>
+    <!-- SECTION 2 -->
+    <section class="section" id="campaigns-overview">
+      <div class="section-header"><h2>Campaigns Overview</h2>
+        <div class="filters" id="filters-campaigns">
+          <span class="filter active" data-filter="all">Alle</span>
+          <span class="filter" data-filter="Onsite">Onsite</span>
+          <span class="filter" data-filter="Offsite">Offsite</span>
+        </div>
+      </div>
+      <div class="kpis" id="kpis-campaigns"></div>
+    </section>
 
-<section class="section" id="rerank">
-  <div class="section-header"><h2>Re-Rank Performance (CPC)</h2></div>
-  <div class="kpis" id="kpis-rerank"></div>
-  <div class="section-header" style="margin-top:12px"><h2>Re-Rank Performance Details</h2><span style="background:#eef2ff;border-radius:999px;padding:6px 10px">Auction Insights →</span></div>
-  <div class="card" style="overflow:auto">
-    <table>
-      <thead>
-        <tr>
-          <th>Kampagne</th><th>Produkt</th><th>Ad Spend</th><th>eCPC</th><th>Start</th><th>Ende</th><th>Sales</th><th>ROAS</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-rerank"></tbody>
-    </table>
-  </div>
-</section>
+    <!-- SECTION 3 -->
+    <section class="section" id="campaign-performance">
+      <div class="section-header"><h2>Campaign Performance</h2></div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Campaign</th><th>Brand</th><th>Placement</th><th>Type</th><th>Targeting</th><th>Start</th><th>Ende</th><th>Booking</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>Sales</th><th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-campaigns"></tbody>
+        </table>
+      </div>
+    </section>
 
-<section class="section" id="sales">
-  <div class="section-header"><h2>Sales Details (Item Level)</h2>
-    <div class="filters" id="filters-sales">
-      <span class="filter active" data-filter="all">Alle</span>
-      <span class="filter" data-filter="Onsite">Onsite</span>
-      <span class="filter" data-filter="Offsite">Offsite</span>
-    </div>
-  </div>
-  <div class="kpis" id="kpis-sales"></div>
-  <div class="card" style="margin-top:12px;overflow:auto">
-    <table>
-      <thead>
-        <tr>
-          <th>Brand</th><th>Produkt</th><th>Campaign</th><th>Placement</th><th>Sales</th><th>Revenue</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-products"></tbody>
-    </table>
-  </div>
-</section>
+    <!-- SECTION 4 -->
+    <section class="section" id="rerank">
+      <div class="section-header"><h2>Re-Rank Performance (CPC)</h2></div>
+      <div class="kpis" id="kpis-rerank"></div>
+      <div class="section-header" style="margin-top:12px"><h2>Re-Rank Performance Details</h2><span style="background:#eef2ff;border-radius:999px;padding:6px 10px">Auction Insights →</span></div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Kampagne</th><th>Produkt</th><th>Ad Spend</th><th>eCPC</th><th>Start</th><th>Ende</th><th>Sales</th><th>ROAS</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-rerank"></tbody>
+        </table>
+      </div>
+    </section>
 
-<p class="sub">Deployment: Lege diese Datei als <code>index.html</code> zusammen mit <code>data.js</code> & <code>script.js</code> in dein Repo. GitHub Pages liefert alle drei Dateien statisch aus.</p>
+    <!-- SECTION 5 -->
+    <section class="section" id="sales">
+      <div class="section-header"><h2>Sales Details (Item Level)</h2>
+        <div class="filters" id="filters-sales">
+          <span class="filter active" data-filter="all">Alle</span>
+          <span class="filter" data-filter="Onsite">Onsite</span>
+          <span class="filter" data-filter="Offsite">Offsite</span>
+        </div>
+      </div>
+      <div class="kpis" id="kpis-sales"></div>
+      <div class="card" style="margin-top:12px;overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Brand</th><th>Produkt</th><th>Campaign</th><th>Placement</th><th>Sales</th><th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-products"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
-  </div>  <script src="data.js"></script>  <script src="script.js"></script></body>
+  <!-- Reihenfolge wichtig: erst Daten, dann Logik -->
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
 </html>
-
