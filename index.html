@@ -1,0 +1,437 @@
+<!doctype html>
+
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Combined Campaign Reporting</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f5f7f8; --card:#ffffff; --muted:#7a869a; --ink:#1f2937; --accent:#3b82f6;
+      --kpi1:#cfe1ff; --kpi2:#c7f0ff; --kpi3:#d4f6d5; --kpi4:#ffe1c9; --kpi5:#f4cdf3;
+      --shadow:0 10px 20px rgba(0,0,0,.04);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    .wrap{max-width:1200px;margin:40px auto;padding:0 20px;}
+    h1{font-weight:800;letter-spacing:.3px;margin:0 0 16px}
+    .sub{color:var(--muted);font-size:.95rem;margin:0 0 24px}
+    .section{background:var(--card);border-radius:var(--radius);padding:24px;margin:18px 0;box-shadow:var(--shadow)}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .section h2{margin:0;font-size:1.35rem}/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{background:linear-gradient(180deg,#fff, #f7f9fb);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);position:relative}
+.kpi.small{grid-column:span 1}
+.kpi .label{font-size:.8rem;color:var(--muted);font-weight:600}
+.kpi .value{font-size:1.35rem;font-weight:800;margin-top:6px}
+.kpi.badge{grid-column:span 2;background:#e8f7ea;border-left:6px solid #22c55e}
+
+/* Layout helpers */
+.grid{display:grid;gap:16px}
+.g-2{grid-template-columns:2fr 3fr}
+.g-3{grid-template-columns:2fr 1fr 3fr}
+.pill{display:inline-flex;align-items:center;padding:8px 12px;background:#eef2ff;border-radius:999px;font-weight:600;color:#2f3c7e}
+
+/* Filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filter{border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff;color:#374151;cursor:pointer;user-select:none}
+.filter.active{background:#111827;color:#fff}
+
+/* Table */
+table{width:100%;border-collapse:separate;border-spacing:0 8px}
+th{font-size:.8rem;letter-spacing:.02em;text-transform:uppercase;color:#6b7280;text-align:left;padding:8px}
+td{padding:12px;background:#fff;border-top:1px solid #eef2f7;border-bottom:1px solid #eef2f7}
+tr{box-shadow:var(--shadow);border-radius:12px}
+tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
+tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
+
+/* Cards */
+.card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+
+/* Responsive */
+@media (max-width: 960px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .g-2,.g-3{grid-template-columns:1fr}
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Combined Campaign Reporting <span class="pill">2025</span></h1>
+    <p class="sub">Statisches Dashboard – GitHub Pages ready. Dummy-Daten. Filterbar nach Channel (Onsite/Offsite) und Typ (CPM/CPC).</p><!-- SECTION 1: Performance Total + Split per Month -->
+<section class="section" id="performance">
+  <div class="section-header"><h2>Performance Total</h2>
+    <div class="filters" id="filters-total">
+      <span class="filter active" data-filter="all">Alle</span>
+      <span class="filter" data-filter="Onsite">Onsite</span>
+      <span class="filter" data-filter="Offsite">Offsite</span>
+      <span class="filter" data-filter="CPM">CPM</span>
+      <span class="filter" data-filter="CPC">CPC</span>
+    </div>
+  </div>
+
+  <div class="grid g-2">
+    <div>
+      <div class="kpis" id="kpis-total">
+        <!-- KPI tiles injected by JS -->
+      </div>
+      <div class="kpi badge" id="last-year-badge" style="margin-top:12px">
+        <div class="label">vs. Last Year Performance</div>
+        <div class="value" id="vs-last-year">+0%</div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <canvas id="trendMonthly" height="150"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="section-header" style="margin:0 0 8px 0"><h2>Split per Month</h2></div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Monat</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Sales</th><th>Revenue</th><th>ROAS</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-months"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: Campaigns Overview -->
+<section class="section" id="campaigns-overview">
+  <div class="section-header"><h2>Campaigns Overview</h2>
+    <div class="filters" id="filters-campaigns">
+      <span class="filter active" data-filter="all">Alle</span>
+      <span class="filter" data-filter="Onsite">Onsite</span>
+      <span class="filter" data-filter="Offsite">Offsite</span>
+    </div>
+  </div>
+  <div class="kpis" id="kpis-campaigns"></div>
+</section>
+
+<!-- SECTION 3: Campaign Performance (table) -->
+<section class="section" id="campaign-performance">
+  <div class="section-header"><h2>Campaign Performance</h2></div>
+  <div class="card" style="overflow:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Campaign</th><th>Brand</th><th>Placement</th><th>Type</th><th>Targeting</th><th>Start</th><th>Ende</th><th>Booking</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>Sales</th><th>Revenue</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-campaigns"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 4: Re-Rank Performance + Details -->
+<section class="section" id="rerank">
+  <div class="section-header"><h2>Re-Rank Performance (CPC)</h2></div>
+  <div class="kpis" id="kpis-rerank"></div>
+  <div class="section-header" style="margin-top:12px"><h2>Re-Rank Performance Details</h2><span class="pill">Auction Insights →</span></div>
+  <div class="card" style="overflow:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Kampagne</th><th>Produkt</th><th>Ad Spend</th><th>eCPC</th><th>Start</th><th>Ende</th><th>Sales</th><th>ROAS</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-rerank"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 5: Sales Details (Item Level) -->
+<section class="section" id="sales">
+  <div class="section-header"><h2>Sales Details (Item Level)</h2>
+    <div class="filters" id="filters-sales">
+      <span class="filter active" data-filter="all">Alle</span>
+      <span class="filter" data-filter="Onsite">Onsite</span>
+      <span class="filter" data-filter="Offsite">Offsite</span>
+    </div>
+  </div>
+  <div class="grid g-2">
+    <div>
+      <div class="kpis" id="kpis-sales"></div>
+    </div>
+    <div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Brand</th><th>Produkt</th><th>Campaign</th><th>Placement</th><th>Sales</th><th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-products"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p class="sub">Deployment: Lege diese Datei als <code>index.html</code> in dein Repo und aktiviere unter <em>Settings → Pages</em> die Branch/Ordner, in dem die Datei liegt.</p>
+
+  </div><script>
+/*********************************
+ * Dummy-Daten (2025)
+ *********************************/
+const months = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+
+// Monatsaggregat (gemischt aus Onsite/Offsite, CPM/CPC)
+const monthlyData = months.map((m, i) => {
+  const ad = Math.round(80000 + Math.random()*260000);
+  const imps = Math.round(ad * (20 + Math.random()*50));
+  const clicks = Math.round(imps * (0.005 + Math.random()*0.01));
+  const ctr = clicks / imps;
+  const sales = Math.round(clicks * (0.08 + Math.random()*0.12));
+  const revenue = Math.round(sales * (10 + Math.random()*20));
+  const roas = revenue / ad;
+  return { m, ad, imps, clicks, ctr, sales, revenue, roas };
+});
+
+// Kampagnen-Daten
+const campaigns = [
+  {name:"Kampagne 1", brand:"Vitamins", placement:"Superbanner", type:"Onsite", buy:"CPM", targeting:"Broad", start:"2025-07-01", end:"2025-11-07", booking:20000, ad:18000, imps:800000, clicks:12000, sales:1200, revenue:120000},
+  {name:"Kampagne 1", brand:"Vitamins", placement:"App Banner", type:"Onsite", buy:"CPM", targeting:"Vitamins 39+", start:"2025-07-01", end:"2025-11-07", booking:5000, ad:4000, imps:200000, clicks:3000, sales:300, revenue:30000},
+  {name:"Re-Rank Always On", brand:"Multiple", placement:"Search Re-Rank", type:"Onsite", buy:"CPC", targeting:"All", start:"2025-01-01", end:"2025-12-31", booking:100000, ad:50000, imps:1200000, clicks:60000, sales:4200, revenue:210000},
+  {name:"Prospecting Q3", brand:"Energy", placement:"Open Web", type:"Offsite", buy:"CPM", targeting:"Sports", start:"2025-07-01", end:"2025-09-30", booking:25000, ad:22000, imps:1400000, clicks:13000, sales:700, revenue:42000}
+];
+
+// Re-Rank Details
+const rerank = [
+  {camp:"Re-Rank Always On", product:"Vitamini", ad:10000, ecpc:0.20, start:"2025-01-01", end:"2025-12-31", sales:900, roas:8.5},
+  {camp:"Re-Rank Always On", product:"Powergum", ad:5000, ecpc:0.22, start:"2025-01-01", end:"2025-12-31", sales:430, roas:7.2},
+  {camp:"Re-Rank Always On", product:"Energy Drink", ad:5000, ecpc:0.18, start:"2025-01-01", end:"2025-12-31", sales:510, roas:9.0}
+];
+
+// Produkt-Sales (Item Level)
+const itemSales = [
+  {brand:"Vitamine", product:"Vitamini", campaign:"Kampagne 1", placement:"Superbanner", channel:"Onsite", sales:100, revenue:1000},
+  {brand:"Vitamine", product:"Powergum", campaign:"Kampagne 1", placement:"App Banner", channel:"Onsite", sales:200, revenue:2000},
+  {brand:"Protein", product:"Energy Drink", campaign:"Prospecting Q3", placement:"Open Web", channel:"Offsite", sales:300, revenue:3000},
+  {brand:"Protein", product:"Pulver", campaign:"Re-Rank Always On", placement:"Search Re-Rank", channel:"Onsite", sales:250, revenue:5000}
+];
+
+/*********************************
+ * Utilities
+ *********************************/
+const fmt = new Intl.NumberFormat('de-DE');
+const fmoney = v => fmt.format(v)+" €";
+const fnum = v => fmt.format(v);
+const fperc = v => (v*100).toFixed(1)+"%";
+
+function calcTotals(rows){
+  const t = rows.reduce((a,r)=>({
+    ad:a.ad+(r.ad||0), imps:a.imps+(r.imps||0), clicks:a.clicks+(r.clicks||0), sales:a.sales+(r.sales||0), revenue:a.revenue+(r.revenue||0)
+  }),{ad:0,imps:0,clicks:0,sales:0,revenue:0});
+  const ctr = t.imps? t.clicks/t.imps : 0;
+  const cpm = t.imps? (t.ad / (t.imps/1000)) : 0;
+  const cpc = t.clicks? (t.ad / t.clicks) : 0;
+  const roas = t.ad? (t.revenue / t.ad) : 0;
+  return {...t, ctr, cpm, cpc, roas};
+}
+
+/*********************************
+ * Render: SECTION 1
+ *********************************/
+function renderTotals(filter){
+  const byFilter = campaigns.filter(c => {
+    if(!filter || filter==='all') return true;
+    if(filter==='Onsite' || filter==='Offsite') return c.type===filter;
+    if(filter==='CPM' || filter==='CPC') return c.buy===filter;
+    return true;
+  });
+  const totals = calcTotals(byFilter);
+
+  const kpis = [
+    {label:'Ad Spend Total', value:fmoney(totals.ad)},
+    {label:'Impressions Total', value:fnum(totals.imps)},
+    {label:'Klicks Total', value:fnum(totals.clicks)},
+    {label:'CTR', value:fperc(totals.ctr)},
+    {label:'Media Sales Total', value:fnum(totals.sales)},
+    {label:'Media Revenue Total', value:fmoney(totals.revenue)},
+    {label:'ROAS', value:totals.roas.toFixed(2)},
+    {label:'CPM', value:totals.cpm.toFixed(2)+" €"},
+    {label:'CPC', value:totals.cpc.toFixed(2)+" €"}
+  ];
+
+  const kpiWrap = document.getElementById('kpis-total');
+  kpiWrap.innerHTML = '';
+  kpis.forEach((k,i)=>{
+    const div=document.createElement('div');
+    div.className='kpi';
+    div.innerHTML=`<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
+    kpiWrap.appendChild(div);
+  });
+
+  // vs Last Year (Dummy: -8% bis +18%)
+  const vs = (Math.random()*0.26 - 0.08);
+  const badge = document.getElementById('vs-last-year');
+  badge.textContent = (vs>=0?'+':'') + (vs*100).toFixed(1) + '%';
+}
+
+function renderMonthlyTable(){
+  const tb = document.getElementById('tbody-months');
+  tb.innerHTML='';
+  monthlyData.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.m}</td><td>${fmoney(r.ad)}</td><td>${fnum(r.imps)}</td><td>${fnum(r.clicks)}</td><td>${fperc(r.ctr)}</td><td>${fnum(r.sales)}</td><td>${fmoney(r.revenue)}</td><td>${r.roas.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+let trendChart;
+function renderTrend(){
+  const ctx=document.getElementById('trendMonthly');
+  const labels=monthlyData.map(r=>r.m);
+  const ad=monthlyData.map(r=>r.ad);
+  const imps=monthlyData.map(r=>r.imps);
+  if(trendChart) trendChart.destroy();
+  trendChart=new Chart(ctx,{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Ad Spend', data:ad},
+      {label:'Impressions', data:imps}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}, plugins:{legend:{position:'bottom'}}}
+  });
+}
+
+/*********************************
+ * Render: SECTION 2 & 3
+ *********************************/
+function renderCampaignsOverview(filter){
+  const list = campaigns.filter(c => filter==='all' || !filter ? true : c.type===filter);
+  const totals = calcTotals(list);
+  const active = list.filter(c=> new Date(c.end) >= new Date()).length;
+  const ended = list.length - active;
+
+  const kpis=[
+    {label:'Anzahl Kampagnen 2025', value:list.length},
+    {label:'Aktive Kampagnen', value:active},
+    {label:'Beendete Kampagnen', value:ended},
+    {label:'Budget Total', value:fnum(list.reduce((a,c)=>a+c.booking,0))},
+    {label:'Ad Spend Total', value:fmoney(totals.ad)},
+    {label:'% ausgeliefert', value: ((totals.ad / (list.reduce((a,c)=>a+c.booking,0)||1))*100).toFixed(1)+'%'}
+  ];
+  const wrap=document.getElementById('kpis-campaigns');
+  wrap.innerHTML='';
+  kpis.forEach(k=>{
+    const div=document.createElement('div');
+    div.className='kpi';
+    div.innerHTML=`<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function renderCampaignTable(){
+  const tb=document.getElementById('tbody-campaigns');
+  tb.innerHTML='';
+  campaigns.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${c.name}</td><td>${c.brand}</td><td>${c.placement}</td><td>${c.type} / ${c.buy}</td><td>${c.targeting}</td><td>${c.start}</td><td>${c.end}</td><td>${fnum(c.booking)}</td><td>${fmoney(c.ad)}</td><td>${fnum(c.imps)}</td><td>${fnum(c.clicks)}</td><td>${fnum(c.sales)}</td><td>${fmoney(c.revenue)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/*********************************
+ * Render: SECTION 4
+ *********************************/
+function renderRerank(){
+  const totals = rerank.reduce((a,r)=>({ad:a.ad+r.ad, sales:a.sales+r.sales, revenue:a.revenue+(r.roas*r.ad)}),{ad:0,sales:0,revenue:0});
+  const kpis=[
+    {label:'Budget Total', value:fnum( rerank.reduce((a,_)=>a+0,0) )},
+    {label:'Ad Spend Total', value:fmoney(totals.ad)},
+    {label:'Klicks', value: fnum(Math.round(totals.ad/0.2)) },
+    {label:'eCPC', value: (totals.ad/Math.max(1, Math.round(totals.ad/0.2))).toFixed(2)+" €" },
+    {label:'% ausgeliefert', value: '—'},
+    {label:'Sales', value:fnum(totals.sales)},
+    {label:'Revenue', value:fmoney(totals.revenue)},
+    {label:'ROAS', value:(totals.revenue/Math.max(1,totals.ad)).toFixed(2)}
+  ];
+  const wrap=document.getElementById('kpis-rerank');
+  wrap.innerHTML='';
+  kpis.forEach(k=>{
+    const div=document.createElement('div');div.className='kpi';div.innerHTML=`<div class="label">${k.label}</div><div class="value">${k.value}</div>`;wrap.appendChild(div);
+  });
+
+  const tb=document.getElementById('tbody-rerank');
+  tb.innerHTML='';
+  rerank.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.camp}</td><td>${r.product}</td><td>${fmoney(r.ad)}</td><td>${r.ecpc.toFixed(2)} €</td><td>${r.start}</td><td>${r.end}</td><td>${fnum(r.sales)}</td><td>${r.roas.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/*********************************
+ * Render: SECTION 5
+ *********************************/
+function renderSales(filter){
+  const list = itemSales.filter(i => filter==='all' || !filter ? true : i.channel===filter);
+  const totals = list.reduce((a,i)=>({sales:a.sales+i.sales,revenue:a.revenue+i.revenue}),{sales:0,revenue:0});
+  const kpis=[
+    {label:'Media Sales Total', value:fnum(totals.sales)},
+    {label:'Media Revenue Total', value:fmoney(totals.revenue)}
+  ];
+  const wrap=document.getElementById('kpis-sales');
+  wrap.innerHTML='';
+  kpis.forEach(k=>{const d=document.createElement('div');d.className='kpi';d.innerHTML=`<div class="label">${k.label}</div><div class="value">${k.value}</div>`;wrap.appendChild(d);});
+
+  const tb=document.getElementById('tbody-products');
+  tb.innerHTML='';
+  list.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.brand}</td><td>${r.product}</td><td>${r.campaign}</td><td>${r.placement}</td><td>${fnum(r.sales)}</td><td>${fmoney(r.revenue)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/*********************************
+ * Filters Wiring
+ *********************************/
+function wireFilters(){
+  document.querySelectorAll('#filters-total .filter').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.querySelectorAll('#filters-total .filter').forEach(f=>f.classList.remove('active'));
+      el.classList.add('active');
+      renderTotals(el.dataset.filter);
+    });
+  });
+  document.querySelectorAll('#filters-campaigns .filter').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.querySelectorAll('#filters-campaigns .filter').forEach(f=>f.classList.remove('active'));
+      el.classList.add('active');
+      renderCampaignsOverview(el.dataset.filter);
+    });
+  });
+  document.querySelectorAll('#filters-sales .filter').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.querySelectorAll('#filters-sales .filter').forEach(f=>f.classList.remove('active'));
+      el.classList.add('active');
+      renderSales(el.dataset.filter);
+    });
+  });
+}
+
+/*********************************
+ * Boot
+ *********************************/
+renderTotals('all');
+renderMonthlyTable();
+renderTrend();
+renderCampaignsOverview('all');
+renderCampaignTable();
+renderRerank();
+renderSales('all');
+wireFilters();
+</script></body>
+</html>
