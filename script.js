@@ -1,0 +1,18 @@
+// script.js function fnum(v){return v.toLocaleString('de-DE');} function fmoney(v){return v.toLocaleString('de-DE',{style:'currency',currency:'EUR'});} function fperc(v){return (v*100).toFixed(1)+'%';}
+
+function calcTotals(rows){ return { ad: rows.reduce((a,b)=>a+(b.ad||0),0), imps: rows.reduce((a,b)=>a+(b.imps||0),0), clicks: rows.reduce((a,b)=>a+(b.clicks||0),0), sales: rows.reduce((a,b)=>a+(b.sales||0),0), revenue: rows.reduce((a,b)=>a+(b.revenue||0),0) }; }
+
+function filterCampaigns(filter){ if(!filter || filter==='all') return campaigns; if(['Onsite','Offsite'].includes(filter)) return campaigns.filter(c=>c.type===filter); if(['CPM','CPC'].includes(filter)) return campaigns.filter(c=>c.buy===filter); return campaigns; }
+
+function monthlyAggregates(filter){ const base = months.map(m=>({m, ad:0, imps:0, clicks:0, sales:0, revenue:0})); const byFilter = filterCampaigns(filter); byFilter.forEach(c=>{ const s = new Date(c.start); const e = new Date(c.end); const idx=[]; months.forEach((_,i)=>{ const d1 = new Date(2025-${String(i+1).padStart(2,'0')}-01); const d2 = new Date(2025-${String(i+1).padStart(2,'0')}-28); if(d2>=s && d1<=e) idx.push(i); }); const n=Math.max(1,idx.length); idx.forEach(i=>{ base[i].ad+=(c.ad||0)/n; base[i].imps+=(c.imps||0)/n; base[i].clicks+=(c.clicks||0)/n; base[i].sales+=(c.sales||0)/n; base[i].revenue+=(c.revenue||0)/n; }); }); return base.map(r=>({...r, ctr:r.imps? r.clicks/r.imps : 0, roas:r.ad? r.revenue/r.ad : 0})); }
+
+function renderTotals(filter){ const totals = calcTotals(filterCampaigns(filter)); document.getElementById('kpis-total').innerHTML =  <div class="kpi"><div class="label">Ad Spend</div><div class="value">${fmoney(totals.ad)}</div></div> <div class="kpi"><div class="label">Impressions</div><div class="value">${fnum(totals.imps)}</div></div> <div class="kpi"><div class="label">Clicks</div><div class="value">${fnum(totals.clicks)}</div></div> <div class="kpi"><div class="label">Sales</div><div class="value">${fnum(totals.sales)}</div></div> <div class="kpi"><div class="label">Revenue</div><div class="value">${fmoney(totals.revenue)}</div></div>; }
+
+let trendChart; function renderTrend(filter){ const data = monthlyAggregates(filter); const ctx=document.getElementById('trendMonthly'); const labels=data.map(r=>r.m); const imps=data.map(r=>Math.round(r.imps)); const clicks=data.map(r=>Math.round(r.clicks)); if(trendChart) trendChart.destroy(); trendChart=new Chart(ctx,{ type:'line', data:{labels, datasets:[ {label:'Impressions', data:imps, yAxisID:'y'}, {label:'Klicks', data:clicks, yAxisID:'y1'} ]}, options:{responsive:true, maintainAspectRatio:false, scales:{y:{type:'linear', position:'left', beginAtZero:true}, y1:{type:'linear', position:'right', grid:{drawOnChartArea:false}, beginAtZero:true}}, plugins:{legend:{position:'bottom'}}} }); }
+
+function renderMonthlyTable(filter){ const tb = document.getElementById('tbody-months'); const data = monthlyAggregates(filter); tb.innerHTML=''; data.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = <td>${r.m}</td><td>${fmoney(Math.round(r.ad))}</td><td>${fnum(Math.round(r.imps))}</td><td>${fnum(Math.round(r.clicks))}</td><td>${fperc(r.ctr)}</td><td>${fnum(Math.round(r.sales))}</td><td>${fmoney(Math.round(r.revenue))}</td><td>${r.roas.toFixed(2)}</td>; tb.appendChild(tr); }); }
+
+function wireFilters(){ document.querySelectorAll('#filters-total .filter').forEach(el=>{ el.addEventListener('click',()=>{ document.querySelectorAll('#filters-total .filter').forEach(f=>f.classList.remove('active')); el.classList.add('active'); const f = el.dataset.filter; renderTotals(f); renderMonthlyTable(f); renderTrend(f); }); }); }
+
+renderTotals('all'); renderMonthlyTable('all'); renderTrend('all'); wireFilters();
+
