@@ -76,31 +76,25 @@ tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
     </div>
   </div>
 
-  <div class="grid g-2">
-    <div>
-      <div class="kpis" id="kpis-total">
-        <!-- KPI tiles injected by JS -->
-      </div>
-      <div class="kpi badge" id="last-year-badge" style="margin-top:12px">
-        <div class="label">vs. Last Year Performance</div>
-        <div class="value" id="vs-last-year">+0%</div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <canvas id="trendMonthly" height="150"></canvas>
-      </div>
+  <div>
+    <div class="kpis" id="kpis-total"></div>
+    <div class="kpi badge" id="last-year-badge" style="margin-top:12px">
+      <div class="label">vs. Last Year Performance</div>
+      <div class="value" id="vs-last-year">+0%</div>
     </div>
-    <div>
-      <div class="section-header" style="margin:0 0 8px 0"><h2>Split per Month</h2></div>
-      <div class="card" style="overflow:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Monat</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Sales</th><th>Revenue</th><th>ROAS</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-months"></tbody>
-        </table>
-      </div>
+    <div class="card" style="margin-top:16px">
+      <canvas id="trendMonthly" height="180"></canvas>
+    </div>
+    <div class="section-header" style="margin:16px 0 8px 0"><h2>Split per Month</h2></div>
+    <div class="card" style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Monat</th><th>Ad Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Sales</th><th>Revenue</th><th>ROAS</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-months"></tbody>
+      </table>
     </div>
   </div>
 </section>
@@ -186,8 +180,7 @@ tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
 const months = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 
 // Monatsaggregat (gemischt aus Onsite/Offsite, CPM/CPC)
-const monthlyData = months.map((m, i) => {
-  const ad = Math.round(80000 + Math.random()*260000);
+// Hinweis: Monatswerte werden aus Kampagnen hergeleitet (gleichmäßige Verteilung über aktive Monate)
   const imps = Math.round(ad * (20 + Math.random()*50));
   const clicks = Math.round(imps * (0.005 + Math.random()*0.01));
   const ctr = clicks / imps;
@@ -278,28 +271,72 @@ function renderTotals(filter){
   badge.textContent = (vs>=0?'+':'') + (vs*100).toFixed(1) + '%';
 }
 
-function renderMonthlyTable(){
+function monthlyAggregates(filter){
+  const base = months.map(m=>({m, ad:0, imps:0, clicks:0, sales:0, revenue:0}));
+  const byFilter = campaigns.filter(c => {
+    if(!filter || filter==='all') return true;
+    if(filter==='Onsite' || filter==='Offsite') return c.type===filter;
+    if(filter==='CPM' || filter==='CPC') return c.buy===filter;
+    return true;
+  });
+  byFilter.forEach(c=>{
+    const s = new Date(c.start);
+    const e = new Date(c.end);
+    const monthsIdx=[];
+    months.forEach((_,i)=>{
+      const d1 = new Date(`2025-${String(i+1).padStart(2,'0')}-01`);
+      const d2 = new Date(`2025-${String(i+1).padStart(2,'0')}-28`);
+      if(d2>=s && d1<=e) monthsIdx.push(i);
+    });
+    const n = Math.max(1, monthsIdx.length);
+    monthsIdx.forEach(i=>{
+      base[i].ad     += (c.ad || 0) / n;
+      base[i].imps   += (c.imps || 0) / n;
+      base[i].clicks += (c.clicks || 0) / n;
+      base[i].sales  += (c.sales || 0) / n;
+      base[i].revenue+= (c.revenue || 0) / n;
+    });
+  });
+  return base.map(r=>({
+    ...r,
+    ctr: r.imps? r.clicks/r.imps : 0,
+    roas: r.ad? r.revenue/r.ad : 0
+  }));
+}
+
+function renderMonthlyTable(filter){
   const tb = document.getElementById('tbody-months');
+  const data = monthlyAggregates(filter);
   tb.innerHTML='';
-  monthlyData.forEach(r=>{
+  data.forEach(r=>{
     const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${r.m}</td><td>${fmoney(r.ad)}</td><td>${fnum(r.imps)}</td><td>${fnum(r.clicks)}</td><td>${fperc(r.ctr)}</td><td>${fnum(r.sales)}</td><td>${fmoney(r.revenue)}</td><td>${r.roas.toFixed(2)}</td>`;
+    tr.innerHTML = `<td>${r.m}</td><td>${fmoney(Math.round(r.ad))}</td><td>${fnum(Math.round(r.imps))}</td><td>${fnum(Math.round(r.clicks))}</td><td>${fperc(r.ctr)}</td><td>${fnum(Math.round(r.sales))}</td><td>${fmoney(Math.round(r.revenue))}</td><td>${r.roas.toFixed(2)}</td>`;
     tb.appendChild(tr);
   });
 }
 
 let trendChart;
-function renderTrend(){
+function renderTrend(filter){
+  const data = monthlyAggregates(filter);
   const ctx=document.getElementById('trendMonthly');
-  const labels=monthlyData.map(r=>r.m);
-  const ad=monthlyData.map(r=>r.ad);
-  const imps=monthlyData.map(r=>r.imps);
+  const labels=data.map(r=>r.m);
+  const imps=data.map(r=>Math.round(r.imps));
+  const clicks=data.map(r=>Math.round(r.clicks));
   if(trendChart) trendChart.destroy();
   trendChart=new Chart(ctx,{
     type:'line',
     data:{labels, datasets:[
-      {label:'Ad Spend', data:ad},
-      {label:'Impressions', data:imps}
+      {label:'Impressions', data:imps, yAxisID:'y'},
+      {label:'Klicks', data:clicks, yAxisID:'y1'}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      scales:{
+        y:{type:'linear', position:'left', beginAtZero:true},
+        y1:{type:'linear', position:'right', grid:{drawOnChartArea:false}, beginAtZero:true}
+      },
+      plugins:{legend:{position:'bottom'}}}
+  });
+}
     ]},
     options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}, plugins:{legend:{position:'bottom'}}}
   });
@@ -403,7 +440,10 @@ function wireFilters(){
     el.addEventListener('click',()=>{
       document.querySelectorAll('#filters-total .filter').forEach(f=>f.classList.remove('active'));
       el.classList.add('active');
-      renderTotals(el.dataset.filter);
+      const f = el.dataset.filter;
+      renderTotals(f);
+      renderMonthlyTable(f);
+      renderTrend(f);
     });
   });
   document.querySelectorAll('#filters-campaigns .filter').forEach(el=>{
@@ -422,16 +462,4 @@ function wireFilters(){
   });
 }
 
-/*********************************
- * Boot
- *********************************/
-renderTotals('all');
-renderMonthlyTable();
-renderTrend();
-renderCampaignsOverview('all');
-renderCampaignTable();
-renderRerank();
-renderSales('all');
-wireFilters();
-</script></body>
-</html>
+/*************
