@@ -2,14 +2,19 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>TV Dashboard (Fixed Scale)</title>
+  <title>TV Dashboard (Configurable Layout)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="design.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <!--
+    WICHTIG:
+    - Scroll/Fix & Grid-Anordnung kommen aus layout.js
+    - Reihenfolge/Spaltenbreiten der Panels werden dynamisch angewendet
+  -->
   <div id="stage">
-    <div class="board">
+    <div class="board" id="board">
       <!-- KPIs + Filter + Trend -->
       <section id="panel-kpi" class="card">
         <div class="header">
@@ -37,39 +42,19 @@
       <section id="panel-camp" class="card">
         <h2>Campaign Performance</h2>
 
-        <!-- NEU: Overview + Filter (visuell) -->
+        <!-- Campaigns Overview + Fake-Filter (rein visuell) -->
         <div class="camp-overview">
           <div class="overview-box">
             <div class="overview-title">Campaigns Overview</div>
-
             <div class="overview-stats">
-              <div class="tile">
-                <div class="tile-label">Anzahl Kampagnen 2025</div>
-                <div class="tile-value" id="ov-count-total">—</div>
-              </div>
-              <div class="tile">
-                <div class="tile-label">Anzahl aktive Kampagnen</div>
-                <div class="tile-value" id="ov-count-active">—</div>
-              </div>
-              <div class="tile">
-                <div class="tile-label">Anzahl beendete Kampagnen</div>
-                <div class="tile-value" id="ov-count-ended">—</div>
-              </div>
+              <div class="tile"><div class="tile-label">Anzahl Kampagnen 2025</div><div class="tile-value" id="ov-count-total">—</div></div>
+              <div class="tile"><div class="tile-label">Anzahl aktive Kampagnen</div><div class="tile-value" id="ov-count-active">—</div></div>
+              <div class="tile"><div class="tile-label">Anzahl beendete Kampagnen</div><div class="tile-value" id="ov-count-ended">—</div></div>
             </div>
-
             <div class="overview-kpis">
-              <div class="okpi">
-                <div class="okpi-label">Budget Total</div>
-                <div class="okpi-value" id="ov-booking">—</div>
-              </div>
-              <div class="okpi">
-                <div class="okpi-label">Ad Spend Total</div>
-                <div class="okpi-value" id="ov-ad">—</div>
-              </div>
-              <div class="okpi">
-                <div class="okpi-label">% ausgeliefert</div>
-                <div class="okpi-value" id="ov-delivered">—</div>
-              </div>
+              <div class="okpi"><div class="okpi-label">Budget Total</div><div class="okpi-value" id="ov-booking">—</div></div>
+              <div class="okpi"><div class="okpi-label">Ad Spend Total</div><div class="okpi-value" id="ov-ad">—</div></div>
+              <div class="okpi"><div class="okpi-label">% ausgeliefert</div><div class="okpi-value" id="ov-delivered">—</div></div>
             </div>
           </div>
 
@@ -138,6 +123,9 @@
     </div>
   </div>
 
+  <!-- Konfiguration zuerst laden -->
+  <script src="layout.js"></script>
+  <!-- Daten & Logik -->
   <script src="data.js"></script>
   <script src="script.js"></script>
 </body>
