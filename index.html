@@ -2,63 +2,76 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>TV Dashboard (Fixed Scale)</title>
+  <title>Campaign Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* ---- Grundlayout: niemals Scrollen, dunkles Theme ---- */
+    /* ---- Fixed-Scale Bühne: niemals Scrollen ---- */
     html, body { height:100%; margin:0; background:#0f1115; color:#e8e8e8;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
     body { overflow:hidden; }
-
-    /* Bühne mit fixer Basisgröße (1920×1080), wird skaliert/gecentert */
     #stage { width:1920px; height:1080px; transform-origin: top left; position:absolute; background:#0f1115; }
 
-    /* Grid: 3 Spalten × 2 Reihen (6 Kacheln) */
+    /* ---- Grid: KPIs oben (volle Breite), unten Camp + Rerank ---- */
     .board {
-      width:100%; height:100%; padding:28px; box-sizing:border-box;
-      display:grid; gap:22px;
+      width:100%; height:100%; padding:24px; box-sizing:border-box;
+      display:grid; gap:18px;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
+      grid-template-rows: 1.15fr 0.85fr;
       grid-template-areas:
-        "kpi trend trend"
+        "kpi kpi kpi"
         "camp camp rerank";
     }
 
     .card {
-      background:#151923; border-radius:18px; padding:18px; display:flex; flex-direction:column;
+      background:#151923; border-radius:16px; padding:16px; display:flex; flex-direction:column;
       min-width:0; min-height:0; box-shadow:0 10px 30px rgba(0,0,0,.25);
     }
-    .card h2 { margin:0 0 10px; font-weight:800; letter-spacing:.2px; font-size:38px; }
+    .card h2 { margin:0 0 8px; font-weight:800; letter-spacing:.2px; font-size:32px; }
 
-    /* KPI */
-    .kpi-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; min-height:0; }
-    .kpi { background:#0f1115; border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; min-width:0; }
-    .kpi .label { font-size:22px; opacity:.85; }
-    .kpi .value { font-size:62px; font-weight:900; line-height:1.05; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* ---- KPI Panel ---- */
+    #panel-kpi .header {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .chipbar { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip {
+      font-size:16px; padding:6px 12px; border-radius:999px; cursor:pointer; user-select:none;
+      background:#0f1115; border:1px solid rgba(255,255,255,.18); color:#e8e8e8; opacity:.9;
+    }
+    .chip.active { background:#e8e8e8; color:#0f1115; border-color:transparent; }
 
-    /* Trend: Chart + Monatstabelle */
-    .trend-body { display:grid; grid-template-rows: 1fr auto; gap:12px; min-height:0; flex:1; }
-    .chart-wrap { position:relative; min-height:0; }
+    .kpi-grid {
+      display:grid; grid-template-columns: repeat(6, 1fr); gap:12px; min-height:0;
+    }
+    .kpi {
+      background:#0f1115; border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; min-width:0;
+    }
+    .kpi .label { font-size:16px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .kpi .value { font-size:40px; font-weight:900; line-height:1.06; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .kpi .delta { font-size:16px; font-weight:700; display:flex; align-items:center; gap:6px; }
+    .delta.up { color:#6be28f; }    /* besser */
+    .delta.down { color:#ff6b6b; }  /* schlechter */
+    .delta.neutral { color:#9aa3b2; }
+    .delta .arrow { font-size:18px; line-height:1; }
+
+    .kpi-body {
+      display:grid; grid-template-rows: auto 1fr; gap:12px; min-height:0; flex:1;
+    }
+    .chart-wrap { position:relative; min-height:0; height:300px; }
     .chart-wrap canvas { position:absolute; inset:0; }
 
-    /* Tabellen */
+    /* ---- Tabellen allgemein ---- */
     .table-wrap { position:relative; min-height:0; flex:1; overflow:hidden; }
-    table { width:100%; border-collapse:collapse; font-size:20px; }
-    thead th { text-align:left; font-weight:800; padding:9px 11px; background:#0f1115; position:sticky; top:0; z-index:1; }
-    tbody td { padding:9px 11px; border-top:1px solid rgba(255,255,255,.06); }
+    table { width:100%; border-collapse:collapse; font-size:18px; }
+    thead th { text-align:left; font-weight:800; padding:8px 10px; background:#0f1115; position:sticky; top:0; z-index:1; }
+    tbody td { padding:8px 10px; border-top:1px solid rgba(255,255,255,.06); }
     tbody tr:nth-child(even) td { background:rgba(255,255,255,.03); }
-    tfoot td { padding:11px; border-top:2px solid rgba(255,255,255,.25); background:#10141c; font-weight:800; }
+    tfoot td { padding:10px; border-top:2px solid rgba(255,255,255,.25); background:#10141c; font-weight:800; }
     .right { text-align:right; white-space:nowrap; }
 
-    /* Controls */
-    .controls { display:flex; align-items:center; gap:10px; margin:2px 0 10px; flex-wrap:wrap; }
-    .controls label { font-size:20px; opacity:.85; }
-    select { font-size:20px; background:#0f1115; color:#e8e8e8; border:1px solid rgba(255,255,255,.18); border-radius:10px; padding:6px 10px; }
-
-    /* Grid-Bereiche */
+    /* ---- Bereiche ---- */
     #panel-kpi { grid-area:kpi; }
-    #panel-trend { grid-area:trend; }
     #panel-camp { grid-area:camp; }
     #panel-rerank { grid-area:rerank; }
   </style>
@@ -66,67 +79,53 @@
 <body>
   <div id="stage">
     <div class="board">
-      <!-- KPIs -->
+      <!-- KPIs + Filter + Trend -->
       <section id="panel-kpi" class="card">
-        <h2>Übersicht Jan–Aug 2025</h2>
-        <div class="kpi-grid" id="kpis"></div>
-      </section>
-
-      <!-- Monats-Trend -->
-      <section id="panel-trend" class="card">
-        <h2>Monats-Trend</h2>
-        <div class="trend-body">
-          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-          <div class="table-wrap" style="height:215px">
-            <table id="monthTable">
-              <thead>
-                <tr>
-                  <th>Monat</th>
-                  <th class="right">Revenue</th>
-                  <th class="right">Ad Spend</th>
-                  <th class="right">ROAS</th>
-                  <th class="right">Orders</th>
-                </tr>
-              </thead>
-              <tbody><!-- per JS --></tbody>
-            </table>
+        <div class="header">
+          <h2>Performance Total (Jan–Aug 2025)</h2>
+          <div class="chipbar" id="filterChips">
+            <div class="chip active" data-filter="ALL">Alle</div>
+            <div class="chip" data-filter="ONSITE">Onsite</div>
+            <div class="chip" data-filter="OFFSITE">Offsite</div>
+            <div class="chip" data-filter="CPM">CPM</div>
+            <div class="chip" data-filter="CPC">CPC</div>
           </div>
         </div>
+
+        <div class="kpi-body">
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
       </section>
 
-      <!-- Campaign Performance (mit Campaign-Dropdown) -->
+      <!-- Campaign Performance -->
       <section id="panel-camp" class="card">
         <h2>Campaign Performance</h2>
-        <div class="controls">
-          <label for="campaignSelect">Campaign</label>
-          <select id="campaignSelect"></select>
-        </div>
         <div class="table-wrap">
           <table id="campaignTable">
             <thead>
               <tr>
                 <th>Campaign</th>
+                <th>Site</th>
+                <th>Model</th>
                 <th>Flight</th>
-                <th class="right">Booking</th>
+                <th class="right">Impressions</th>
+                <th class="right">Klicks</th>
+                <th class="right">CTR</th>
                 <th class="right">Ad Spend</th>
-                <th class="right">% Delivered</th>
                 <th class="right">Revenue</th>
                 <th class="right">ROAS</th>
                 <th class="right">Orders</th>
               </tr>
             </thead>
-            <tbody><!-- rows per JS --></tbody>
+            <tbody><!-- per JS --></tbody>
             <tfoot>
-              <tr id="campaignGrandRow">
-                <td>Gesamt (Alle)</td>
-                <td>—</td>
-                <td class="right">—</td>
-                <td class="right">—</td>
-                <td class="right">—</td>
-                <td class="right">—</td>
-                <td class="right">—</td>
-                <td class="right">—</td>
-              </tr>
+              <tr id="campaignFilterRow"><td>Summe (Filter)</td><td>—</td><td>—</td><td>—</td>
+                <td class="right">—</td><td class="right">—</td><td class="right">—</td>
+                <td class="right">—</td><td class="right">—</td><td class="right">—</td><td class="right">—</td></tr>
+              <tr id="campaignGrandRow"><td>Gesamt (Alle)</td><td>—</td><td>—</td><td>—</td>
+                <td class="right">—</td><td class="right">—</td><td class="right">—</td>
+                <td class="right">—</td><td class="right">—</td><td class="right">—</td><td class="right">—</td></tr>
             </tfoot>
           </table>
         </div>
@@ -135,7 +134,6 @@
       <!-- Re-Rank -->
       <section id="panel-rerank" class="card">
         <h2>Re-Rank Summary</h2>
-        <div class="kpi-grid" id="rerank-kpis" style="grid-template-columns:1fr; margin-bottom:8px"></div>
         <div class="table-wrap">
           <table id="rerankTable">
             <thead>
@@ -148,14 +146,13 @@
                 <th class="right">ROAS</th>
               </tr>
             </thead>
-            <tbody><!-- rows per JS --></tbody>
+            <tbody><!-- per JS --></tbody>
           </table>
         </div>
       </section>
     </div>
   </div>
 
-  <!-- Daten + Logik -->
   <script src="data.js"></script>
   <script src="script.js"></script>
 </body>
