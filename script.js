@@ -5,7 +5,7 @@ const fmtPct1   = n => (n*100).toFixed(1) + '%';
 const fmtNum    = n => n.toLocaleString('de-DE');
 const safeDiv   = (a,b) => (b ? (a/b) : 0);
 
-/* ========= Fixed-Scale Bühne ========= */
+/* ========= Bühne skalieren ========= */
 const BASE = { w:1920, h:1080 };
 function fitStage(){
   const stage = document.getElementById('stage');
@@ -14,7 +14,6 @@ function fitStage(){
   stage.style.left = `${(window.innerWidth - BASE.w*s)/2}px`;
   stage.style.top  = `${(window.innerHeight - BASE.h*s)/2}px`;
 }
-window.addEventListener('resize', fitStage);
 
 /* ========= Daten / State ========= */
 const D = window.DASHBOARD_DATA;
@@ -36,20 +35,22 @@ function predicateFor(filter){
 }
 function applyFilter(list, filter){ return list.filter(predicateFor(filter)); }
 
-/* ========= Totals / Aggregation ========= */
+/* ========= Totals ========= */
 function totals(list){
   const t = list.reduce((a,c)=>({
     impressions: a.impressions + (c.impressions||0),
     clicks:      a.clicks      + (c.clicks||0),
     ad:          a.ad          + (c.ad||0),
     revenue:     a.revenue     + (c.revenue||0),
-    orders:      a.orders      + (c.orders||0)
-  }), {impressions:0, clicks:0, ad:0, revenue:0, orders:0});
+    orders:      a.orders      + (c.orders||0),
+    booking:     a.booking     + (c.booking||0)
+  }), {impressions:0, clicks:0, ad:0, revenue:0, orders:0, booking:0});
   const ctr  = safeDiv(t.clicks, t.impressions);
   const roas = safeDiv(t.revenue, t.ad);
   const cpm  = safeDiv(t.ad, t.impressions/1000);
   const cpc  = safeDiv(t.ad, t.clicks);
-  return { ...t, ctr, roas, cpm, cpc };
+  const delivered = safeDiv(t.ad, t.booking);
+  return { ...t, ctr, roas, cpm, cpc, delivered };
 }
 
 /* ========= KPI-Karten mit YoY ========= */
@@ -64,7 +65,6 @@ const KPI_DEF = [
   { key:'cpm',         label:'CPM',                  fmt:fmtMoney2,           better:'lower' },
   { key:'cpc',         label:'CPC',                  fmt:fmtMoney2,           better:'lower' }
 ];
-
 function deltaInfo(cur, ly, better){
   if (!isFinite(ly) || ly === 0) return { cls:'neutral', txt:'—', arrow:'' };
   const diff = (cur - ly) / Math.abs(ly);
@@ -74,7 +74,6 @@ function deltaInfo(cur, ly, better){
   const arrow = good ? '▲' : bad ? '▼' : '•';
   return { cls, txt: (diff*100).toFixed(1) + '%', arrow };
 }
-
 function renderKPIs(curTotals, lyTotals){
   const grid = document.getElementById('kpiGrid');
   grid.innerHTML = '';
@@ -93,26 +92,36 @@ function renderKPIs(curTotals, lyTotals){
   });
 }
 
-/* ========= Trend-Chart ========= */
+/* ========= Chart-Höhe dynamisch ========= */
+function autoSizeChart() {
+  const card        = document.getElementById('panel-kpi');
+  if (!card) return;
+  const header      = card.querySelector('.header');
+  const kpiGrid     = card.querySelector('#kpiGrid');
+  const chartHeader = card.querySelector('.chart-header');
+  const paddingY = 32;     // card padding top+bottom
+  const gaps     = 12 + 8; // kpi-body gap + chart-section gap
+  const used = (header?.offsetHeight||0) + (kpiGrid?.offsetHeight||0) + (chartHeader?.offsetHeight||0) + paddingY + gaps;
+  let free = (card.clientHeight - used);
+  free = Math.max(200, Math.min(480, free));
+  card.style.setProperty('--chart-h', `${Math.round(free)}px`);
+}
+
 /* ========= Trend-Chart ========= */
 let trendChart;
 function renderTrend(list){
-  // Aggregate pro Monat (gleichmäßig über Flight-Overlap verteilt)
   const monthTotals = Array.from({length:8}, ()=>({ad:0,revenue:0}));
   list.forEach(c => {
-    const s = new Date(c.start + 'T00:00:00'), e = new Date(c.end + 'T00:00:00');
+    const s = new Date(c.start+'T00:00:00'), e = new Date(c.end+'T00:00:00');
     const months = [];
     let cur = new Date(s); cur.setDate(1);
     while (cur <= e){
       const m = cur.getMonth(), y = cur.getFullYear();
-      if (y === 2025 && m <= 7) months.push(m);
+      if (y===2025 && m<=7) months.push(m);
       cur.setMonth(cur.getMonth()+1); cur.setDate(1);
     }
     const share = months.length ? 1/months.length : 0;
-    months.forEach(m => {
-      monthTotals[m].ad      += c.ad * share;
-      monthTotals[m].revenue += c.revenue * share;
-    });
+    months.forEach(m => { monthTotals[m].ad += c.ad*share; monthTotals[m].revenue += c.revenue*share; });
   });
 
   const ctx = document.getElementById('trendChart').getContext('2d');
@@ -122,19 +131,19 @@ function renderTrend(list){
   trendChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'],
+      labels: MONTHS,
       datasets: [
         {
           label: 'Ad Spend',
           data: monthTotals.map(m=>m.ad),
-          backgroundColor: 'rgba(255,199,177,0.85)',  // #FFC7B1 (Peach)
+          backgroundColor: 'rgba(255,199,177,0.85)',  // Peach #FFC7B1
           borderColor:     '#FFC7B1',
           borderWidth: 1
         },
         {
           label: 'Media Revenue',
           data: monthTotals.map(m=>m.revenue),
-          backgroundColor: 'rgba(192,155,191,0.85)',  // #C09BBF (Mauve aus deinem 2. Screenshot)
+          backgroundColor: 'rgba(192,155,191,0.85)',  // Mauve #C09BBF
           borderColor:     '#C09BBF',
           borderWidth: 1
         }
@@ -143,22 +152,34 @@ function renderTrend(list){
     options: {
       responsive:true,
       maintainAspectRatio:false,
-      layout: { padding: { top: 4, right: 8, bottom: 18, left: 8 } }, // extra Platz unten
+      layout:{ padding:{ top:4, right:8, bottom:18, left:8 } },
       plugins:{
         legend:{ labels:{ font:{ size:18 } } },
-        title:{ display:false } // Überschrift kommt aus .chart-header
+        title:{ display:false }
       },
       scales:{
         x:{ ticks:{ font:{ size:16 } } },
-        y:{
-          beginAtZero:true,
-          ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) }
-        }
+        y:{ beginAtZero:true, ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) } }
       }
     }
   });
 }
 
+/* ========= Campaign Overview (visuell) ========= */
+function renderCampaignOverview(all){
+  const t = totals(all);
+  const now = new Date();
+  const active = all.filter(c => new Date(c.start) <= now && now <= new Date(c.end)).length;
+  const ended  = all.filter(c => new Date(c.end) <  now).length;
+
+  document.getElementById('ov-count-total').textContent = fmtNum(all.length);
+  document.getElementById('ov-count-active').textContent = fmtNum(active);
+  document.getElementById('ov-count-ended').textContent  = fmtNum(ended);
+
+  document.getElementById('ov-booking').textContent  = fmtMoney0(t.booking);
+  document.getElementById('ov-ad').textContent       = fmtMoney0(t.ad);
+  document.getElementById('ov-delivered').textContent= (t.delivered*100).toFixed(0) + '%';
+}
 
 /* ========= Campaign Table ========= */
 function renderCampaignTable(list, allList){
@@ -186,7 +207,6 @@ function renderCampaignTable(list, allList){
     tbody.appendChild(tr);
   });
 
-  // Fußzeilen: Summe(Filter) & Gesamt(Alle)
   const sumF = totals(list);
   const sumA = totals(allList);
   document.getElementById('campaignFilterRow').innerHTML = `
@@ -257,12 +277,20 @@ function renderAll(){
   const t24 = totals(list24);
 
   renderKPIs(t25, t24);
+  autoSizeChart();
   renderTrend(list25);
+  renderCampaignOverview(ALL_2025);  // visuelle Box basiert immer auf Gesamtdaten 2025
   renderCampaignTable(list25, ALL_2025);
   if (!trendChartOnce) trendChartOnce = true;
 }
 
 /* ========= Boot ========= */
+window.addEventListener('resize', () => {
+  fitStage();
+  autoSizeChart();
+  if (trendChart) trendChart.resize();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   fitStage();
   bindChips();
