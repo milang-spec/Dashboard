@@ -18,8 +18,8 @@ window.addEventListener('resize', fitStage);
 
 /* ========= Daten / State ========= */
 const D = window.DASHBOARD_DATA;
-const ALL_2025 = D.campaigns_2025;
-const ALL_2024 = D.campaigns_2024;
+const ALL_2025 = D.campaigns_2025 || [];
+const ALL_2024 = D.campaigns_2024 || [];
 
 const STATE = { filter: 'ALL' }; // ALL | ONSITE | OFFSITE | CPM | CPC
 const MONTHS = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'];
@@ -54,15 +54,15 @@ function totals(list){
 
 /* ========= KPI-Karten mit YoY ========= */
 const KPI_DEF = [
-  { key:'ad',        label:'Ad Spend Total',  fmt:fmtMoney0, better:'higher' },
-  { key:'impressions', label:'Impressions Total', fmt:fmtNum, better:'higher' },
-  { key:'clicks',    label:'Klicks Total',   fmt:fmtNum,    better:'higher' },
-  { key:'ctr',       label:'CTR',            fmt:v=>fmtPct1(v), better:'higher' },
-  { key:'orders',    label:'Media Sales Total', fmt:fmtNum,  better:'higher' },
-  { key:'revenue',   label:'Media Revenue Total', fmt:fmtMoney0, better:'higher' },
-  { key:'roas',      label:'ROAS',           fmt:v=>v.toFixed(2)+'×', better:'higher' },
-  { key:'cpm',       label:'CPM',            fmt:fmtMoney2, better:'lower' },
-  { key:'cpc',       label:'CPC',            fmt:fmtMoney2, better:'lower' }
+  { key:'ad',          label:'Ad Spend Total',       fmt:fmtMoney0,           better:'higher' },
+  { key:'impressions', label:'Impressions Total',    fmt:fmtNum,              better:'higher' },
+  { key:'clicks',      label:'Klicks Total',         fmt:fmtNum,              better:'higher' },
+  { key:'ctr',         label:'CTR',                  fmt:v=>fmtPct1(v),       better:'higher' },
+  { key:'orders',      label:'Media Sales Total',    fmt:fmtNum,              better:'higher' },
+  { key:'revenue',     label:'Media Revenue Total',  fmt:fmtMoney0,           better:'higher' },
+  { key:'roas',        label:'ROAS',                 fmt:v=>v.toFixed(2)+'×', better:'higher' },
+  { key:'cpm',         label:'CPM',                  fmt:fmtMoney2,           better:'lower' },
+  { key:'cpc',         label:'CPC',                  fmt:fmtMoney2,           better:'lower' }
 ];
 
 function deltaInfo(cur, ly, better){
@@ -120,20 +120,23 @@ function renderTrend(list){
     data: {
       labels: MONTHS,
       datasets: [
-        { label:'Revenue', data: monthTotals.map(m=>m.revenue) },
-        { label:'Ad Spend', data: monthTotals.map(m=>m.ad) }
+        { label: 'Ad Spend',      data: monthTotals.map(m=>m.ad) },
+        { label: 'Media Revenue', data: monthTotals.map(m=>m.revenue) }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      responsive:true,
+      maintainAspectRatio:false,
       plugins:{
         legend:{ labels:{ font:{ size:18 } } },
-        title:{ display:true, text:'Revenue vs. Ad Spend', font:{ size:28 } },
-        tooltip:{ enabled:true }
+        title:{ display:false } // Header kommt aus der HTML (.chart-header)
       },
       scales:{
         x:{ ticks:{ font:{ size:16 } } },
-        y:{ beginAtZero:true, ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) } }
+        y:{
+          beginAtZero:true,
+          ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) }
+        }
       }
     }
   });
@@ -245,6 +248,6 @@ function renderAll(){
 document.addEventListener('DOMContentLoaded', () => {
   fitStage();
   bindChips();
-  renderRerank(D.rerank);
+  renderRerank(D.rerank || []);
   renderAll();
 });
