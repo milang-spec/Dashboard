@@ -5,14 +5,55 @@ const fmtPct1   = n => (n*100).toFixed(1) + '%';
 const fmtNum    = n => n.toLocaleString('de-DE');
 const safeDiv   = (a,b) => (b ? (a/b) : 0);
 
-/* ========= Bühne skalieren ========= */
+/* ========= Stage / Layout Mode ========= */
 const BASE = { w:1920, h:1080 };
-function fitStage(){
+function fitStageFixed() {
   const stage = document.getElementById('stage');
   const s = Math.min(window.innerWidth/BASE.w, window.innerHeight/BASE.h);
   stage.style.transform = `scale(${s})`;
   stage.style.left = `${(window.innerWidth - BASE.w*s)/2}px`;
   stage.style.top  = `${(window.innerHeight - BASE.h*s)/2}px`;
+}
+function applyLayoutConfig() {
+  const cfg = window.DASHBOARD_LAYOUT || { mode:'fixed-scale', columns:3, gap:18, order:[] };
+  const board = document.getElementById('board');
+  // Grid-Spalten & Gap setzen
+  document.documentElement.style.setProperty('--cols', String(cfg.columns || 3));
+  document.documentElement.style.setProperty('--gap', `${cfg.gap || 18}px`);
+  board.style.gap = `${cfg.gap || 18}px`;
+
+  // Panels in angegebener Reihenfolge anordnen + span setzen
+  (cfg.order || []).forEach(item => {
+    const el = document.getElementById(item.id);
+    if (!el) return;
+    // gridColumn span
+    const span = Math.max(1, Math.min(item.span || 1, cfg.columns || 3));
+    el.style.gridColumn = `span ${span}`;
+    board.appendChild(el); // re-append = neue Reihenfolge
+  });
+
+  // Mode anwenden
+  const stage = document.getElementById('stage');
+  if ((cfg.mode || 'fixed-scale') === 'scroll') {
+    // Scroll-Mode
+    document.body.style.overflow = 'auto';
+    stage.style.position = 'relative';
+    stage.style.transform = 'none';
+    stage.style.left = stage.style.top = '';
+    stage.style.width = '100%';
+    stage.style.height = 'auto';
+    // Chart etwas größer im Scroll-Modus
+    stage.style.setProperty('--chart-h', '340px');
+    window.removeEventListener('resize', fitStageFixed);
+  } else {
+    // TV Fixed-Scale
+    document.body.style.overflow = 'hidden';
+    stage.style.position = 'absolute';
+    stage.style.width = BASE.w + 'px';
+    stage.style.height = BASE.h + 'px';
+    fitStageFixed();
+    window.addEventListener('resize', fitStageFixed);
+  }
 }
 
 /* ========= Daten / State ========= */
@@ -92,16 +133,19 @@ function renderKPIs(curTotals, lyTotals){
   });
 }
 
-/* ========= Chart-Höhe dynamisch ========= */
+/* ========= Dynamische Chart-Höhe ========= */
 function autoSizeChart() {
+  const cfg = window.DASHBOARD_LAYOUT || {};
+  if (cfg.mode === 'scroll') {  // im Scroll-Mode genügt eine fixe angenehme Höhe
+    document.getElementById('panel-kpi').style.setProperty('--chart-h','360px');
+    return;
+  }
   const card        = document.getElementById('panel-kpi');
-  if (!card) return;
   const header      = card.querySelector('.header');
   const kpiGrid     = card.querySelector('#kpiGrid');
   const chartHeader = card.querySelector('.chart-header');
-  const paddingY = 32;     // card padding top+bottom
-  const gaps     = 12 + 8; // kpi-body gap + chart-section gap
-  const used = (header?.offsetHeight||0) + (kpiGrid?.offsetHeight||0) + (chartHeader?.offsetHeight||0) + paddingY + gaps;
+  const paddingY = 32, gaps = 12 + 8;
+  const used = (header?.offsetHeight||0)+(kpiGrid?.offsetHeight||0)+(chartHeader?.offsetHeight||0)+paddingY+gaps;
   let free = (card.clientHeight - used);
   free = Math.max(200, Math.min(480, free));
   card.style.setProperty('--chart-h', `${Math.round(free)}px`);
@@ -153,10 +197,7 @@ function renderTrend(list){
       responsive:true,
       maintainAspectRatio:false,
       layout:{ padding:{ top:4, right:8, bottom:18, left:8 } },
-      plugins:{
-        legend:{ labels:{ font:{ size:18 } } },
-        title:{ display:false }
-      },
+      plugins:{ legend:{ labels:{ font:{ size:18 } } }, title:{ display:false } },
       scales:{
         x:{ ticks:{ font:{ size:16 } } },
         y:{ beginAtZero:true, ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) } }
@@ -279,21 +320,20 @@ function renderAll(){
   renderKPIs(t25, t24);
   autoSizeChart();
   renderTrend(list25);
-  renderCampaignOverview(ALL_2025);  // visuelle Box basiert immer auf Gesamtdaten 2025
+  renderCampaignOverview(ALL_2025);
   renderCampaignTable(list25, ALL_2025);
   if (!trendChartOnce) trendChartOnce = true;
 }
 
 /* ========= Boot ========= */
 window.addEventListener('resize', () => {
-  fitStage();
-  autoSizeChart();
-  if (trendChart) trendChart.resize();
+  const cfg = window.DASHBOARD_LAYOUT || {};
+  if (cfg.mode !== 'scroll') { fitStageFixed(); autoSizeChart(); trendChart?.resize(); }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  fitStage();
+  applyLayoutConfig();       // <— Scroll vs Fixed + Grid-Order/Spans setzen
   bindChips();
-  renderRerank(D.rerank || []);
+  renderRerank((window.DASHBOARD_DATA || {}).rerank || []);
   renderAll();
 });
