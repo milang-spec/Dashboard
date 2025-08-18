@@ -1,3 +1,4 @@
+// Dummy-Daten Jan–Aug 2025 + 2024 (für YoY)
 window.DASHBOARD_DATA = {
   // --- 2025 ---
   campaigns_2025: [
@@ -65,7 +66,7 @@ window.DASHBOARD_DATA = {
       ctr:0.017, cpm:14.50, impressions:4620690, clicks:78552 }
   ],
 
-  // Re-Rank bleibt unabhängig vom Filter (Produkt-Listing)
+  // Re-Rank
   rerank: [
     { sku:"SKU-001", item:"Vitamin D 2000 IU",     ad:3200, ecpc:0.22, roas:2.8 },
     { sku:"SKU-002", item:"Magnesium 400 mg",      ad:2800, ecpc:0.25, roas:2.2 },
