@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Sales Details – Produktreport</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="design.css" />
+</head>
+<body style="overflow:auto;">
+  <div style="max-width:1400px;margin:22px auto;padding:0 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h1 style="margin:0;font-size:28px;color:var(--theme)">Sales Details (Jan–Aug 2025)</h1>
+      <a href="index.html" class="sales-btn" style="text-decoration:none;">← Zurück zum Dashboard</a>
+    </div>
+
+    <section class="card" style="margin-bottom:14px;">
+      <h2>Summary</h2>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi"><div class="label">Umsatz gesamt</div><div class="value" id="sd-revenue">—</div></div>
+        <div class="kpi"><div class="label">Verkaufte Einheiten</div><div class="value" id="sd-units">—</div></div>
+        <div class="kpi"><div class="label">Ø Umsatz / Produkt</div><div class="value" id="sd-avg">—</div></div>
+        <div class="kpi"><div class="label">Top SKU</div><div class="value" id="sd-top">—</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Produktliste</h2>
+      <div class="table-wrap">
+        <table id="salesTable">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Produkt</th>
+              <th class="right">Einheiten</th>
+              <th class="right">Revenue</th>
+            </tr>
+          </thead>
+          <tbody><!-- via JS --></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="sales.js"></script>
+</body>
+</html>
