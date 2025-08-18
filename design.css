@@ -1,41 +1,144 @@
+/* ========== THEME ==========
+   Haupt-Akzentfarbe: #FFC7B1
+   ========================== */
 :root{
-  /* Theme */
+  --bg: #0f1115;
+  --text: #e8e8e8;
+  --card: #171a20;
+  --muted: #0f1115;
+
+  --border: rgba(255,255,255,.18);
+  --border-strong: rgba(255,255,255,.25);
+  --shadow: 0 10px 30px rgba(0,0,0,.25);
+
+  /* Theme / Akzent */
   --theme: #FFC7B1;
   --theme-weak: rgba(255,199,177,.18);
 
-  /* (Optional) Überschreibe Akzentverwendung im Board deutlicher */
-  --bg: #0f1115;
-  --text: #e8e8e8;
-  --card: #171a20;            /* leicht neutral, Theme übernimmt Akzent */
-  --muted: #0f1115;
+  /* Statusfarben */
+  --good: #6be28f;
+  --bad:  #ff6b6b;
+  --neutral: #9aa3b2;
+
+  /* Typo kompakt */
+  --h2: 32px;
+  --kpi-label: 16px;
+  --kpi-value: 40px;
+  --kpi-delta: 16px;
+  --table: 18px;
+
+  /* Layout */
+  --pad: 24px;
+  --gap: 18px;
+  --radius: 16px;
 }
 
-/* Überschriften & wichtige Linien in Theme-Farbe */
-.card h2 { color: var(--theme); }
+/* ---- Base ---- */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+body { overflow: hidden; }
 
-/* Karten bekommen einen klareren Theme-Rand */
-.card { outline: 2px solid var(--theme-weak); }
-
-/* KPI-Labels in Theme */
-.kpi .label { color: var(--theme); }
-
-/* Tabellen-Kopfzeilen mit Theme-Hintergrund (zart) und Trennlinien */
-thead th {
-  background: rgba(255,199,177,.10);
-  box-shadow:
-    0 -1px 0 0 var(--theme-weak) inset,
-    0 1px 0 0 var(--theme-weak) inset;
+#stage {
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  position: absolute;
+  background: var(--bg);
 }
 
-/* Filter-Chips – aktiv in Theme */
+/* ---- Grid: KPIs oben, unten Camp + Rerank ---- */
+.board {
+  width: 100%;
+  height: 100%;
+  padding: var(--pad);
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1.15fr 0.85fr;
+  grid-template-areas:
+    "kpi kpi kpi"
+    "camp camp rerank";
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  box-shadow: var(--shadow);
+  outline: 2px solid var(--theme-weak); /* deutlicher Theme-Rand */
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  font-size: var(--h2);
+  color: var(--theme); /* Überschriften in Hauptfarbe */
+}
+
+/* ---- KPI Panel ---- */
+#panel-kpi .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+/* Chips */
+.chipbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  font-size: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--text);
+  opacity: .9;
+}
 .chip.active {
   background: var(--theme);
-  color: #1b1f2a;
+  color: #1b1f2a;         /* Kontrast auf Theme */
   border-color: transparent;
   box-shadow: 0 0 0 2px var(--theme-weak) inset;
 }
 
-/* >>> Neue Chart-Section mit Header-Bar in Theme <<< */
+/* KPI-Karten */
+.kpi-body { display: grid; grid-template-rows: auto 1fr; gap: 12px; min-height: 0; flex: 1; }
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; min-height: 0; }
+
+.kpi {
+  background: var(--muted);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 0;
+  box-shadow: 0 0 0 1px var(--theme-weak) inset; /* feiner Theme-Touch */
+}
+
+.kpi .label { font-size: var(--kpi-label); color: var(--theme); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi .value { font-size: var(--kpi-value); font-weight: 900; line-height: 1.06; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.kpi .delta { font-size: var(--kpi-delta); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.delta.up { color: var(--good); }
+.delta.down { color: var(--bad); }
+.delta.neutral { color: var(--neutral); }
+.delta .arrow { font-size: 18px; line-height: 1; }
+
+/* ---- Chart-Bereich: eigene Header-Leiste in Theme ---- */
 .chart-section { display: grid; grid-template-rows: auto 1fr; gap: 8px; min-height: 0; }
 .chart-header {
   background: var(--theme);
@@ -45,10 +148,28 @@ thead th {
   letter-spacing: .2px;
   padding: 8px 12px;
   border-radius: 10px;
-  /* feine Trennung nach oben/unten */
-  box-shadow: 0 0 0 1px var(--theme-weak) inset;
+  box-shadow: 0 0 0 1px var(--theme-weak) inset; /* klare Abgrenzung */
 }
-
-/* Chart-Canvas wie gehabt */
 .chart-wrap { position: relative; min-height: 0; height: 300px; }
 .chart-wrap canvas { position: absolute; inset: 0; }
+
+/* ---- Tabellen ---- */
+.table-wrap { position: relative; min-height: 0; flex: 1; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: var(--table); }
+thead th {
+  text-align: left; font-weight: 800; padding: 8px 10px;
+  background: rgba(255,199,177,.10);  /* leichter Theme-Hintergrund */
+  position: sticky; top: 0; z-index: 1;
+  box-shadow:
+    0 -1px 0 0 var(--theme-weak) inset,
+    0 1px 0 0 var(--theme-weak) inset;
+}
+tbody td { padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.06); }
+tbody tr:nth-child(even) td { background: rgba(255,255,255,.03); }
+tfoot td { padding: 10px; border-top: 2px solid var(--border-strong); background: #10141c; font-weight: 800; }
+.right { text-align: right; white-space: nowrap; }
+
+/* ---- Bereiche ---- */
+#panel-kpi { grid-area: kpi; }
+#panel-camp { grid-area: camp; }
+#panel-rerank { grid-area: rerank; }
