@@ -1,241 +1,250 @@
 /* ========= Utils ========= */
 const fmtMoney0 = n => n.toLocaleString('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 });
-const fmtMoney1 = n => n.toLocaleString('de-DE', { style:'currency', currency:'EUR', minimumFractionDigits:2, maximumFractionDigits:2 });
-const fmtNum = n => n.toLocaleString('de-DE');
+const fmtMoney2 = n => n.toLocaleString('de-DE', { style:'currency', currency:'EUR', minimumFractionDigits:2, maximumFractionDigits:2 });
+const fmtPct1   = n => (n*100).toFixed(1) + '%';
+const fmtNum    = n => n.toLocaleString('de-DE');
+const safeDiv   = (a,b) => (b ? (a/b) : 0);
 
-/* ========= Bühne skalieren (Fixed Base) ========= */
+/* ========= Fixed-Scale Bühne ========= */
 const BASE = { w:1920, h:1080 };
-function fitStage() {
+function fitStage(){
   const stage = document.getElementById('stage');
-  const s = Math.min(window.innerWidth / BASE.w, window.innerHeight / BASE.h);
+  const s = Math.min(window.innerWidth/BASE.w, window.innerHeight/BASE.h);
   stage.style.transform = `scale(${s})`;
-  const x = (window.innerWidth - BASE.w * s) / 2;
-  const y = (window.innerHeight - BASE.h * s) / 2;
-  stage.style.left = `${x}px`;
-  stage.style.top  = `${y}px`;
+  stage.style.left = `${(window.innerWidth - BASE.w*s)/2}px`;
+  stage.style.top  = `${(window.innerHeight - BASE.h*s)/2}px`;
 }
 window.addEventListener('resize', fitStage);
 
-/* ========= Daten ========= */
-const data = window.DASHBOARD_DATA || { campaigns: [], rerank: [] };
-const YEAR = 2025, LAST_MONTH = 8;
+/* ========= Daten / State ========= */
+const D = window.DASHBOARD_DATA;
+const ALL_2025 = D.campaigns_2025;
+const ALL_2024 = D.campaigns_2024;
+
+const STATE = { filter: 'ALL' }; // ALL | ONSITE | OFFSITE | CPM | CPC
 const MONTHS = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'];
-const MONTH_KEYS = Array.from({length: LAST_MONTH}, (_,i)=>`${YEAR}-${String(i+1).padStart(2,'0')}`);
 
-function parseISO(d){ return new Date(d + 'T00:00:00'); }
-function monthKey(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; }
+/* ========= Filterung ========= */
+function predicateFor(filter){
+  switch(filter){
+    case 'ONSITE': return c => c.site === 'Onsite';
+    case 'OFFSITE': return c => c.site === 'Offsite';
+    case 'CPM': return c => c.model === 'CPM';
+    case 'CPC': return c => c.model === 'CPC';
+    default: return () => true;
+  }
+}
+function applyFilter(list, filter){ return list.filter(predicateFor(filter)); }
 
-/* Kampagnen gleichmäßig über beteiligte Monate (Jan–Aug) verteilen */
-function aggregateMonthly(campaigns){
-  const agg = Object.fromEntries(MONTH_KEYS.map(m => [m, { ad:0, revenue:0, orders:0 }]));
-  campaigns.forEach(c => {
-    const start = parseISO(c.start);
-    const end   = parseISO(c.end);
+/* ========= Totals / Aggregation ========= */
+function totals(list){
+  const t = list.reduce((a,c)=>({
+    impressions: a.impressions + (c.impressions||0),
+    clicks:      a.clicks      + (c.clicks||0),
+    ad:          a.ad          + (c.ad||0),
+    revenue:     a.revenue     + (c.revenue||0),
+    orders:      a.orders      + (c.orders||0)
+  }), {impressions:0, clicks:0, ad:0, revenue:0, orders:0});
+  const ctr  = safeDiv(t.clicks, t.impressions);
+  const roas = safeDiv(t.revenue, t.ad);
+  const cpm  = safeDiv(t.ad, t.impressions/1000);
+  const cpc  = safeDiv(t.ad, t.clicks);
+  return { ...t, ctr, roas, cpm, cpc };
+}
+
+/* ========= KPI-Karten mit YoY ========= */
+const KPI_DEF = [
+  { key:'ad',        label:'Ad Spend Total',  fmt:fmtMoney0, better:'higher' },
+  { key:'impressions', label:'Impressions Total', fmt:fmtNum, better:'higher' },
+  { key:'clicks',    label:'Klicks Total',   fmt:fmtNum,    better:'higher' },
+  { key:'ctr',       label:'CTR',            fmt:v=>fmtPct1(v), better:'higher' },
+  { key:'orders',    label:'Media Sales Total', fmt:fmtNum,  better:'higher' },
+  { key:'revenue',   label:'Media Revenue Total', fmt:fmtMoney0, better:'higher' },
+  { key:'roas',      label:'ROAS',           fmt:v=>v.toFixed(2)+'×', better:'higher' },
+  { key:'cpm',       label:'CPM',            fmt:fmtMoney2, better:'lower' },
+  { key:'cpc',       label:'CPC',            fmt:fmtMoney2, better:'lower' }
+];
+
+function deltaInfo(cur, ly, better){
+  if (!isFinite(ly) || ly === 0) return { cls:'neutral', txt:'—', arrow:'' };
+  const diff = (cur - ly) / Math.abs(ly);
+  const good = better === 'higher' ? diff > 0 : diff < 0;
+  const bad  = better === 'higher' ? diff < 0 : diff > 0;
+  const cls  = good ? 'up' : bad ? 'down' : 'neutral';
+  const arrow = good ? '▲' : bad ? '▼' : '•';
+  return { cls, txt: (diff*100).toFixed(1) + '%', arrow };
+}
+
+function renderKPIs(curTotals, lyTotals){
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = '';
+  KPI_DEF.forEach(def => {
+    const cur = curTotals[def.key] || 0;
+    const ly  = lyTotals[def.key]  || 0;
+    const d   = deltaInfo(cur, ly, def.better);
+    const div = document.createElement('div');
+    div.className = 'kpi';
+    div.innerHTML = `
+      <div class="label">${def.label}</div>
+      <div class="value">${def.fmt(cur)}</div>
+      <div class="delta ${d.cls}"><span class="arrow">${d.arrow}</span><span>${d.txt}</span> <span style="opacity:.7">vs LY</span></div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+/* ========= Trend-Chart ========= */
+let trendChart;
+function renderTrend(list){
+  // Aggregate pro Monat nach Flight-Overlap (gleichmäßige Verteilung)
+  const monthTotals = Array.from({length:8}, ()=>({ad:0,revenue:0}));
+  list.forEach(c => {
+    const s = new Date(c.start + 'T00:00:00'), e = new Date(c.end + 'T00:00:00');
     const months = [];
-    let cur = new Date(start); cur.setDate(1);
-    while (cur <= end) { const mk = monthKey(cur);
-      if (cur.getFullYear()===YEAR && (cur.getMonth()+1)<=LAST_MONTH) months.push(mk);
+    let cur = new Date(s); cur.setDate(1);
+    while (cur <= e){
+      const m = cur.getMonth(); const y = cur.getFullYear();
+      if (y===2025 && m<=7) months.push(m);  // Jan..Aug index 0..7
       cur.setMonth(cur.getMonth()+1); cur.setDate(1);
     }
-    if (!months.length) return;
-    const share = 1 / months.length;
-    months.forEach(mk => {
-      agg[mk].ad      += c.ad      * share;
-      agg[mk].revenue += c.revenue * share;
-      agg[mk].orders  += c.orders  * share;
-    });
+    const share = months.length ? 1/months.length : 0;
+    months.forEach(m => { monthTotals[m].ad += c.ad*share; monthTotals[m].revenue += c.revenue*share; });
   });
-  return agg;
-}
 
-/* ========= Top-Totals (für KPIs & Gesamtzeile) ========= */
-function calcTotals(campaigns){
-  return campaigns.reduce((a,c)=>({
-    booking: a.booking + c.booking,
-    ad: a.ad + c.ad,
-    revenue: a.revenue + c.revenue,
-    orders: a.orders + c.orders
-  }), {booking:0, ad:0, revenue:0, orders:0});
-}
-
-/* ========= Render: KPIs ========= */
-function renderKPIs(totals){
-  const roas = totals.ad ? (totals.revenue / totals.ad) : 0;
-  const kpis = document.getElementById('kpis');
-  kpis.innerHTML = '';
-  [
-    { label:'Revenue', value: fmtMoney0(totals.revenue) },
-    { label:'Ad Spend', value: fmtMoney0(totals.ad) },
-    { label:'ROAS', value: roas.toFixed(2) + '×' },
-    { label:'Orders', value: fmtNum(Math.round(totals.orders)) }
-  ].forEach(k => {
-    const el = document.createElement('div');
-    el.className = 'kpi';
-    el.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
-    kpis.appendChild(el);
-  });
-}
-
-/* ========= Render: Trend Chart & Monatstabelle ========= */
-let trendChart;
-function renderTrend(monthAgg){
   const ctx = document.getElementById('trendChart').getContext('2d');
-  const labels = MONTHS;
-  const ad = MONTH_KEYS.map(m => Math.round(monthAgg[m].ad));
-  const rev = MONTH_KEYS.map(m => Math.round(monthAgg[m].revenue));
-
   if (trendChart) trendChart.destroy();
-  Chart.defaults.font.size = 22;
+  Chart.defaults.font.size = 18;
 
   trendChart = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[
-      { label:'Revenue', data:rev },
-      { label:'Ad Spend', data:ad }
-    ]},
-    options:{
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Revenue', data: monthTotals.map(m=>m.revenue) },
+        { label:'Ad Spend', data: monthTotals.map(m=>m.ad) }
+      ]
+    },
+    options: {
       responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ labels:{ font:{ size:22 } } },
-        title:{ display:true, text:'Revenue vs. Ad Spend', font:{ size:36 } },
+        legend:{ labels:{ font:{ size:18 } } },
+        title:{ display:true, text:'Revenue vs. Ad Spend', font:{ size:28 } },
         tooltip:{ enabled:true }
       },
       scales:{
-        x:{ ticks:{ font:{ size:20 } } },
-        y:{ beginAtZero:true, ticks:{ font:{ size:20 }, callback:v=>fmtMoney0(v) } }
+        x:{ ticks:{ font:{ size:16 } } },
+        y:{ beginAtZero:true, ticks:{ font:{ size:16 }, callback:v=>fmtMoney0(v) } }
       }
     }
   });
+}
 
-  // Monatstabelle
-  const tbody = document.querySelector('#monthTable tbody');
+/* ========= Campaign Table ========= */
+function renderCampaignTable(list, allList){
+  const tbody = document.querySelector('#campaignTable tbody');
   tbody.innerHTML = '';
-  MONTH_KEYS.forEach((mk, i) => {
-    const m = monthAgg[mk];
-    const roas = m.ad ? m.revenue / m.ad : 0;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${MONTHS[i]}</td>
-      <td class="right">${fmtMoney0(m.revenue)}</td>
-      <td class="right">${fmtMoney0(m.ad)}</td>
-      <td class="right">${roas.toFixed(2)}×</td>
-      <td class="right">${fmtNum(Math.round(m.orders))}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+  const sorted = [...list].sort((a,b)=> b.ad - a.ad);
 
-/* ========= Campaign Performance ========= */
-function initCampaignDropdown(campaigns){
-  const sel = document.getElementById('campaignSelect');
-  const names = [...new Set(campaigns.map(c => c.name))].sort();
-  sel.innerHTML = `<option value="__ALL__">Alle Kampagnen</option>` + names.map(n => `<option value="${encodeURIComponent(n)}">${n}</option>`).join('');
-  sel.addEventListener('change', () => renderCampaignTable(campaigns));
-}
-
-function renderCampaignTable(allCampaigns){
-  const sel = document.getElementById('campaignSelect');
-  const val = sel.value;
-  const rows = document.querySelector('#campaignTable tbody');
-  rows.innerHTML = '';
-
-  const filtered = (val === '__ALL__') ? allCampaigns : allCampaigns.filter(c => c.name === decodeURIComponent(val));
-  const list = [...filtered].sort((a,b)=> b.ad - a.ad);
-
-  list.forEach(c => {
-    const delivered = c.booking ? (c.ad / c.booking) : 0;
-    const roas = c.ad ? (c.revenue / c.ad) : 0;
+  sorted.forEach(c => {
+    const roas = safeDiv(c.revenue, c.ad);
     const tr = document.createElement('tr');
     const flight = `${c.start.slice(8,10)}.${c.start.slice(5,7)}.${c.start.slice(0,4)}–${c.end.slice(8,10)}.${c.end.slice(5,7)}.${c.end.slice(0,4)}`;
     tr.innerHTML = `
       <td>${c.name}</td>
+      <td>${c.site}</td>
+      <td>${c.model}</td>
       <td>${flight}</td>
-      <td class="right">${fmtMoney0(c.booking)}</td>
+      <td class="right">${fmtNum(Math.round(c.impressions))}</td>
+      <td class="right">${fmtNum(Math.round(c.clicks))}</td>
+      <td class="right">${fmtPct1(safeDiv(c.clicks, c.impressions))}</td>
       <td class="right">${fmtMoney0(c.ad)}</td>
-      <td class="right">${(delivered*100).toFixed(0)}%</td>
       <td class="right">${fmtMoney0(c.revenue)}</td>
       <td class="right">${roas.toFixed(2)}×</td>
       <td class="right">${fmtNum(c.orders)}</td>
     `;
-    rows.appendChild(tr);
+    tbody.appendChild(tr);
   });
 
-  // Gesamtzeile (immer ALLE Kampagnen, wie oben in den KPIs)
-  const grand = calcTotals(allCampaigns);
-  const grandRoas = grand.ad ? grand.revenue / grand.ad : 0;
-  const grandDelivered = grand.booking ? grand.ad / grand.booking : 0;
-  const trow = document.getElementById('campaignGrandRow');
-  trow.innerHTML = `
-    <td>Gesamt (Alle)</td>
-    <td>—</td>
-    <td class="right">${fmtMoney0(grand.booking)}</td>
-    <td class="right">${fmtMoney0(grand.ad)}</td>
-    <td class="right">${(grandDelivered*100).toFixed(0)}%</td>
-    <td class="right">${fmtMoney0(grand.revenue)}</td>
-    <td class="right">${grandRoas.toFixed(2)}×</td>
-    <td class="right">${fmtNum(Math.round(grand.orders))}</td>
+  // Fußzeilen: Summe(Filter) & Gesamt(Alle)
+  const sumF = totals(list);
+  const sumA = totals(allList);
+  document.getElementById('campaignFilterRow').innerHTML = `
+    <td>Summe (Filter)</td><td>—</td><td>—</td><td>—</td>
+    <td class="right">${fmtNum(Math.round(sumF.impressions))}</td>
+    <td class="right">${fmtNum(Math.round(sumF.clicks))}</td>
+    <td class="right">${fmtPct1(sumF.ctr)}</td>
+    <td class="right">${fmtMoney0(sumF.ad)}</td>
+    <td class="right">${fmtMoney0(sumF.revenue)}</td>
+    <td class="right">${sumF.roas.toFixed(2)}×</td>
+    <td class="right">${fmtNum(Math.round(sumF.orders))}</td>
+  `;
+  document.getElementById('campaignGrandRow').innerHTML = `
+    <td>Gesamt (Alle)</td><td>—</td><td>—</td><td>—</td>
+    <td class="right">${fmtNum(Math.round(sumA.impressions))}</td>
+    <td class="right">${fmtNum(Math.round(sumA.clicks))}</td>
+    <td class="right">${fmtPct1(sumA.ctr)}</td>
+    <td class="right">${fmtMoney0(sumA.ad)}</td>
+    <td class="right">${fmtMoney0(sumA.revenue)}</td>
+    <td class="right">${sumA.roas.toFixed(2)}×</td>
+    <td class="right">${fmtNum(Math.round(sumA.orders))}</td>
   `;
 }
 
 /* ========= Re-Rank ========= */
-function renderRerank(rerank){
-  const totals = rerank.reduce((a,r)=>({
-    ad: a.ad + r.ad,
-    clicks: a.clicks + (r.ecpc>0 ? (r.ad / r.ecpc) : 0),
-    revenue: a.revenue + (r.roas * r.ad)
-  }), {ad:0, clicks:0, revenue:0});
-
-  const ecpc = totals.clicks ? (totals.ad / totals.clicks) : 0;
-  const roas = totals.ad ? (totals.revenue / totals.ad) : 0;
-
-  const kpis = document.getElementById('rerank-kpis');
-  kpis.innerHTML = '';
-  [
-    { label:'Ad Spend', value: fmtMoney0(totals.ad) },
-    { label:'Klicks',   value: fmtNum(Math.round(totals.clicks)) },
-    { label:'eCPC',     value: fmtMoney1(ecpc) },
-    { label:'Revenue',  value: fmtMoney0(totals.revenue) },
-    { label:'ROAS',     value: roas.toFixed(2) + '×' }
-  ].forEach(k => {
-    const el = document.createElement('div');
-    el.className = 'kpi';
-    el.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
-    kpis.appendChild(el);
-  });
-
-  const rows = document.querySelector('#rerankTable tbody');
-  rows.innerHTML = '';
-  const sorted = [...rerank].map(r => ({
+function renderRerank(list){
+  const tbody = document.querySelector('#rerankTable tbody');
+  tbody.innerHTML = '';
+  const rows = [...list].map(r => ({
     ...r,
-    clicks: (r.ecpc>0 ? (r.ad / r.ecpc) : 0),
+    clicks: r.ecpc>0 ? (r.ad / r.ecpc) : 0,
     revenue: r.roas * r.ad
   })).sort((a,b)=> b.revenue - a.revenue);
 
-  sorted.forEach(r => {
+  rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${r.sku} — ${r.item}</td>
       <td class="right">${fmtMoney0(r.ad)}</td>
       <td class="right">${fmtNum(Math.round(r.clicks))}</td>
-      <td class="right">${fmtMoney1(r.ecpc)}</td>
+      <td class="right">${fmtMoney2(r.ecpc)}</td>
       <td class="right">${fmtMoney0(r.revenue)}</td>
-      <td class="right">${(r.roas).toFixed(2)}×</td>
+      <td class="right">${r.roas.toFixed(2)}×</td>
     `;
-    rows.appendChild(tr);
+    tbody.appendChild(tr);
   });
+}
+
+/* ========= Interaktion ========= */
+function bindChips(){
+  const bar = document.getElementById('filterChips');
+  bar.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    bar.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    STATE.filter = chip.dataset.filter;
+    renderAll();
+  });
+}
+
+/* ========= Render All ========= */
+let trendChartOnce;
+function renderAll(){
+  const list25 = applyFilter(ALL_2025, STATE.filter);
+  const list24 = applyFilter(ALL_2024, STATE.filter);
+  const t25 = totals(list25);
+  const t24 = totals(list24);
+
+  renderKPIs(t25, t24);
+  renderTrend(list25);
+  renderCampaignTable(list25, ALL_2025);
+  if (!trendChartOnce) trendChartOnce = true;
 }
 
 /* ========= Boot ========= */
 document.addEventListener('DOMContentLoaded', () => {
   fitStage();
-
-  const campaigns = data.campaigns.map(c => ({ ...c, roas: (c.ad ? c.revenue / c.ad : 0) }));
-  const totals = calcTotals(campaigns);
-  const monthAgg = aggregateMonthly(campaigns);
-
-  renderKPIs(totals);
-  renderTrend(monthAgg);
-  initCampaignDropdown(campaigns);
-  renderCampaignTable(campaigns);
-  renderRerank(data.rerank);
+  bindChips();
+  renderRerank(D.rerank);
+  renderAll();
 });
