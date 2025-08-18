@@ -1,233 +1,263 @@
-// script.js
-(function(){
-  // -------- Utils --------
-  const fmt = new Intl.NumberFormat('de-DE');
-  const fmoney = v => fmt.format(Math.round(v)) + " €";
-  const fnum   = v => fmt.format(Math.round(v));
-  const fperc  = v => (v*100).toFixed(1) + "%";
-  const rndChange = () => (Math.random()*0.2 - 0.1); // ±10%
-  const changeHTML = c => {
-    const arrow = c >= 0 ? '▲' : '▼';
-    const color = c >= 0 ? '#16a34a' : '#dc2626';
-    return `<div style="font-size:.8rem;color:${color};font-weight:600">${arrow} ${(c*100).toFixed(1)}%</div>`;
-  };
+/* ========= Utils ========= */
+const fmtMoney0 = n => n.toLocaleString('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 });
+const fmtMoney1 = n => n.toLocaleString('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:1 });
+const fmtNum = n => n.toLocaleString('de-DE');
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-  const byFilter = f => {
-    if(!f || f==="all") return campaigns;
-    if(f==="Onsite"||f==="Offsite") return campaigns.filter(c=>c.type===f);
-    if(f==="CPM"||f==="CPC") return campaigns.filter(c=>c.buy===f);
-    return campaigns;
-  };
+/* ========= Bühne skalieren (Fixed Base) ========= */
+const BASE = { w:1920, h:1080 };
+function fitStage() {
+  const stage = document.getElementById('stage');
+  const s = Math.min(window.innerWidth / BASE.w, window.innerHeight / BASE.h);
+  stage.style.transform = `scale(${s})`;
+  const x = (window.innerWidth - BASE.w * s) / 2;
+  const y = (window.innerHeight - BASE.h * s) / 2;
+  stage.style.left = `${x}px`;
+  stage.style.top  = `${y}px`;
+}
+window.addEventListener('resize', fitStage);
 
-  const calcTotals = rows => {
-    const t = rows.reduce((a,r)=>({
-      ad:a.ad+(r.ad||0), imps:a.imps+(r.imps||0), clicks:a.clicks+(r.clicks||0),
-      sales:a.sales+(r.sales||0), revenue:a.revenue+(r.revenue||0)
-    }),{ad:0,imps:0,clicks:0,sales:0,revenue:0});
-    return {
-      ...t,
-      ctr: t.imps ? t.clicks/t.imps : 0,
-      cpm: t.imps ? (t.ad/(t.imps/1000)) : 0,
-      cpc: t.clicks ? (t.ad/t.clicks) : 0,
-      roas: t.ad ? (t.revenue/t.ad) : 0
-    };
-  };
+/* ========= Datenzugriff ========= */
+const data = window.DASHBOARD_DATA || { campaigns: [], rerank: [] };
 
-  function monthlyAggregates(filter){
-    const base = months.map(m=>({m, ad:0, imps:0, clicks:0, sales:0, revenue:0}));
-    const list = byFilter(filter);
-    list.forEach(c=>{
-      const s=new Date(c.start), e=new Date(c.end), idx=[];
-      months.forEach((_,i)=>{
-        const d1=new Date(`2025-${String(i+1).padStart(2,'0')}-01`);
-        const d2=new Date(`2025-${String(i+1).padStart(2,'0')}-28`);
-        if(d2>=s && d1<=e) idx.push(i);
-      });
-      const n=Math.max(1,idx.length);
-      idx.forEach(i=>{
-        base[i].ad+=(c.ad||0)/n;
-        base[i].imps+=(c.imps||0)/n;
-        base[i].clicks+=(c.clicks||0)/n;
-        base[i].sales+=(c.sales||0)/n;
-        base[i].revenue+=(c.revenue||0)/n;
-      });
+/* Months Jan..Aug 2025 Keys */
+const YEAR = 2025, LAST_MONTH = 8;
+const MONTH_KEYS = Array.from({length: LAST_MONTH}, (_,i)=>`${YEAR}-${String(i+1).padStart(2,'0')}`);
+
+function parseISO(d){ return new Date(d + 'T00:00:00'); }
+function monthKey(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; }
+
+/* Verteile Kampagnenwerte gleichmäßig auf überlappte Monate Jan..Aug 2025 */
+function aggregateMonthly(campaigns){
+  const agg = Object.fromEntries(MONTH_KEYS.map(m => [m, { ad:0, revenue:0, orders:0 }]));
+  campaigns.forEach(c => {
+    const start = parseISO(c.start);
+    const end   = parseISO(c.end);
+    const rangeMonths = [];
+    let cur = new Date(start);
+    cur.setDate(1);
+    while (cur <= end) {
+      const mk = monthKey(cur);
+      if (cur.getFullYear() === YEAR && cur.getMonth()+1 <= LAST_MONTH) {
+        rangeMonths.push(mk);
+      }
+      // next month
+      cur.setMonth(cur.getMonth()+1);
+      cur.setDate(1);
+    }
+    if (rangeMonths.length === 0) return;
+    const share = 1 / rangeMonths.length;
+    rangeMonths.forEach(mk => {
+      agg[mk].ad      += c.ad      * share;
+      agg[mk].revenue += c.revenue * share;
+      agg[mk].orders  += c.orders  * share;
     });
-    return base.map(r=>({...r, ctr:r.imps? r.clicks/r.imps : 0, roas:r.ad? r.revenue/r.ad : 0}));
-  }
+  });
+  return agg;
+}
 
-  // -------- SECTION 1: Performance --------
-  function renderTotals(filter){
-    const t = calcTotals(byFilter(filter));
-    const changes = {
-      ad:rndChange(), imps:rndChange(), clicks:rndChange(), ctr:rndChange(),
-      sales:rndChange(), revenue:rndChange(), roas:rndChange(), cpm:rndChange(), cpc:rndChange()
-    };
-    const tiles = [
-      ['Ad Spend Total', fmoney(t.ad), changes.ad],
-      ['Impressions Total', fnum(t.imps), changes.imps],
-      ['Klicks Total', fnum(t.clicks), changes.clicks],
-      ['CTR', fperc(t.ctr), changes.ctr],
-      ['Media Sales Total', fnum(t.sales), changes.sales],
-      ['Media Revenue Total', fmoney(t.revenue), changes.revenue],
-      ['ROAS', t.roas.toFixed(2), changes.roas],
-      ['CPM', t.cpm.toFixed(2)+' €', changes.cpm],
-      ['CPC', t.cpc.toFixed(2)+' €', changes.cpc]
-    ];
-    const wrap = document.getElementById('kpis-total');
-    wrap.innerHTML = tiles.map(([label,val,ch])=>
-      `<div class="kpi"><div class="label">${label}</div><div class="value">${val}${changeHTML(ch)}</div></div>`
-    ).join('');
+/* ========= Render: KPIs ========= */
+function renderKPIs(campaigns){
+  const totals = campaigns.reduce((a,c)=>({
+    ad: a.ad + c.ad,
+    revenue: a.revenue + c.revenue,
+    orders: a.orders + c.orders
+  }), {ad:0,revenue:0,orders:0});
+  const roas = totals.ad ? (totals.revenue / totals.ad) : 0;
 
-    // Badge unten zeigt hier einfach die Revenue-Änderung als Beispiel
-    const badge = document.getElementById('vs-last-year');
-    if (badge) badge.textContent = (changes.revenue>=0?'+':'') + (changes.revenue*100).toFixed(1) + '%';
-  }
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = '';
+  const items = [
+    { label:'Revenue', value: fmtMoney0(totals.revenue) },
+    { label:'Ad Spend', value: fmtMoney0(totals.ad) },
+    { label:'ROAS', value: (roas.toFixed(2) + '×') },
+    { label:'Orders', value: fmtNum(Math.round(totals.orders)) }
+  ];
+  items.forEach(k => {
+    const el = document.createElement('div');
+    el.className = 'kpi';
+    el.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
+    kpis.appendChild(el);
+  });
+}
 
-  let trendChart;
-  function renderTrend(filter){
-    const data = monthlyAggregates(filter);
-    const labels = data.map(r=>r.m);
-    const imps   = data.map(r=>Math.round(r.imps));
-    const clicks = data.map(r=>Math.round(r.clicks));
-    const ctx = document.getElementById('trendMonthly');
-    if(!ctx) return;
-    if(trendChart) trendChart.destroy();
-    trendChart = new Chart(ctx,{
-      type:'line',
-      data:{labels, datasets:[
-        {label:'Impressions', data:imps, yAxisID:'y'},
-        {label:'Klicks', data:clicks, yAxisID:'y1'}
-      ]},
-      options:{responsive:true, maintainAspectRatio:false,
-        scales:{ y:{type:'linear', position:'left', beginAtZero:true},
-                 y1:{type:'linear', position:'right', grid:{drawOnChartArea:false}, beginAtZero:true}},
-        plugins:{legend:{position:'bottom'}}}
-    });
-  }
+/* ========= Render: Trend Chart ========= */
+let trendChart;
+function renderTrendChart(monthAgg){
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  const labels = MONTH_KEYS.map(m => {
+    const [,mm] = m.split('-');
+    const mon = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'][Number(mm)-1];
+    return mon;
+  });
+  const ad = MONTH_KEYS.map(m => Math.round(monthAgg[m].ad));
+  const rev = MONTH_KEYS.map(m => Math.round(monthAgg[m].revenue));
 
-  function renderMonthlyTable(filter){
-    const tb = document.getElementById('tbody-months');
-    if(!tb) return;
-    const data = monthlyAggregates(filter);
-    tb.innerHTML='';
-    data.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${r.m}</td><td>${fmoney(r.ad)}</td><td>${fnum(r.imps)}</td><td>${fnum(r.clicks)}</td><td>${fperc(r.ctr)}</td><td>${fnum(r.sales)}</td><td>${fmoney(r.revenue)}</td><td>${r.roas.toFixed(2)}</td>`;
-      tb.appendChild(tr);
-    });
-  }
+  if (trendChart) trendChart.destroy();
 
-  // -------- SECTION 2 & 3: Campaigns --------
-  function renderCampaignsOverview(filter){
-    const list = byFilter(filter==='all'?null:filter);
-    const t = calcTotals(list);
-    const active = list.filter(c=> new Date(c.end) >= new Date()).length;
-    const ended = list.length - active;
-    const el = document.getElementById('kpis-campaigns');
-    if(!el) return;
-    const k = [
-      ['Anzahl Kampagnen 2025', list.length],
-      ['Aktive Kampagnen', active],
-      ['Beendete Kampagnen', ended],
-      ['Budget Total', list.reduce((a,c)=>a+c.booking,0).toLocaleString('de-DE')],
-      ['Ad Spend Total', fmoney(t.ad)],
-      ['% ausgeliefert', ((t.ad/(list.reduce((a,c)=>a+c.booking,0)||1))*100).toFixed(1)+'%']
-    ];
-    el.innerHTML = k.map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div></div>`).join('');
-  }
+  // Globale Schriftgrößen für TV
+  Chart.defaults.font.size = 24;
 
-  function renderCampaignTable(){
-    const tb=document.getElementById('tbody-campaigns');
-    if(!tb) return;
-    tb.innerHTML='';
-    campaigns.forEach(c=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${c.name}</td><td>${c.brand}</td><td>${c.placement}</td><td>${c.type} / ${c.buy}</td><td>${c.targeting}</td><td>${c.start}</td><td>${c.end}</td><td>${c.booking.toLocaleString('de-DE')}</td><td>${fmoney(c.ad)}</td><td>${c.imps.toLocaleString('de-DE')}</td><td>${c.clicks.toLocaleString('de-DE')}</td><td>${c.sales.toLocaleString('de-DE')}</td><td>${fmoney(c.revenue)}</td>`;
-      tb.appendChild(tr);
-    });
-  }
+  trendChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Revenue', data: rev },
+        { label: 'Ad Spend', data: ad }
+      ]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins: {
+        legend: { labels: { font:{ size:24 } } },
+        title:  { display:true, text:'Revenue vs. Ad Spend', font:{ size:40 } },
+        tooltip:{ enabled:true }
+      },
+      scales: {
+        x: { ticks: { font:{ size:24 } } },
+        y: {
+          ticks: {
+            font:{ size:24 },
+            callback: v => fmtMoney0(v)
+          },
+          beginAtZero:true
+        }
+      }
+    }
+  });
+}
 
-  // -------- SECTION 4: Re-Rank --------
-  function renderRerank(){
-    const el=document.getElementById('kpis-rerank');
-    const tb=document.getElementById('tbody-rerank');
-    if(!el || !tb) return;
-    const totals = rerank.reduce((a,r)=>({ad:a.ad+r.ad, sales:a.sales+r.sales, revenue:a.revenue+(r.roas*r.ad)}),{ad:0,sales:0,revenue:0});
-    const k = [
-      ['Budget Total','—'],
-      ['Ad Spend Total', fmoney(totals.ad)],
-      ['Klicks', (Math.round(totals.ad/0.2)).toLocaleString('de-DE')],
-      ['eCPC', (totals.ad/Math.max(1, Math.round(totals.ad/0.2))).toFixed(2)+' €'],
-      ['% ausgeliefert','—'],
-      ['Sales', totals.sales.toLocaleString('de-DE')],
-      ['Revenue', fmoney(totals.revenue)],
-      ['ROAS', (totals.revenue/Math.max(1,totals.ad)).toFixed(2)]
-    ];
-    el.innerHTML = k.map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div></div>`).join('');
-    tb.innerHTML='';
-    rerank.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${r.camp}</td><td>${r.product}</td><td>${fmoney(r.ad)}</td><td>${r.ecpc.toFixed(2)} €</td><td>${r.start}</td><td>${r.end}</td><td>${r.sales.toLocaleString('de-DE')}</td><td>${r.roas.toFixed(2)}</td>`;
-      tb.appendChild(tr);
-    });
-  }
+/* ========= Render: Campaign Performance (mit Dropdown) ========= */
+function initCampaignDropdown(campaigns){
+  const sel = document.getElementById('campaignSelect');
+  const names = [...new Set(campaigns.map(c => c.name))].sort();
+  sel.innerHTML = `<option value="__ALL__">Alle Kampagnen</option>` + names.map(n => `<option value="${encodeURIComponent(n)}">${n}</option>`).join('');
+  sel.addEventListener('change', () => renderCampaignTable(campaigns));
+}
 
-  // -------- SECTION 5: Item Sales --------
-  function renderSales(filter){
-    const el=document.getElementById('kpis-sales');
-    const tb=document.getElementById('tbody-products');
-    if(!el || !tb) return;
-    const list = itemSales.filter(i => !filter || filter==='all' ? true : i.channel===filter);
-    const totals = list.reduce((a,i)=>({sales:a.sales+i.sales,revenue:a.revenue+i.revenue}),{sales:0,revenue:0});
-    el.innerHTML = [
-      ['Media Sales Total', totals.sales.toLocaleString('de-DE')],
-      ['Media Revenue Total', fmoney(totals.revenue)]
-    ].map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div></div>`).join('');
-    tb.innerHTML='';
-    list.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${r.brand}</td><td>${r.product}</td><td>${r.campaign}</td><td>${r.placement}</td><td>${r.sales.toLocaleString('de-DE')}</td><td>${fmoney(r.revenue)}</td>`;
-      tb.appendChild(tr);
-    });
-  }
+function renderCampaignTable(campaigns){
+  const sel = document.getElementById('campaignSelect');
+  const val = sel.value;
+  const rows = document.querySelector('#campaignTable tbody');
+  rows.innerHTML = '';
 
-  // -------- Filters --------
-  function wireFilters(){
-    document.querySelectorAll('#filters-total .filter').forEach(el=>{
-      el.addEventListener('click',()=>{
-        document.querySelectorAll('#filters-total .filter').forEach(f=>f.classList.remove('active'));
-        el.classList.add('active');
-        const f = el.dataset.filter;
-        renderTotals(f); renderMonthlyTable(f); renderTrend(f);
-      });
-    });
-    document.querySelectorAll('#filters-campaigns .filter').forEach(el=>{
-      el.addEventListener('click',()=>{
-        document.querySelectorAll('#filters-campaigns .filter').forEach(f=>f.classList.remove('active'));
-        el.classList.add('active');
-        renderCampaignsOverview(el.dataset.filter);
-      });
-    });
-    document.querySelectorAll('#filters-sales .filter').forEach(el=>{
-      el.addEventListener('click',()=>{
-        document.querySelectorAll('#filters-sales .filter').forEach(f=>f.classList.remove('active'));
-        el.classList.add('active');
-        renderSales(el.dataset.filter);
-      });
-    });
-  }
+  const filtered = (val === '__ALL__')
+    ? campaigns
+    : campaigns.filter(c => c.name === decodeURIComponent(val));
 
-  // -------- Boot --------
-  function boot(){
-    if (typeof campaigns === 'undefined') { console.error('data.js nicht geladen'); return; }
-    renderTotals('all');
-    renderMonthlyTable('all');
-    renderTrend('all');
-    renderCampaignsOverview('all');
-    renderCampaignTable();
-    renderRerank();
-    renderSales('all');
-    wireFilters();
+  // Sortierung: Ad Spend absteigend
+  const list = [...filtered].sort((a,b)=> b.ad - a.ad);
+
+  list.forEach(c => {
+    const delivered = c.booking ? (c.ad / c.booking) : 0;
+    const roas = c.ad ? (c.revenue / c.ad) : 0;
+    const tr = document.createElement('tr');
+    const flight = `${c.start.slice(8,10)}.${c.start.slice(5,7)}.${c.start.slice(0,4)}–${c.end.slice(8,10)}.${c.end.slice(5,7)}.${c.end.slice(0,4)}`;
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>${flight}</td>
+      <td class="right">${fmtMoney0(c.booking)}</td>
+      <td class="right">${fmtMoney0(c.ad)}</td>
+      <td class="right">${(delivered*100).toFixed(0)}%</td>
+      <td class="right">${fmtMoney0(c.revenue)}</td>
+      <td class="right">${roas.toFixed(2)}×</td>
+      <td class="right">${fmtNum(c.orders)}</td>
+    `;
+    rows.appendChild(tr);
+  });
+
+  // Summenzeile (bei Filter: Summe des Filters)
+  if (list.length > 1) {
+    const tot = list.reduce((a,c)=>({
+      booking: a.booking + c.booking,
+      ad: a.ad + c.ad,
+      revenue: a.revenue + c.revenue,
+      orders: a.orders + c.orders
+    }), {booking:0, ad:0, revenue:0, orders:0});
+    const roas = tot.ad ? tot.revenue / tot.ad : 0;
+    const delivered = tot.booking ? tot.ad / tot.booking : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>Summe</strong></td>
+      <td>—</td>
+      <td class="right"><strong>${fmtMoney0(tot.booking)}</strong></td>
+      <td class="right"><strong>${fmtMoney0(tot.ad)}</strong></td>
+      <td class="right"><strong>${(delivered*100).toFixed(0)}%</strong></td>
+      <td class="right"><strong>${fmtMoney0(tot.revenue)}</strong></td>
+      <td class="right"><strong>${roas.toFixed(2)}×</strong></td>
+      <td class="right"><strong>${fmtNum(tot.orders)}</strong></td>
+    `;
+    rows.appendChild(tr);
   }
-  document.addEventListener('DOMContentLoaded', boot);
-})();
+}
+
+/* ========= Render: Re-Rank ========= */
+function renderRerank(rerank){
+  // Totals mit korrekter Klick-Berechnung pro Zeile
+  const totals = rerank.reduce((a,r)=>({
+    ad: a.ad + r.ad,
+    clicks: a.clicks + (r.ecpc > 0 ? (r.ad / r.ecpc) : 0),
+    revenue: a.revenue + (r.roas * r.ad)
+  }), {ad:0, clicks:0, revenue:0});
+
+  const ecpc = totals.clicks ? (totals.ad / totals.clicks) : 0;
+  const roas = totals.ad ? (totals.revenue / totals.ad) : 0;
+
+  // KPI-Block
+  const kpis = document.getElementById('rerank-kpis');
+  kpis.innerHTML = '';
+  [
+    { label:'Ad Spend', value: fmtMoney0(totals.ad) },
+    { label:'Klicks',   value: fmtNum(Math.round(totals.clicks)) },
+    { label:'eCPC',     value: fmtMoney1(ecpc) },
+    { label:'Revenue',  value: fmtMoney0(totals.revenue) },
+    { label:'ROAS',     value: roas.toFixed(2) + '×' }
+  ].forEach(k => {
+    const el = document.createElement('div');
+    el.className = 'kpi';
+    el.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div>`;
+    kpis.appendChild(el);
+  });
+
+  // Tabelle: Top-Items nach Revenue
+  const rows = document.querySelector('#rerankTable tbody');
+  rows.innerHTML = '';
+  const sorted = [...rerank].map(r => ({
+    ...r,
+    clicks: (r.ecpc>0 ? (r.ad / r.ecpc) : 0),
+    revenue: r.roas * r.ad
+  })).sort((a,b)=> b.revenue - a.revenue);
+
+  sorted.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.sku} — ${r.item}</td>
+      <td class="right">${fmtMoney0(r.ad)}</td>
+      <td class="right">${fmtNum(Math.round(r.clicks))}</td>
+      <td class="right">${fmtMoney1(r.ecpc)}</td>
+      <td class="right">${fmtMoney0(r.revenue)}</td>
+      <td class="right">${(r.roas).toFixed(2)}×</td>
+    `;
+    rows.appendChild(tr);
+  });
+}
+
+/* ========= Boot ========= */
+document.addEventListener('DOMContentLoaded', () => {
+  fitStage();
+
+  const campaigns = data.campaigns.map(c => ({
+    ...c,
+    // Falls roas fehlt/inkonsistent, robust berechnen
+    roas: (c.ad ? c.revenue / c.ad : 0)
+  }));
+
+  const monthAgg = aggregateMonthly(campaigns);
+  renderKPIs(campaigns);
+  renderTrendChart(monthAgg);
+  initCampaignDropdown(campaigns);
+  renderCampaignTable(campaigns);
+  renderRerank(data.rerank);
+});
