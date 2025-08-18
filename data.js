@@ -1,5 +1,3 @@
-// data.js — kompatibel (keine numeric separators)
-
 window.DASHBOARD_DATA = {
   campaigns_2025: [
     { name:"New Year Boost", site:"Offsite", model:"CPC", channel:"Search",
