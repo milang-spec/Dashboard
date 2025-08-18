@@ -94,21 +94,25 @@ function renderKPIs(curTotals, lyTotals){
 }
 
 /* ========= Trend-Chart ========= */
+/* ========= Trend-Chart ========= */
 let trendChart;
 function renderTrend(list){
-  // Aggregate pro Monat nach Flight-Overlap (gleichmäßige Verteilung)
+  // Aggregate pro Monat (gleichmäßig über Flight-Overlap verteilt)
   const monthTotals = Array.from({length:8}, ()=>({ad:0,revenue:0}));
   list.forEach(c => {
     const s = new Date(c.start + 'T00:00:00'), e = new Date(c.end + 'T00:00:00');
     const months = [];
     let cur = new Date(s); cur.setDate(1);
     while (cur <= e){
-      const m = cur.getMonth(); const y = cur.getFullYear();
-      if (y===2025 && m<=7) months.push(m);  // Jan..Aug index 0..7
+      const m = cur.getMonth(), y = cur.getFullYear();
+      if (y === 2025 && m <= 7) months.push(m);
       cur.setMonth(cur.getMonth()+1); cur.setDate(1);
     }
     const share = months.length ? 1/months.length : 0;
-    months.forEach(m => { monthTotals[m].ad += c.ad*share; monthTotals[m].revenue += c.revenue*share; });
+    months.forEach(m => {
+      monthTotals[m].ad      += c.ad * share;
+      monthTotals[m].revenue += c.revenue * share;
+    });
   });
 
   const ctx = document.getElementById('trendChart').getContext('2d');
@@ -118,18 +122,31 @@ function renderTrend(list){
   trendChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: MONTHS,
+      labels: ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'],
       datasets: [
-        { label: 'Ad Spend',      data: monthTotals.map(m=>m.ad) },
-        { label: 'Media Revenue', data: monthTotals.map(m=>m.revenue) }
+        {
+          label: 'Ad Spend',
+          data: monthTotals.map(m=>m.ad),
+          backgroundColor: 'rgba(255,199,177,0.85)',  // #FFC7B1 (Peach)
+          borderColor:     '#FFC7B1',
+          borderWidth: 1
+        },
+        {
+          label: 'Media Revenue',
+          data: monthTotals.map(m=>m.revenue),
+          backgroundColor: 'rgba(192,155,191,0.85)',  // #C09BBF (Mauve aus deinem 2. Screenshot)
+          borderColor:     '#C09BBF',
+          borderWidth: 1
+        }
       ]
     },
     options: {
       responsive:true,
       maintainAspectRatio:false,
+      layout: { padding: { top: 4, right: 8, bottom: 18, left: 8 } }, // extra Platz unten
       plugins:{
         legend:{ labels:{ font:{ size:18 } } },
-        title:{ display:false } // Header kommt aus der HTML (.chart-header)
+        title:{ display:false } // Überschrift kommt aus .chart-header
       },
       scales:{
         x:{ ticks:{ font:{ size:16 } } },
@@ -141,6 +158,7 @@ function renderTrend(list){
     }
   });
 }
+
 
 /* ========= Campaign Table ========= */
 function renderCampaignTable(list, allList){
