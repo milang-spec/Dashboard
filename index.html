@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>Campaign Dashboard</title>
+  <title>TV Dashboard (Fixed Scale)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="design.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,16 +25,67 @@
 
         <div class="kpi-body">
           <div class="kpi-grid" id="kpiGrid"></div>
+
           <div class="chart-section">
-  <div class="chart-header">Ad Spend vs. Media Revenue</div>
-  <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-</div>
+            <div class="chart-header">Ad Spend vs. Media Revenue</div>
+            <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+          </div>
         </div>
       </section>
 
       <!-- Campaign Performance -->
       <section id="panel-camp" class="card">
         <h2>Campaign Performance</h2>
+
+        <!-- NEU: Overview + Filter (visuell) -->
+        <div class="camp-overview">
+          <div class="overview-box">
+            <div class="overview-title">Campaigns Overview</div>
+
+            <div class="overview-stats">
+              <div class="tile">
+                <div class="tile-label">Anzahl Kampagnen 2025</div>
+                <div class="tile-value" id="ov-count-total">—</div>
+              </div>
+              <div class="tile">
+                <div class="tile-label">Anzahl aktive Kampagnen</div>
+                <div class="tile-value" id="ov-count-active">—</div>
+              </div>
+              <div class="tile">
+                <div class="tile-label">Anzahl beendete Kampagnen</div>
+                <div class="tile-value" id="ov-count-ended">—</div>
+              </div>
+            </div>
+
+            <div class="overview-kpis">
+              <div class="okpi">
+                <div class="okpi-label">Budget Total</div>
+                <div class="okpi-value" id="ov-booking">—</div>
+              </div>
+              <div class="okpi">
+                <div class="okpi-label">Ad Spend Total</div>
+                <div class="okpi-value" id="ov-ad">—</div>
+              </div>
+              <div class="okpi">
+                <div class="okpi-label">% ausgeliefert</div>
+                <div class="okpi-value" id="ov-delivered">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-box">
+            <div class="filter-title">FILTER</div>
+            <div class="filter-grid">
+              <div class="filter-tile">BRAND</div>
+              <div class="filter-tile">COUNTRY</div>
+              <div class="filter-tile">Kampagne</div>
+              <div class="filter-tile">DATE</div>
+              <div class="filter-tile">CREATIVE?</div>
+              <div class="filter-tile">…</div>
+            </div>
+          </div>
+        </div>
+
         <div class="table-wrap">
           <table id="campaignTable">
             <thead>
