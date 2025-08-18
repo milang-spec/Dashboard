@@ -173,3 +173,13 @@ tfoot td { padding: 10px; border-top: 2px solid var(--border-strong); background
 #panel-kpi { grid-area: kpi; }
 #panel-camp { grid-area: camp; }
 #panel-rerank { grid-area: rerank; }
+
+/* mehr vertikaler Abstand zwischen oberem und unterem Board-Row */
+.board { row-gap: calc(var(--gap) + 10px); }  /* erhöht nur die Zeilenlücke */
+
+/* minimaler Abstand NACH der Chart-Section im KPI-Panel */
+.chart-section { margin-bottom: 6px; }
+
+/* optional: etwas Innenabstand am unteren Rand der Karte */
+#panel-kpi { padding-bottom: 20px; }
+
