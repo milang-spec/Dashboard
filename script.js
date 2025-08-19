@@ -5,13 +5,13 @@ function fmtPct1(n){ return ((n||0)*100).toFixed(1)+'%'; }
 function fmtNum(n){ return (n||0).toLocaleString('de-DE'); }
 function safeDiv(a,b){ return b ? (a/b) : 0; }
 
-/* ========= Fehler-Overlay ========= */
+/* ========= Fehler-Overlay (sichtbar) ========= */
 window.addEventListener('error', function (e) {
   try{
-    const msg = (e && e.message) ? e.message : String(e);
-    const box = document.createElement('div');
+    var msg = (e && e.message) ? e.message : String(e);
+    var box = document.createElement('div');
     box.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px/1.4 monospace';
-    box.textContent = 'JS Error: ' + msg;
+    box.textContent = 'JS error: ' + msg;
     document.body.appendChild(box);
   }catch(_){}
 });
@@ -33,12 +33,14 @@ function applyLayoutConfig(){
   document.documentElement.style.setProperty('--gap', (cfg.gap||18)+'px');
   board.style.gap=(cfg.gap||18)+'px';
 
-  (cfg.order||[]).forEach(function(it){
-    var el=document.getElementById(it.id); if(!el) return;
+  var ord = cfg.order || [];
+  for (var i=0;i<ord.length;i++){
+    var it = ord[i];
+    var el=document.getElementById(it.id); if(!el) continue;
     var span=Math.max(1, Math.min(it.span||1, cfg.columns||3));
     el.style.gridColumn='span '+span;
     board.appendChild(el);
-  });
+  }
 
   var stage=document.getElementById('stage');
   if((cfg.mode||'fixed-scale')==='scroll'){
@@ -79,41 +81,36 @@ function predicateFor(f){
 }
 function applyFilter(list,f){ return (list||[]).filter(predicateFor(f)); }
 
-/* ========= Totals ========= */
-// Hilfsfunktion: Summe aus eingebetteten Produktlisten
+/* ========= Totals: Sales/Revenue aus products ========= */
 function sumProducts(c, field){
   if (!c || !c.products) return 0;
-  return c.products.reduce(function(s,p){ return s + (p[field] || 0); }, 0);
+  var s=0; for (var i=0;i<c.products.length;i++){ s += (c.products[i][field] || 0); }
+  return s;
 }
-
-// Totals: bevorzugt Produktdaten (products.units/revenue), fallback auf c.orders/c.revenue
 function totals(list){
-  list = list || [];
-  var t = list.reduce(function(a,c){
-    var orders  = c.products ? sumProducts(c,'units')    : (c.orders   || 0);
-    var revenue = c.products ? sumProducts(c,'revenue')  : (c.revenue  || 0);
-    return {
-      impressions: a.impressions + (c.impressions || 0),
-      clicks:      a.clicks      + (c.clicks      || 0),
-      ad:          a.ad          + (c.ad          || 0),
-      revenue:     a.revenue     +  revenue,
-      orders:      a.orders      +  orders,
-      booking:     a.booking     + (c.booking     || 0)
-    };
-  }, {impressions:0, clicks:0, ad:0, revenue:0, orders:0, booking:0});
-
-  var ctr       = safeDiv(t.clicks, t.impressions);
-  var roas      = safeDiv(t.revenue, t.ad);
-  var cpm       = safeDiv(t.ad, t.impressions/1000);
-  var cpc       = safeDiv(t.ad, t.clicks);
-  var delivered = safeDiv(t.ad, t.booking);
-
-  return { impressions:t.impressions, clicks:t.clicks, ad:t.ad, revenue:t.revenue, orders:t.orders,
-           booking:t.booking, ctr:ctr, roas:roas, cpm:cpm, cpc:cpc, delivered:delivered };
+  list=list||[];
+  var acc={impressions:0,clicks:0,ad:0,revenue:0,orders:0,booking:0};
+  for (var i=0;i<list.length;i++){
+    var c=list[i];
+    var orders  = c.products ? sumProducts(c,'units')   : (c.orders   || 0);
+    var revenue = c.products ? sumProducts(c,'revenue') : (c.revenue  || 0);
+    acc.impressions += (c.impressions||0);
+    acc.clicks      += (c.clicks||0);
+    acc.ad          += (c.ad||0);
+    acc.revenue     +=  revenue;
+    acc.orders      +=  orders;
+    acc.booking     += (c.booking||0);
+  }
+  var ctr  = safeDiv(acc.clicks, acc.impressions);
+  var roas = safeDiv(acc.revenue, acc.ad);
+  var cpm  = safeDiv(acc.ad, acc.impressions/1000);
+  var cpc  = safeDiv(acc.ad, acc.clicks);
+  var delivered = safeDiv(acc.ad, acc.booking);
+  return { impressions:acc.impressions, clicks:acc.clicks, ad:acc.ad, revenue:acc.revenue,
+           orders:acc.orders, booking:acc.booking, ctr:ctr, roas:roas, cpm:cpm, cpc:cpc, delivered:delivered };
 }
 
-
-/* ========= KPIs ========= */
+/* ========= KPIs (Sales/Revenue klickbar) ========= */
 var KPI_DEF=[
   {key:'ad',label:'Ad Spend Total',fmt:fmtMoney0,better:'higher'},
   {key:'impressions',label:'Impressions Total',fmt:fmtNum,better:'higher'},
@@ -133,35 +130,31 @@ function deltaInfo(cur,ly,better){
   return {cls:good?'up':bad?'down':'neutral', txt:(diff*100).toFixed(1)+'%', arrow:good?'▲':'▼'};
 }
 function renderKPIs(curTotals, lyTotals){
-  var grid = document.getElementById('kpiGrid'); if (!grid) return;
-  grid.innerHTML = '';
-  KPI_DEF.forEach(function(def){
-    var cur = curTotals[def.key] || 0;
-    var ly  = lyTotals[def.key]  || 0;
-    var d   = deltaInfo(cur, ly, def.better);
-
-    var div = document.createElement('div');
-    var isSalesPair = (def.key === 'orders' || def.key === 'revenue');
-    div.className = 'kpi' + (isSalesPair ? ' sales-pair' : '');
+  var grid=document.getElementById('kpiGrid'); if(!grid) return;
+  grid.innerHTML='';
+  for (var i=0;i<KPI_DEF.length;i++){
+    var def=KPI_DEF[i];
+    var cur=curTotals[def.key]||0, ly=lyTotals[def.key]||0, d=deltaInfo(cur,ly,def.better);
+    var div=document.createElement('div');
+    var isSalesPair = (def.key==='orders'||def.key==='revenue');
+    div.className='kpi' + (isSalesPair ? ' sales-pair' : '');
     div.setAttribute('data-key', def.key);
-    div.innerHTML =
-      '<div class="label">'+def.label+'</div>' +
-      '<div class="value">'+def.fmt(cur)+'</div>' +
+    div.innerHTML='<div class="label">'+def.label+'</div>'+
+      '<div class="value">'+def.fmt(cur)+'</div>'+
       '<div class="delta '+d.cls+'"><span class="arrow">'+d.arrow+'</span><span>'+d.txt+
       '</span> <span style="opacity:.7">vs LY</span></div>';
-
-    // Klick-Navigation zu sales.html (Scope = aktueller Filter)
     if (isSalesPair){
-      div.style.cursor = 'pointer';
-      div.title = 'Details nach Produkt ansehen';
-      div.addEventListener('click', function(){
-        var url = 'sales.html?scope=' + encodeURIComponent(STATE.filter);
-        window.location.href = url;
-      });
+      div.style.cursor='pointer';
+      div.title='Details nach Produkt ansehen';
+      div.addEventListener('click', (function(){
+        return function(){
+          var url='sales.html?scope='+encodeURIComponent(STATE.filter);
+          window.location.href=url;
+        };
+      })());
     }
-
     grid.appendChild(div);
-  });
+  }
 }
 
 /* ========= Chart ========= */
@@ -170,55 +163,69 @@ function autoSizeChart(){
   var cfg=window.DASHBOARD_LAYOUT||{};
   var panel=document.getElementById('panel-kpi'); if(!panel) return;
   if(cfg.mode==='scroll'){ panel.style.setProperty('--chart-h','360px'); return; }
-  var used=(panel.querySelector('.header')?.offsetHeight||0)
-           +(panel.querySelector('#kpiGrid')?.offsetHeight||0)
-           +(panel.querySelector('.chart-header')?.offsetHeight||0)+44;
+  var header = panel.querySelector('.header');
+  var kpiGrid = panel.querySelector('#kpiGrid');
+  var chartHeader = panel.querySelector('.chart-header');
+  var used=(header?header.offsetHeight:0)+(kpiGrid?kpiGrid.offsetHeight:0)+(chartHeader?chartHeader.offsetHeight:0)+44;
   var free=Math.max(200, Math.min(480, panel.clientHeight-used));
   panel.style.setProperty('--chart-h', free+'px');
 }
 function renderTrend(list){
   if(!window.Chart) return;
   list=list||[];
-  var monthTotals=Array.from({length:8},()=>({ad:0,revenue:0}));
-  list.forEach(function(c){
+  var monthTotals=[]; for (var i=0;i<8;i++) monthTotals.push({ad:0,revenue:0});
+  for (var j=0;j<list.length;j++){
+    var c=list[j];
     var s=new Date(c.start+'T00:00:00'), e=new Date(c.end+'T00:00:00');
     var months=[], cur=new Date(s); cur.setDate(1);
-    while(cur<=e){ var m=cur.getMonth(), y=cur.getFullYear(); if(y===2025&&m<=7) months.push(m); cur.setMonth(cur.getMonth()+1); cur.setDate(1); }
+    while(cur<=e){
+      var m=cur.getMonth(), y=cur.getFullYear();
+      if(y===2025&&m<=7) months.push(m);
+      cur.setMonth(cur.getMonth()+1); cur.setDate(1);
+    }
     var share=months.length?1/months.length:0;
-    months.forEach(function(m){ monthTotals[m].ad+=c.ad*share; monthTotals[m].revenue+=c.revenue*share; });
-  });
+    for (var k=0;k<months.length;k++){
+      var mm=months[k]; monthTotals[mm].ad+=c.ad*share; monthTotals[mm].revenue+=c.revenue*share;
+    }
+  }
   var ctx=document.getElementById('trendChart').getContext('2d');
   if(trendChart&&trendChart.destroy) trendChart.destroy();
   Chart.defaults.font.size=18;
   trendChart=new Chart(ctx,{type:'bar',
     data:{labels:MONTHS,
       datasets:[
-        {label:'Ad Spend',data:monthTotals.map(m=>m.ad),backgroundColor:'rgba(255,199,177,0.85)',borderColor:'#FFC7B1',borderWidth:1},
-        {label:'Media Revenue',data:monthTotals.map(m=>m.revenue),backgroundColor:'rgba(192,155,191,0.85)',borderColor:'#C09BBF',borderWidth:1}
+        {label:'Ad Spend',data:monthTotals.map(function(m){return m.ad;}),backgroundColor:'rgba(255,199,177,0.85)',borderColor:'#FFC7B1',borderWidth:1},
+        {label:'Media Revenue',data:monthTotals.map(function(m){return m.revenue;}),backgroundColor:'rgba(192,155,191,0.85)',borderColor:'#C09BBF',borderWidth:1}
       ]},
     options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:4,right:8,bottom:18,left:8}},
       plugins:{legend:{labels:{font:{size:18}}},title:{display:false}},
-      scales:{x:{ticks:{font:{size:16}}},y:{beginAtZero:true,ticks:{font:{size:16},callback:v=>fmtMoney0(v)}}}}
-  );
+      scales:{x:{ticks:{font:{size:16}}},y:{beginAtZero:true,ticks:{font:{size:16},callback:function(v){return fmtMoney0(v);}}}}
+  });
 }
 
 /* ========= Campaign Overview/Table ========= */
 function renderCampaignOverview(all){
-  all=all||[]; var t=totals(all), now=new Date();
-  var active=all.filter(c=>new Date(c.start)<=now && now<=new Date(c.end)).length;
-  var ended =all.filter(c=>new Date(c.end)< now).length;
-  (document.getElementById('ov-count-total')||{}).textContent=fmtNum(all.length);
-  (document.getElementById('ov-count-active')||{}).textContent=fmtNum(active);
-  (document.getElementById('ov-count-ended')||{}).textContent =fmtNum(ended);
-  (document.getElementById('ov-booking')||{}).textContent  =fmtMoney0(t.booking);
-  (document.getElementById('ov-ad')||{}).textContent       =fmtMoney0(t.ad);
-  (document.getElementById('ov-delivered')||{}).textContent=(t.delivered*100).toFixed(0)+'%';
+  all=all||[]; var t=totals(all), now=new Date(), active=0, ended=0;
+  for (var i=0;i<all.length;i++){
+    var cs=all[i];
+    if(new Date(cs.start)<=now && now<=new Date(cs.end)) active++;
+    if(new Date(cs.end)< now) ended++;
+  }
+  var el;
+  el=document.getElementById('ov-count-total'); if(el) el.textContent=fmtNum(all.length);
+  el=document.getElementById('ov-count-active'); if(el) el.textContent=fmtNum(active);
+  el=document.getElementById('ov-count-ended'); if(el) el.textContent=fmtNum(ended);
+  el=document.getElementById('ov-booking'); if(el) el.textContent=fmtMoney0(t.booking);
+  el=document.getElementById('ov-ad'); if(el) el.textContent=fmtMoney0(t.ad);
+  el=document.getElementById('ov-delivered'); if(el) el.textContent=(t.delivered*100).toFixed(0)+'%';
 }
 function renderCampaignTable(list, allList){
   list=list||[]; allList=allList||[];
   var tbody=document.querySelector('#campaignTable tbody'); if(!tbody) return;
   tbody.innerHTML='';
-  list.slice().sort((a,b)=> (b.ad||0)-(a.ad||0)).forEach(function(c){
+  var sorted=list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
+  for (var i=0;i<sorted.length;i++){
+    var c=sorted[i];
     var roas=safeDiv(c.revenue,c.ad);
     var flight=c.start.slice(8,10)+'.'+c.start.slice(5,7)+'.'+c.start.slice(0,4)+'–'+c.end.slice(8,10)+'.'+c.end.slice(5,7)+'.'+c.end.slice(0,4);
     var tr=document.createElement('tr');
@@ -231,7 +238,7 @@ function renderCampaignTable(list, allList){
       '<td class="right">'+(roas||0).toFixed(2)+'×</td>'+
       '<td class="right">'+fmtNum(c.orders||0)+'</td>';
     tbody.appendChild(tr);
-  });
+  }
   var sumF=totals(list), sumA=totals(allList);
   var r1=document.getElementById('campaignFilterRow'), r2=document.getElementById('campaignGrandRow');
   if(r1) r1.innerHTML='<td>Summe (Filter)</td><td>—</td><td>—</td><td>—</td>'+
@@ -252,68 +259,74 @@ function renderCampaignTable(list, allList){
     '<td class="right">'+fmtNum(Math.round(sumA.orders))+'</td>';
 }
 
-/* ========= Re-Rank: Overview + Table ========= */
+/* ========= Re-Rank ========= */
 function renderRerankOverview(rerankList, salesDetails){
   rerankList=rerankList||[]; salesDetails=salesDetails||[];
-  // Totals
-  var totalAd=0, totalClicks=0, totalRevenue=0;
-  rerankList.forEach(function(r){
+  var totalAd=0,totalClicks=0,totalRevenue=0;
+  for (var i=0;i<rerankList.length;i++){
+    var r=rerankList[i];
     var clicks = r.ecpc>0 ? (r.ad/r.ecpc) : 0;
     totalAd += (r.ad||0);
     totalClicks += clicks;
     totalRevenue += (r.roas||0) * (r.ad||0);
-  });
+  }
   var ecpcWeighted = safeDiv(totalAd, totalClicks);
   var roasWeighted = safeDiv(totalRevenue, totalAd);
 
-  // Sales (Units) über Namen matchen (falls vorhanden)
-  var names = new Set(rerankList.map(function(r){ return String(r.item||'').toLowerCase(); }));
-  var salesUnits = salesDetails
-    .filter(function(p){ return names.has(String(p.name||'').toLowerCase()); })
-    .reduce(function(s,p){ return s + (p.units||0); }, 0);
+  // Sales Units via Namen matchen (optional)
+  var names = {};
+  for (var j=0;j<rerankList.length;j++){ names[String(rerankList[j].item||'').toLowerCase()] = true; }
+  var salesUnits=0;
+  for (var k=0;k<salesDetails.length;k++){
+    var p=salesDetails[k];
+    if (names[String(p.name||'').toLowerCase()]) salesUnits += (p.units||0);
+  }
 
-  // Budget/%delivered: keine Booking-Daten -> „—“
-  (document.getElementById('rr-budget')||{}).textContent = '—';
-  (document.getElementById('rr-delivered')||{}).textContent = '—';
-
-  (document.getElementById('rr-ad')||{}).textContent      = fmtMoney0(totalAd);
-  (document.getElementById('rr-clicks')||{}).textContent  = fmtNum(Math.round(totalClicks));
-  (document.getElementById('rr-ecpc')||{}).textContent    = fmtMoney2(ecpcWeighted);
-  (document.getElementById('rr-sales')||{}).textContent   = salesUnits ? fmtNum(salesUnits) : '—';
-  (document.getElementById('rr-revenue')||{}).textContent = fmtMoney0(totalRevenue);
-  (document.getElementById('rr-roas')||{}).textContent    = (roasWeighted||0).toFixed(2)+'×';
+  var el;
+  el=document.getElementById('rr-budget');   if(el) el.textContent='—';
+  el=document.getElementById('rr-delivered');if(el) el.textContent='—';
+  el=document.getElementById('rr-ad');       if(el) el.textContent=fmtMoney0(totalAd);
+  el=document.getElementById('rr-clicks');   if(el) el.textContent=fmtNum(Math.round(totalClicks));
+  el=document.getElementById('rr-ecpc');     if(el) el.textContent=fmtMoney2(ecpcWeighted);
+  el=document.getElementById('rr-sales');    if(el) el.textContent=salesUnits?fmtNum(salesUnits):'—';
+  el=document.getElementById('rr-revenue');  if(el) el.textContent=fmtMoney0(totalRevenue);
+  el=document.getElementById('rr-roas');     if(el) el.textContent=(roasWeighted||0).toFixed(2)+'×';
 }
 function renderRerank(list){
   list=list||[];
   var tbody=document.querySelector('#rerankTable tbody'); if(!tbody) return;
   tbody.innerHTML='';
-  var rows=list.map(function(r){
-    return {
-      sku:r.sku, item:r.item, ad:r.ad, ecpc:r.ecpc, roas:r.roas,
+  var rows=[];
+  for (var i=0;i<list.length;i++){
+    var r=list[i];
+    rows.push({ sku:r.sku, item:r.item, ad:r.ad, ecpc:r.ecpc, roas:r.roas,
       clicks: r.ecpc>0 ? (r.ad/r.ecpc) : 0,
-      revenue: (r.roas||0) * (r.ad||0)
-    };
-  }).sort(function(a,b){ return (b.revenue||0)-(a.revenue||0); });
-  rows.forEach(function(r){
+      revenue: (r.roas||0) * (r.ad||0) });
+  }
+  rows.sort(function(a,b){ return (b.revenue||0)-(a.revenue||0); });
+  for (var j=0;j<rows.length;j++){
+    var x=rows[j];
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+r.sku+' — '+r.item+'</td>'+
-      '<td class="right">'+fmtMoney0(r.ad)+'</td>'+
-      '<td class="right">'+fmtNum(Math.round(r.clicks))+'</td>'+
-      '<td class="right">'+fmtMoney2(r.ecpc)+'</td>'+
-      '<td class="right">'+fmtMoney0(r.revenue)+'</td>'+
-      '<td class="right">'+(r.roas||0).toFixed(2)+'×</td>';
+    tr.innerHTML='<td>'+x.sku+' — '+x.item+'</td>'+
+      '<td class="right">'+fmtMoney0(x.ad)+'</td>'+
+      '<td class="right">'+fmtNum(Math.round(x.clicks))+'</td>'+
+      '<td class="right">'+fmtMoney2(x.ecpc)+'</td>'+
+      '<td class="right">'+fmtMoney0(x.revenue)+'</td>'+
+      '<td class="right">'+(x.roas||0).toFixed(2)+'×</td>';
     tbody.appendChild(tr);
-  });
+  }
 }
 
 /* ========= Interaktion ========= */
 function bindChips(){
   var bar=document.getElementById('filterChips'); if(!bar) return;
   bar.addEventListener('click',function(e){
-    var chip=e.target.closest ? e.target.closest('.chip') : null; if(!chip) return;
-    bar.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
-    chip.classList.add('active');
-    STATE.filter=chip.getAttribute('data-filter');
+    var t=e.target; while(t && !/chip/.test(t.className)) t=t.parentNode;
+    if(!t) return;
+    var chips=bar.querySelectorAll('.chip');
+    for (var i=0;i<chips.length;i++) chips[i].classList.remove('active');
+    t.classList.add('active');
+    STATE.filter=t.getAttribute('data-filter');
     renderAll();
   });
 }
@@ -325,16 +338,14 @@ function renderAll(){
   var t25=totals(list25), t24=totals(list24);
 
   renderKPIs(t25,t24);
-  renderSalesCTA();
   autoSizeChart();
   renderTrend(list25);
   renderCampaignOverview(ALL_2025);
   renderCampaignTable(list25,ALL_2025);
-
-  // Re-Rank
   renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]);
   renderRerank((D||{}).rerank||[]);
-   // NEU: signalisiert dem Health-Check, dass das Rendering durchgelaufen ist
+
+  // Health-Flag für Index-Health-Check
   window.__appRendered = true;
 }
 
