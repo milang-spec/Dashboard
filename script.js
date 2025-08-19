@@ -5,12 +5,25 @@ function fmtPct1(n){ return ((n||0)*100).toFixed(1)+'%'; }
 function fmtNum(n){ return (n||0).toLocaleString('de-DE'); }
 function safeDiv(a,b){ return b ? (a/b) : 0; }
 
-/* ========= Fehler-Overlay (sichtbar) ========= */
+/* ========= Sichtbares Fehler-Overlay + Guards ========= */
+function __report(where, err){
+  try{
+    var msg = (err && err.message) ? err.message : String(err);
+    console.error('[Dashboard]', where, err);
+    var d=document.createElement('div');
+    d.style='position:fixed;left:8px;bottom:120px;z-index:99999;background:#520;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+    d.textContent='Fehler in '+where+': '+msg;
+    document.body.appendChild(d);
+  }catch(_){}
+}
+function __guard(where, fn){
+  try { return fn(); } catch(e){ __report(where, e); throw e; }
+}
 window.addEventListener('error', function (e) {
   try{
     var msg = (e && e.message) ? e.message : String(e);
     var box = document.createElement('div');
-    box.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px/1.4 monospace';
+    box.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
     box.textContent = 'JS error: ' + msg;
     document.body.appendChild(box);
   }catch(_){}
@@ -273,7 +286,6 @@ function renderRerankOverview(rerankList, salesDetails){
   var ecpcWeighted = safeDiv(totalAd, totalClicks);
   var roasWeighted = safeDiv(totalRevenue, totalAd);
 
-  // Sales Units via Namen matchen (optional)
   var names = {};
   for (var j=0;j<rerankList.length;j++){ names[String(rerankList[j].item||'').toLowerCase()] = true; }
   var salesUnits=0;
@@ -321,7 +333,7 @@ function renderRerank(list){
 function bindChips(){
   var bar=document.getElementById('filterChips'); if(!bar) return;
   bar.addEventListener('click',function(e){
-    var t=e.target; while(t && !/chip/.test(t.className)) t=t.parentNode;
+    var t=e.target; while(t && (!t.className || t.className.indexOf('chip')===-1)) t=t.parentNode;
     if(!t) return;
     var chips=bar.querySelectorAll('.chip');
     for (var i=0;i<chips.length;i++) chips[i].classList.remove('active');
@@ -333,19 +345,20 @@ function bindChips(){
 
 /* ========= Render All ========= */
 function renderAll(){
-  var list25=applyFilter(ALL_2025,STATE.filter);
-  var list24=applyFilter(ALL_2024,STATE.filter);
-  var t25=totals(list25), t24=totals(list24);
+  var list25 = __guard('filter 2025', function(){ return applyFilter(ALL_2025, STATE.filter); });
+  var list24 = __guard('filter 2024', function(){ return applyFilter(ALL_2024, STATE.filter); });
+  var t25    = __guard('totals 2025', function(){ return totals(list25); });
+  var t24    = __guard('totals 2024', function(){ return totals(list24); });
 
-  renderKPIs(t25,t24);
-  autoSizeChart();
-  renderTrend(list25);
-  renderCampaignOverview(ALL_2025);
-  renderCampaignTable(list25,ALL_2025);
-  renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]);
-  renderRerank((D||{}).rerank||[]);
+  __guard('renderKPIs',         function(){ renderKPIs(t25, t24); });
+  __guard('autoSizeChart',      function(){ autoSizeChart(); });
+  __guard('renderTrend',        function(){ renderTrend(list25); });
+  __guard('overview campaigns', function(){ renderCampaignOverview(ALL_2025); });
+  __guard('table campaigns',    function(){ renderCampaignTable(list25, ALL_2025); });
+  __guard('rerank overview',    function(){ renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]); });
+  __guard('rerank table',       function(){ renderRerank((D||{}).rerank||[]); });
 
-  // Health-Flag für Index-Health-Check
+  // Health-Flag: Render abgeschlossen
   window.__appRendered = true;
 }
 
@@ -355,7 +368,9 @@ window.addEventListener('resize',function(){
   if(cfg.mode!=='scroll'){ fitStageFixed(); autoSizeChart(); if(window.trendChart && trendChart.resize) trendChart.resize(); }
 });
 document.addEventListener('DOMContentLoaded',function(){
-  applyLayoutConfig();
-  bindChips();
-  renderAll();
+  try{
+    applyLayoutConfig();
+    bindChips();
+    renderAll();
+  }catch(e){ __report('BOOT', e); }
 });
