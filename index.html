@@ -5,14 +5,9 @@
   <title>TV Dashboard (Configurable Layout)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="design.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!--
-    WICHTIG:
-    - Scroll/Fix & Grid-Anordnung kommen aus layout.js
-    - Reihenfolge/Spaltenbreiten der Panels werden dynamisch angewendet
-  -->
+  <!-- Layout (scroll vs fixed) & Grid kommen aus layout.js -->
   <div id="stage">
     <div class="board" id="board">
       <!-- KPIs + Filter + Trend -->
@@ -31,6 +26,9 @@
         <div class="kpi-body">
           <div class="kpi-grid" id="kpiGrid"></div>
 
+          <!-- CTA wird per JS direkt UNTER dem KPI-Grid eingefügt -->
+          <!-- <div id="salesCta" class="sales-cta"></div> -->
+
           <div class="chart-section">
             <div class="chart-header">Ad Spend vs. Media Revenue</div>
             <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
@@ -42,7 +40,7 @@
       <section id="panel-camp" class="card">
         <h2>Campaign Performance</h2>
 
-        <!-- Campaigns Overview + Fake-Filter (rein visuell) -->
+        <!-- Campaigns Overview + Fake-Filter (nur visuell) -->
         <div class="camp-overview">
           <div class="overview-box">
             <div class="overview-title">Campaigns Overview</div>
@@ -123,10 +121,10 @@
     </div>
   </div>
 
-  <!-- Konfiguration zuerst laden -->
-  <script src="layout.js"></script>
-  <!-- Daten & Logik -->
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+  <!-- SCRIPTS: Reihenfolge ist wichtig -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="layout.js?v=6"></script>
+  <script src="data.js?v=6"></script>   <!-- MUSS vor script.js kommen -->
+  <script src="script.js?v=6"></script>
 </body>
 </html>
