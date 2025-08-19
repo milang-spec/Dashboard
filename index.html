@@ -164,21 +164,26 @@
   <script src="script.js?v=11"></script>
 
   <!-- kleines Health-Banner -->
-  <script>
-    (function () {
-      function banner(msg, y){ 
-        var d=document.createElement('div');
-        d.style='position:fixed;left:8px;bottom:'+(y||8)+'px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
-        d.textContent=msg; document.body.appendChild(d);
-      }
-      window.addEventListener('error', function (e) { banner('JS error: ' + (e && e.message ? e.message : String(e)), 36); });
-      setTimeout(function(){
-        if(!window.DASHBOARD_DATA) banner('data.js wurde nicht geladen (oder Syntaxfehler).', 64);
-        else if(!window.__appRendered) banner('script.js geladen, aber Render nicht abgeschlossen.', 92);
-      }, 600);
-    })();
-  </script>
-
+ <script>
+  (function () {
+    function banner(msg, y){
+      var d=document.createElement('div');
+      d.style='position:fixed;left:8px;bottom:'+(y||8)+'px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+      d.textContent=msg; document.body.appendChild(d);
+    }
+    window.addEventListener('error', function (e) {
+      banner(
+        'JS error in ' + (e.filename || 'unknown') +
+        ':' + (e.lineno || '?') + ' — ' + (e.message || e.toString()),
+        36
+      );
+    });
+    setTimeout(function(){
+      if(!window.DASHBOARD_DATA) banner('HINWEIS: data.js nicht geladen/fehlerhaft.', 64);
+      else if(!window.__appRendered) banner('script.js geladen, aber Render nicht abgeschlossen.', 92);
+    }, 600);
+  })();
+</script>
 
 </body>
 </html>
