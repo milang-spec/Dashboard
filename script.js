@@ -183,38 +183,90 @@ function autoSizeChart(){
   var free=Math.max(200, Math.min(480, panel.clientHeight-used));
   panel.style.setProperty('--chart-h', free+'px');
 }
+// === REPLACE: renderTrend ===
+var trendChart = null;
 function renderTrend(list){
-  if(!window.Chart) return;
-  list=list||[];
-  var monthTotals=[]; for (var i=0;i<8;i++) monthTotals.push({ad:0,revenue:0});
-  for (var j=0;j<list.length;j++){
-    var c=list[j];
-    var s=new Date(c.start+'T00:00:00'), e=new Date(c.end+'T00:00:00');
-    var months=[], cur=new Date(s); cur.setDate(1);
-    while(cur<=e){
-      var m=cur.getMonth(), y=cur.getFullYear();
-      if(y===2025&&m<=7) months.push(m);
-      cur.setMonth(cur.getMonth()+1); cur.setDate(1);
+  if (!window.Chart) return;              // Chart.js nicht geladen? => still
+  list = list || [];
+
+  // 8 Monate (Jan–Aug)
+  var labels = MONTHS.slice(0, 8);
+  var ad  = [0,0,0,0,0,0,0,0];
+  var rev = [0,0,0,0,0,0,0,0];
+
+  // Kampagnen monatsweise verteilen (gleichmäßig über die beteiligten Monate)
+  for (var i=0; i<list.length; i++){
+    var c = list[i];
+    var s = new Date(c.start + 'T00:00:00');
+    var e = new Date(c.end   + 'T00:00:00');
+
+    var months = [];
+    var cur = new Date(s); cur.setDate(1);
+    while (cur <= e){
+      var m = cur.getMonth();
+      var y = cur.getFullYear();
+      if (y === 2025 && m <= 7) months.push(m);
+      cur.setMonth(cur.getMonth() + 1);
+      cur.setDate(1);
     }
-    var share=months.length?1/months.length:0;
-    for (var k=0;k<months.length;k++){
-      var mm=months[k]; monthTotals[mm].ad+=c.ad*share; monthTotals[mm].revenue+=c.revenue*share;
+
+    var share = months.length ? 1 / months.length : 0;
+    for (var j=0; j<months.length; j++){
+      var idx = months[j];
+      ad[idx]  += (c.ad || 0)       * share;
+      rev[idx] += (c.revenue || 0)  * share;
     }
   }
-  var ctx=document.getElementById('trendChart').getContext('2d');
-  if(trendChart&&trendChart.destroy) trendChart.destroy();
-  Chart.defaults.font.size=18;
-  trendChart=new Chart(ctx,{type:'bar',
-    data:{labels:MONTHS,
-      datasets:[
-        {label:'Ad Spend',data:monthTotals.map(function(m){return m.ad;}),backgroundColor:'rgba(255,199,177,0.85)',borderColor:'#FFC7B1',borderWidth:1},
-        {label:'Media Revenue',data:monthTotals.map(function(m){return m.revenue;}),backgroundColor:'rgba(192,155,191,0.85)',borderColor:'#C09BBF',borderWidth:1}
-      ]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:4,right:8,bottom:18,left:8}},
-      plugins:{legend:{labels:{font:{size:18}}},title:{display:false}},
-      scales:{x:{ticks:{font:{size:16}}},y:{beginAtZero:true,ticks:{font:{size:16},callback:function(v){return fmtMoney0(v);}}}}
+
+  var canvas = document.getElementById('trendChart');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  if (trendChart && trendChart.destroy) trendChart.destroy();
+
+  trendChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Ad Spend',
+          data: ad,
+          backgroundColor: 'rgba(255,199,177,0.85)', // Peach #FFC7B1
+          borderColor:     '#FFC7B1',
+          borderWidth: 1
+        },
+        {
+          label: 'Media Revenue',
+          data: rev,
+          backgroundColor: 'rgba(192,155,191,0.85)', // Mauve #C09BBF
+          borderColor:     '#C09BBF',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 18 } } },
+        title:  { display: false }
+      },
+      layout: { padding: { top: 4, right: 8, bottom: 18, left: 8 } },
+      scales: {
+        x: { ticks: { font: { size: 16 } } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { size: 16 },
+            callback: function(v){ return fmtMoney0(v); }
+          }
+        }
+      }
+    }
   });
 }
+
 
 /* ========= Campaign Overview/Table ========= */
 function renderCampaignOverview(all){
