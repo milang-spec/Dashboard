@@ -156,27 +156,29 @@
     })();
   </script>
 
+  <!-- SCRIPTS: minimal & in richtiger Reihenfolge -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="layout.js?v=10"></script>
-  <script src="data.js?v=10"></script>   <!-- MUSS vor script.js kommen -->
-  <script src="script.js?v=10"></script>
+  <!-- layout.js vorübergehend deaktiviert -->
+  <!-- <script src="layout.js?v=11"></script> -->
+  <script src="data.js?v=11"></script>   <!-- MUSS vor script.js kommen -->
+  <script src="script.js?v=11"></script>
 
+  <!-- kleines Health-Banner -->
   <script>
-    // Health-Check: zeigt dir an, welches Script fehlt / nicht lief
-    setTimeout(function () {
-      if (!window.DASHBOARD_DATA) {
-        var d = document.createElement('div');
-        d.style = 'position:fixed;bottom:36px;left:8px;z-index:99999;background:#843;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
-        d.textContent = 'data.js wurde nicht geladen (oder Syntaxfehler).';
-        document.body.appendChild(d);
-      } else if (!window.__appRendered) {
-        var d2 = document.createElement('div');
-        d2.style = 'position:fixed;bottom:36px;left:8px;z-index:99999;background:#864;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
-        d2.textContent = 'script.js geladen, aber Render nicht abgeschlossen.';
-        document.body.appendChild(d2);
+    (function () {
+      function banner(msg, y){ 
+        var d=document.createElement('div');
+        d.style='position:fixed;left:8px;bottom:'+(y||8)+'px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+        d.textContent=msg; document.body.appendChild(d);
       }
-    }, 600);
+      window.addEventListener('error', function (e) { banner('JS error: ' + (e && e.message ? e.message : String(e)), 36); });
+      setTimeout(function(){
+        if(!window.DASHBOARD_DATA) banner('data.js wurde nicht geladen (oder Syntaxfehler).', 64);
+        else if(!window.__appRendered) banner('script.js geladen, aber Render nicht abgeschlossen.', 92);
+      }, 600);
+    })();
   </script>
+
 
 </body>
 </html>
