@@ -139,10 +139,44 @@
     </div>
   </div>
 
-  <!-- Scripts in korrekter Reihenfolge -->
+  <!-- SCRIPTS: Reihenfolge ist wichtig -->
+  <script>
+    // Kleines Fehler-Banner, damit wir sehen, wenn etwas schiefgeht
+    (function () {
+      function banner(msg) {
+        var d = document.createElement('div');
+        d.style = 'position:fixed;bottom:8px;left:8px;z-index:99999;background:#300;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+        d.textContent = msg;
+        document.body.appendChild(d);
+      }
+      window.__appHealth = { started: Date.now() };
+      window.addEventListener('error', function (e) {
+        banner('JS error: ' + (e && e.message ? e.message : String(e)));
+      });
+    })();
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="layout.js?v=8"></script>
-  <script src="data.js?v=8"></script>
-  <script src="script.js?v=8"></script>
+  <script src="layout.js?v=10"></script>
+  <script src="data.js?v=10"></script>   <!-- MUSS vor script.js kommen -->
+  <script src="script.js?v=10"></script>
+
+  <script>
+    // Health-Check: zeigt dir an, welches Script fehlt / nicht lief
+    setTimeout(function () {
+      if (!window.DASHBOARD_DATA) {
+        var d = document.createElement('div');
+        d.style = 'position:fixed;bottom:36px;left:8px;z-index:99999;background:#843;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+        d.textContent = 'data.js wurde nicht geladen (oder Syntaxfehler).';
+        document.body.appendChild(d);
+      } else if (!window.__appRendered) {
+        var d2 = document.createElement('div');
+        d2.style = 'position:fixed;bottom:36px;left:8px;z-index:99999;background:#864;color:#fff;padding:6px 10px;border-radius:6px;font:12px monospace';
+        d2.textContent = 'script.js geladen, aber Render nicht abgeschlossen.';
+        document.body.appendChild(d2);
+      }
+    }, 600);
+  </script>
+
 </body>
 </html>
