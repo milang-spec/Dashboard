@@ -334,6 +334,8 @@ function renderAll(){
   // Re-Rank
   renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]);
   renderRerank((D||{}).rerank||[]);
+   // NEU: signalisiert dem Health-Check, dass das Rendering durchgelaufen ist
+  window.__appRendered = true;
 }
 
 /* ========= Boot ========= */
