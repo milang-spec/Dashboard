@@ -139,3 +139,27 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 #panel-camp .filters,
 #panel-camp .filter-panel { display:none !important; }
 
+/* 1) Campaign Performance: vertikal stapeln */
+#panel-camp .camp-stack{
+  display: grid;
+  grid-template-columns: 1fr;   /* immer eine Spalte */
+  gap: 16px;
+}
+#panel-camp .camp-overview,
+#panel-camp .camp-table{
+  width: 100%;
+  display: block;
+}
+
+/* 2) Sponsored-Block: nichts darf rechts überstehen */
+#panel-rerank{ overflow: hidden; }
+#panel-rerank .table-wrap{ overflow:auto; }          /* Scrollbar falls nötig */
+#panel-rerank table{ width: 100%; box-sizing:border-box; }
+
+/* 3) Einheitliche Header mit Chips */
+#panel-camp .header-inline,
+#panel-rerank .header-inline{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+
+
