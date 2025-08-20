@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>KPI Vergleich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="design.css" />
+</head>
+<body>
+  <div id="stage">
+    <div class="board" id="board" style="grid-template-columns: 1fr;">
+      <section class="card">
+        <div class="header" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <h2>KPI Vergleich – Ad Spend vs. Media Revenue</h2>
+          <a class="chip" href="index.html">Zurück zum Dashboard</a>
+        </div>
+
+        <div class="chart-header" style="background:var(--theme,#FFC7B1);color:#1b1b1b;font-weight:800">
+          Ad Spend vs. Media Revenue
+        </div>
+        <div class="chart-area" style="height:420px">
+          <canvas id="cmpChart"></canvas>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="data.js?v=1"></script>
+  <script>
+    (function(){
+      // Farben wie im Dashboard
+      var COLOR_SPEND   = 'rgba(255,199,177,0.85)';  // #FFC7B1
+      var COLOR_SPEND_B = '#FFC7B1';
+      var COLOR_REV     = 'rgba(192,155,191,0.85)';  // #C09BBF
+      var COLOR_REV_B   = '#C09BBF';
+
+      var MONTHS = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug'];
+
+      function getScope(){
+        var m = location.search.match(/[?&]scope=([^&]+)/);
+        return m ? decodeURIComponent(m[1]) : 'ALL';
+      }
+      function predicateFor(f){
+        switch(f){
+          case 'ONSITE': return function(c){return c.site==='Onsite';};
+          case 'OFFSITE':return function(c){return c.site==='Offsite';};
+          case 'CPM':    return function(c){return c.model==='CPM';};
+          case 'CPC':    return function(c){return c.model==='CPC';};
+          default:       return function(){return true;};
+        }
+      }
+      function filter(list, f){ return (list||[]).filter(predicateFor(f)); }
+
+      // Verteilung der Kampagnen (gleich wie im Dashboard)
+      function monthTotals(list){
+        var ad  = [0,0,0,0,0,0,0,0];
+        var rev = [0,0,0,0,0,0,0,0];
+        list = list || [];
+        for (var i=0;i<list.length;i++){
+          var c = list[i];
+          var s = new Date(c.start+'T00:00:00');
+          var e = new Date(c.end  +'T00:00:00');
+          var spans=[], cur=new Date(s); cur.setDate(1);
+          while(cur<=e){
+            var m=cur.getMonth(), y=cur.getFullYear();
+            if (y===2025 && m<=7) spans.push(m);
+            cur.setMonth(cur.getMonth()+1); cur.setDate(1);
+          }
+          var share = spans.length ? 1/spans.length : 0;
+          for (var j=0;j<spans.length;j++){
+            var idx = spans[j];
+            ad[idx]  += (c.ad||0)      * share;
+            // Revenue kommt aus Kampagne direkt oder (wie bei dir) aus products aggregiert
+            var crev = (c.products||[]).reduce(function(s,p){ return s + (p.revenue||0); }, (c.revenue||0));
+            rev[idx] += crev * share;
+          }
+        }
+        return {ad:ad, rev:rev};
+      }
+
+      var DATA = window.DASHBOARD_DATA || {campaigns_2025:[]};
+      var scope = getScope();
+      var list25 = filter(DATA.campaigns_2025, scope);
+      var mt = monthTotals(list25);
+
+      var ctx = document.getElementById('cmpChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: MONTHS,
+          datasets: [
+            { label:'Ad Spend',      data: mt.ad,  backgroundColor: COLOR_SPEND, borderColor: COLOR_SPEND_B, borderWidth: 1 },
+            { label:'Media Revenue', data: mt.rev, backgroundColor: COLOR_REV,   borderColor: COLOR_REV_B,   borderWidth: 1 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { font: { size: 18 } } },
+            title:  { display: false }
+          },
+          layout: { padding: { top: 4, right: 8, bottom: 18, left: 8 } },
+          scales: {
+            x: { ticks: { font: { size: 16 } } },
+            y: { beginAtZero:true, ticks:{
+                  font:{ size:16 },
+                  callback:function(v){ return v.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
+                } }
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
