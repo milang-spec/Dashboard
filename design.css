@@ -112,3 +112,16 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 .segment-en { background: #C09BBF; }  /* Engagement – Mauve */
 .segment-pe { background: #7BD8A4; }  /* Performance – Mint */
 
+/* Funnel-Widget breiter machen (über 2 Spalten) */
+.kpi.kpi-funnel { grid-column: span 2; }
+
+/* Labels im Funnel-Widget als Einzeiler mit Trennern */
+.kpi-funnel .segment-labels {
+  display: block;
+  text-align: left;
+  font-weight: 800;
+  color: var(--theme-fore, #ffe9e0);
+  opacity: .9;
+  letter-spacing: .2px;
+}
+.kpi-funnel .segment-labels .sep { margin: 0 8px; opacity: .65; }
