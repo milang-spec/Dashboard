@@ -110,7 +110,12 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 }
 .segment-aw { background: #FFC7B1; }  /* Awareness – Peach */
 .segment-en { background: #C09BBF; }  /* Engagement – Mauve */
-.segment-pe { background: #7BD8A4; }  /* Performance – Mint */
+/* Performance (Funnel Mix) – gelb */
+.segment-pe { 
+  background: #FFE15A !important;  /* die gewünschte Gelbnuance */
+  color: #111;                      /* gute Lesbarkeit auf Gelb */
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
 
 /* Funnel-Widget breiter machen (über 2 Spalten) */
 .kpi.kpi-funnel { grid-column: span 2; }
