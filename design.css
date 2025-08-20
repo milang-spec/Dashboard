@@ -125,3 +125,17 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   letter-spacing: .2px;
 }
 .kpi-funnel .segment-labels .sep { margin: 0 8px; opacity: .65; }
+
+/* Einheitlicher Header mit Chips – auch für Campaign Performance */
+#panel-camp .header-inline,
+#panel-rerank .header-inline {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+
+/* Chips im Campaign-Header sind nur Deko */
+#panel-camp .chipbar .chip { pointer-events:none; }
+
+/* Falls der alte Filter-Kasten noch im DOM ist: ausblenden (Sicherheitsnetz) */
+#panel-camp .filters,
+#panel-camp .filter-panel { display:none !important; }
+
