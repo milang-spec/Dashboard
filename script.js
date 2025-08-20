@@ -310,7 +310,7 @@ if (f) {
       '</div>' +
     '</div>';
   box.appendChild(c);
-}
+}}
 
 
 /* ========= Campaign Overview/Table ========= */
