@@ -62,18 +62,12 @@
 </section>
 
 
-         <!--  <div class="chart-section">
-            <div class="chart-header">Ad Spend vs. Media Revenue</div>
-            <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-          </div>
-        </div>
-      </section> -->
-
       <!-- Campaign Performance -->
-   <!-- panel-camp -->
+<!-- ====================== Campaign Performance ====================== -->
 <section class="card" id="panel-camp">
   <div class="header header-inline">
     <h2>Campaign Performance</h2>
+    <!-- statische Chips (nur Optik) -->
     <div class="chipbar" id="campChips">
       <span class="chip active">Alle</span>
       <span class="chip">Onsite</span>
@@ -83,52 +77,69 @@
     </div>
   </div>
 
-  <!-- ... Campaigns Overview usw. ... -->
-
-        <div class="camp-overview">
-          <div class="overview-box">
-            <div class="overview-title">Campaigns Overview</div>
-            <div class="overview-stats">
-              <div class="tile"><div class="tile-label">Anzahl Kampagnen 2025</div><div class="tile-value" id="ov-count-total">—</div></div>
-              <div class="tile"><div class="tile-label">Anzahl aktive Kampagnen</div><div class="tile-value" id="ov-count-active">—</div></div>
-              <div class="tile"><div class="tile-label">Anzahl beendete Kampagnen</div><div class="tile-value" id="ov-count-ended">—</div></div>
-            </div>
-            <div class="overview-kpis">
-              <div class="okpi"><div class="okpi-label">Budget Total</div><div class="okpi-value" id="ov-booking">—</div></div>
-              <div class="okpi"><div class="okpi-label">Ad Spend Total</div><div class="okpi-value" id="ov-ad">—</div></div>
-              <div class="okpi"><div class="okpi-label">% ausgeliefert</div><div class="okpi-value" id="ov-delivered">—</div></div>
-            </div>
-          </div>
-
-        <div class="table-wrap">
-          <table id="campaignTable">
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Site</th>
-                <th>Model</th>
-                <th>Flight</th>
-                <th class="right">Impressions</th>
-                <th class="right">Klicks</th>
-                <th class="right">CTR</th>
-                <th class="right">Ad Spend</th>
-                <th class="right">Revenue</th>
-                <th class="right">ROAS</th>
-                <th class="right">Orders</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-              <tr id="campaignFilterRow"><td>Summe (Filter)</td><td>—</td><td>—</td><td>—</td>
-                <td class="right">—</td><td class="right">—</td><td class="right">—</td>
-                <td class="right">—</td><td class="right">—</td><td class="right">—</td><td class="right">—</td></tr>
-              <tr id="campaignGrandRow"><td>Gesamt (Alle)</td><td>—</td><td>—</td><td>—</td>
-                <td class="right">—</td><td class="right">—</td><td class="right">—</td>
-                <td class="right">—</td><td class="right">—</td><td class="right">—</td><td class="right">—</td></tr>
-            </tfoot>
-          </table>
+  <!-- alles im Panel untereinander stapeln -->
+  <div class="camp-stack">
+    <!-- Campaigns Overview -->
+    <div class="camp-overview">
+      <div class="subheader">Campaigns Overview</div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="label">Anzahl Kampagnen 2025</div>
+          <div class="value" id="ov-count-total">—</div>
         </div>
-      </section>
+        <div class="kpi">
+          <div class="label">Anzahl aktive Kampagnen</div>
+          <div class="value" id="ov-count-active">—</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Anzahl beendete Kampagnen</div>
+          <div class="value" id="ov-count-ended">—</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Budget Total</div>
+          <div class="value" id="ov-booking">—</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Ad Spend Total</div>
+          <div class="value" id="ov-ad">—</div>
+        </div>
+        <div class="kpi">
+          <div class="label">% ausgeliefert</div>
+          <div class="value" id="ov-delivered">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaign-Tabelle -->
+    <div class="table-wrap camp-table">
+      <table id="campaignTable">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Site</th>
+            <th>Model</th>
+            <th>Flight</th>
+            <th class="right">Impressions</th>
+            <th class="right">Klicks</th>
+            <th class="right">CTR</th>
+            <th class="right">Ad Spend</th>
+            <th class="right">Revenue</th>
+            <th class="right">ROAS</th>
+            <th class="right">Orders</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr id="campaignFilterRow"></tr>
+          <tr id="campaignGrandRow"></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+          
+<!-- ==================== /Campaign Performance ====================== -->
+
 
       <!-- Re-Rank -->
 <section class="card" id="panel-rerank">
