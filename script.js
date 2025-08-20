@@ -288,32 +288,30 @@ function renderSOVandFunnel(){
     box.appendChild(k);
   }
 
-  // Funnel-Segmentbar
-  var f = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.funnel) ? window.DASHBOARD_DATA.funnel : null;
-  if (f) {
-    var aw = Math.max(0, Math.min(1, f.awareness||0));
-    var en = Math.max(0, Math.min(1, f.engagement||0));
-    var pe = Math.max(0, Math.min(1, f.performance||0));
-    var sum = aw+en+pe || 1;
-    aw/=sum; en/=sum; pe/=sum;
+// Funnel-Segmentbar
+var f = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.funnel) ? window.DASHBOARD_DATA.funnel : null;
+if (f) {
+  var aw = Math.max(0, Math.min(1, f.awareness||0));
+  var en = Math.max(0, Math.min(1, f.engagement||0));
+  var pe = Math.max(0, Math.min(1, f.performance||0));
+  var sum = aw+en+pe || 1;
+  aw/=sum; en/=sum; pe/=sum;
 
-    var c = document.createElement('div');
-    c.className = 'kpi';
-    c.innerHTML =
-      '<div class="label">Funnel Mix</div>' +
-      '<div class="segment">' +
-        '<div class="segment-labels">' +
-          '<div>Awareness</div><div>Engagement</div><div>Performance</div>' +
-        '</div>' +
-        '<div class="segment-bar">' +
-          '<div class="segment-chunk segment-aw" style="width:'+(aw*100).toFixed(0)+'%">'+ (aw*100).toFixed(0)+'%</div>' +
-          '<div class="segment-chunk segment-en" style="width:'+(en*100).toFixed(0)+'%">'+ (en*100).toFixed(0)+'%</div>' +
-          '<div class="segment-chunk segment-pe" style="width:'+(pe*100).toFixed(0)+'%">'+ (pe*100).toFixed(0)+'%</div>' +
-        '</div>' +
-      '</div>';
-    box.appendChild(c);
-  }
+  var c = document.createElement('div');
+  c.className = 'kpi kpi-funnel'; // <-- breiter (span 2)
+  c.innerHTML =
+    '<div class="label">Funnel Mix</div>' +
+    '<div class="segment">' +
+      '<div class="segment-labels">Awareness<span class="sep">/</span>Engagement<span class="sep">/</span>Performance</div>' +
+      '<div class="segment-bar">' +
+        '<div class="segment-chunk segment-aw" style="width:'+(aw*100).toFixed(0)+'%">'+ (aw*100).toFixed(0)+'%</div>' +
+        '<div class="segment-chunk segment-en" style="width:'+(en*100).toFixed(0)+'%">'+ (en*100).toFixed(0)+'%</div>' +
+        '<div class="segment-chunk segment-pe" style="width:'+(pe*100).toFixed(0)+'%">'+ (pe*100).toFixed(0)+'%</div>' +
+      '</div>' +
+    '</div>';
+  box.appendChild(c);
 }
+
 
 /* ========= Campaign Overview/Table ========= */
 function renderCampaignOverview(all){
