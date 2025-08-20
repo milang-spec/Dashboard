@@ -267,6 +267,55 @@ function renderTrend(list){
   });
 }
 
+// Verteile Kampagnen (gefilterte Liste) gleichmäßig auf beteiligte Monate (Jan–Aug 2025)
+function monthlyBreakdown(list){
+  var months = []; for (var i=0; i<8; i++) months.push({impressions:0, clicks:0, ad:0, revenue:0, orders:0});
+  list = list || [];
+
+  function sumProducts(c, field){
+    if (!c || !c.products) return 0;
+    var s=0; for (var i=0;i<c.products.length;i++) s += (c.products[i][field]||0);
+    return s;
+  }
+
+  for (var i=0; i<list.length; i++){
+    var c = list[i];
+    var s = new Date(c.start+'T00:00:00');
+    var e = new Date(c.end+'T00:00:00');
+
+    var spans=[], cur=new Date(s); cur.setDate(1);
+    while(cur<=e){
+      var m=cur.getMonth(), y=cur.getFullYear();
+      if (y===2025 && m<=7) spans.push(m); // Jan(0)..Aug(7) 2025
+      cur.setMonth(cur.getMonth()+1); cur.setDate(1);
+    }
+    var share = spans.length ? 1/spans.length : 0;
+
+    var rev = c.products ? sumProducts(c,'revenue') : (c.revenue||0);
+    var ord = c.products ? sumProducts(c,'units')   : (c.orders ||0);
+
+    for (var j=0;j<spans.length;j++){
+      var idx = spans[j];
+      months[idx].impressions += (c.impressions||0)*share;
+      months[idx].clicks      += (c.clicks||0)*share;
+      months[idx].ad          += (c.ad||0)*share;
+      months[idx].revenue     +=  rev*share;
+      months[idx].orders      +=  ord*share;
+    }
+  }
+
+  // abgeleitete Kennzahlen je Monat
+  for (var k=0;k<8;k++){
+    var m = months[k];
+    m.ctr  = safeDiv(m.clicks, m.impressions);
+    m.cpc  = safeDiv(m.ad, m.clicks);
+    m.cpm  = safeDiv(m.ad, m.impressions/1000);
+    m.roas = safeDiv(m.revenue, m.ad);
+  }
+  return months;
+}
+
+
 /* === SoV-KPI + Funnel-Segmentbar === */
 function renderSOVandFunnel(){
   var box = document.getElementById('kpiGrid');
@@ -426,6 +475,51 @@ function renderRerank(list){
   }
 }
 
+function renderMonthlyTable(monthsData, grandTotals){
+  var tbody = document.querySelector('#monthlyTable tbody');
+  if (!tbody) return;
+  var sovVal = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov) ? window.DASHBOARD_DATA.sov.total : null;
+
+  var labels = MONTHS.slice(0,8); // Jan..Aug
+
+  var rowsHtml = '';
+  for (var i=0;i<8;i++){
+    var m = monthsData[i];
+    rowsHtml += '<tr>' +
+      '<td>'+labels[i]+'</td>' +
+      '<td class="right">'+fmtNum(Math.round(m.impressions))+'</td>' +
+      '<td class="right">'+fmtNum(Math.round(m.clicks))+'</td>' +
+      '<td class="right">'+fmtPct1(m.ctr)+'</td>' +
+      '<td class="right">'+fmtMoney0(m.ad)+'</td>' +
+      '<td class="right">'+fmtMoney2(m.cpc)+'</td>' +
+      '<td class="right">'+fmtMoney2(m.cpm)+'</td>' +
+      '<td class="right">'+fmtNum(Math.round(m.orders))+'</td>' +
+      '<td class="right">'+fmtMoney0(m.revenue)+'</td>' +
+      '<td class="right">'+(m.roas||0).toFixed(2)+'×</td>' +
+      '<td class="right">'+(sovVal!=null? ((sovVal*100).toFixed(0)+'%') : '—')+'</td>' +
+    '</tr>';
+  }
+  tbody.innerHTML = rowsHtml;
+
+  // Summe-Zeile (soll den KPI-Totals entsprechen)
+  var tr = document.getElementById('monthlyTotalRow');
+  if (tr && grandTotals){
+    tr.innerHTML =
+      '<td><b>Summe</b></td>' +
+      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.impressions))+'</b></td>' +
+      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.clicks))+'</b></td>' +
+      '<td class="right"><b>'+fmtPct1(grandTotals.ctr)+'</b></td>' +
+      '<td class="right"><b>'+fmtMoney0(grandTotals.ad)+'</b></td>' +
+      '<td class="right"><b>'+fmtMoney2(grandTotals.cpc)+'</b></td>' +
+      '<td class="right"><b>'+fmtMoney2(grandTotals.cpm)+'</b></td>' +
+      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.orders))+'</b></td>' +
+      '<td class="right"><b>'+fmtMoney0(grandTotals.revenue)+'</b></td>' +
+      '<td class="right"><b>'+(grandTotals.roas||0).toFixed(2)+'×</b></td>' +
+      '<td class="right"><b>'+(sovVal!=null? ((sovVal*100).toFixed(0)+'%') : '—')+'</b></td>';
+  }
+}
+
+
 /* ========= Interaktion ========= */
 function bindChips(){
   var bar=document.getElementById('filterChips'); if(!bar) return;
@@ -442,23 +536,28 @@ function bindChips(){
 
 /* ========= Render All ========= */
 function renderAll(){
-  var list25 = __guard('filter 2025', function(){ return applyFilter(ALL_2025, STATE.filter); });
-  var list24 = __guard('filter 2024', function(){ return applyFilter(ALL_2024, STATE.filter); });
-  var t25    = __guard('totals 2025', function(){ return totals(list25); });
-  var t24    = __guard('totals 2024', function(){ return totals(list24); });
+  var list25  = __guard('filter 2025',  function(){ return applyFilter(ALL_2025, STATE.filter); });
+  var monthly = __guard('monthly breakdown', function(){ return monthlyBreakdown(list25); });
+  var list24  = __guard('filter 2024',  function(){ return applyFilter(ALL_2024, STATE.filter); });
+  var t25     = __guard('totals 2025',  function(){ return totals(list25); });
+  var t24     = __guard('totals 2024',  function(){ return totals(list24); });
 
   __guard('renderKPIs',         function(){ renderKPIs(t25, t24); });
   __guard('renderSOVandFunnel', function(){ renderSOVandFunnel(); });
+
   __guard('autoSizeChart',      function(){ autoSizeChart(); });
   __guard('renderTrend',        function(){ renderTrend(list25); });
+
+  __guard('monthly table',      function(){ renderMonthlyTable(monthly, t25); });
+
   __guard('overview campaigns', function(){ renderCampaignOverview(ALL_2025); });
   __guard('table campaigns',    function(){ renderCampaignTable(list25, ALL_2025); });
   __guard('rerank overview',    function(){ renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]); });
   __guard('rerank table',       function(){ renderRerank((D||{}).rerank||[]); });
 
-  // Health-Flag: Render abgeschlossen
   window.__appRendered = true;
 }
+
 
 /* ========= Boot ========= */
 window.addEventListener('resize',function(){
