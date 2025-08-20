@@ -432,6 +432,11 @@ function renderRerankOverview(rerankList, salesDetails){
   var ecpcWeighted = safeDiv(totalAd, totalClicks);
   var roasWeighted = safeDiv(totalRevenue, totalAd);
 
+  // Budget & %Spend (Placeholder: Budget = Spend → 100%)
+  var budgetTotal = totalAd;                            // <<< NEU
+  var pctSpend    = budgetTotal ? totalAd/budgetTotal : 0;  // <<< NEU
+
+  // (Sales via Namen optional – bleibt wie gehabt)
   var names = {};
   for (var j=0;j<rerankList.length;j++){ names[String(rerankList[j].item||'').toLowerCase()] = true; }
   var salesUnits=0;
@@ -441,15 +446,16 @@ function renderRerankOverview(rerankList, salesDetails){
   }
 
   var el;
-  el=document.getElementById('rr-budget');   if(el) el.textContent='—';
-  el=document.getElementById('rr-delivered');if(el) el.textContent='—';
+  el=document.getElementById('rr-budget');   if(el) el.textContent=fmtMoney0(budgetTotal);   // <<< NEU
   el=document.getElementById('rr-ad');       if(el) el.textContent=fmtMoney0(totalAd);
   el=document.getElementById('rr-clicks');   if(el) el.textContent=fmtNum(Math.round(totalClicks));
   el=document.getElementById('rr-ecpc');     if(el) el.textContent=fmtMoney2(ecpcWeighted);
+  el=document.getElementById('rr-pct');      if(el) el.textContent=((pctSpend*100)||0).toFixed(0)+'%'; // <<< NEU
   el=document.getElementById('rr-sales');    if(el) el.textContent=salesUnits?fmtNum(salesUnits):'—';
   el=document.getElementById('rr-revenue');  if(el) el.textContent=fmtMoney0(totalRevenue);
   el=document.getElementById('rr-roas');     if(el) el.textContent=(roasWeighted||0).toFixed(2)+'×';
 }
+
 function renderRerank(list){
   list=list||[];
   var tbody=document.querySelector('#rerankTable tbody'); if(!tbody) return;
