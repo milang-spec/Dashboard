@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Share of Voice – Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="design.css" />
+</head>
+<body>
+  <div id="stage">
+    <div class="board" id="board" style="grid-template-columns: 1fr;">
+      <section class="card">
+        <div class="header">
+          <h2>Share of Voice – Kategorien & Brands</h2>
+        </div>
+        <div class="table-wrap">
+          <table id="sovTable">
+            <thead>
+              <tr>
+                <th>Kategorie</th>
+                <th>Brand</th>
+                <th class="right">Share of Voice</th>
+                <th class="right">Market Share</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="data.js?v=21"></script>
+  <script>
+    (function(){
+      function fmtPct(v){ return ((v||0)*100).toFixed(0)+'%'; }
+      var sov = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov) ? window.DASHBOARD_DATA.sov.by_category : [];
+      var tbody = document.querySelector('#sovTable tbody');
+      var rows = sov.slice().sort(function(a,b){ return (b.sov||0)-(a.sov||0); });
+      tbody.innerHTML = rows.map(function(r){
+        return '<tr>' +
+          '<td>'+r.category+'</td>' +
+          '<td>'+r.brand+'</td>' +
+          '<td class="right">'+fmtPct(r.sov)+'</td>' +
+          '<td class="right">'+fmtPct(r.market_share)+'</td>' +
+        '</tr>';
+      }).join('');
+    })();
+  </script>
+</body>
+</html>
