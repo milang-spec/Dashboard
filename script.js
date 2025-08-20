@@ -267,6 +267,53 @@ function renderTrend(list){
   });
 }
 
+/* === SoV-KPI + Funnel-Segmentbar === */
+function renderSOVandFunnel(){
+  var box = document.getElementById('kpiGrid');
+  if (!box) return;
+
+  // SoV-KPI
+  var sov = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov) ? window.DASHBOARD_DATA.sov.total : null;
+  if (sov != null) {
+    var k = document.createElement('div');
+    k.className = 'kpi kpi-sov';
+    k.innerHTML =
+      '<div class="label">Share of Voice</div>' +
+      '<div class="value">'+ ((sov*100).toFixed(0)) + '%</div>' +
+      '<div class="delta neutral"><span class="arrow"></span><span>Details</span></div>';
+    k.addEventListener('click', function(){
+      var url='share.html?scope='+encodeURIComponent(STATE.filter);
+      window.location.href = url;
+    });
+    box.appendChild(k);
+  }
+
+  // Funnel-Segmentbar
+  var f = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.funnel) ? window.DASHBOARD_DATA.funnel : null;
+  if (f) {
+    var aw = Math.max(0, Math.min(1, f.awareness||0));
+    var en = Math.max(0, Math.min(1, f.engagement||0));
+    var pe = Math.max(0, Math.min(1, f.performance||0));
+    var sum = aw+en+pe || 1;
+    aw/=sum; en/=sum; pe/=sum;
+
+    var c = document.createElement('div');
+    c.className = 'kpi';
+    c.innerHTML =
+      '<div class="label">Funnel Mix</div>' +
+      '<div class="segment">' +
+        '<div class="segment-labels">' +
+          '<div>Awareness</div><div>Engagement</div><div>Performance</div>' +
+        '</div>' +
+        '<div class="segment-bar">' +
+          '<div class="segment-chunk segment-aw" style="width:'+(aw*100).toFixed(0)+'%">'+ (aw*100).toFixed(0)+'%</div>' +
+          '<div class="segment-chunk segment-en" style="width:'+(en*100).toFixed(0)+'%">'+ (en*100).toFixed(0)+'%</div>' +
+          '<div class="segment-chunk segment-pe" style="width:'+(pe*100).toFixed(0)+'%">'+ (pe*100).toFixed(0)+'%</div>' +
+        '</div>' +
+      '</div>';
+    box.appendChild(c);
+  }
+}
 
 /* ========= Campaign Overview/Table ========= */
 function renderCampaignOverview(all){
@@ -403,6 +450,7 @@ function renderAll(){
   var t24    = __guard('totals 2024', function(){ return totals(list24); });
 
   __guard('renderKPIs',         function(){ renderKPIs(t25, t24); });
+  __guard('renderSOVandFunnel', function(){ renderSOVandFunnel(); });
   __guard('autoSizeChart',      function(){ autoSizeChart(); });
   __guard('renderTrend',        function(){ renderTrend(list25); });
   __guard('overview campaigns', function(){ renderCampaignOverview(ALL_2025); });
