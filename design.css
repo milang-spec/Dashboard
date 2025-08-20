@@ -191,3 +191,16 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   color: var(--theme, #FFC7B1); text-shadow:0 1px 0 rgba(0,0,0,.25);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* Performance Total: Label größer, Werte etwas kleiner */
+#panel-kpi .kpi .label{
+  font-size: 22px;           /* vorher kleiner */
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+#panel-kpi .kpi .value{
+  font-size: 40px;           /* vorher sehr groß -> kleiner für Lesbarkeit */
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
