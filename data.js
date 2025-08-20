@@ -169,3 +169,22 @@ window.DASHBOARD_DATA = {
     { sku:"P-1012", name:"Sonnencreme SPF50",  units:1200, revenue:26400 }
   ]
 };
+
+// === Share of Voice + Funnel-Verteilung ===
+window.DASHBOARD_DATA.sov = {
+  total: 0.17, // 17% gesamt
+  by_category: [
+    { category: "Wundheilung", brand: "Wundcreme",    sov: 0.25, market_share: 0.20 },
+    { category: "Magen/Darm",  brand: "Magenwohl",    sov: 0.10, market_share: 0.18 },
+    { category: "Schmerz",     brand: "Schmerzgel 5%",sov: 0.22, market_share: 0.19 },
+    { category: "Immun",       brand: "Zink + C",     sov: 0.15, market_share: 0.16 },
+    { category: "Vitamine",    brand: "Vitamin D",    sov: 0.19, market_share: 0.21 }
+  ]
+};
+
+window.DASHBOARD_DATA.funnel = {
+  awareness: 0.30,   // 30%
+  engagement: 0.40,  // 40%
+  performance: 0.30  // 30%
+};
+
