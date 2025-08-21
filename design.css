@@ -230,3 +230,34 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   white-space: nowrap;
 }
 
+/* Rerank-Panel: kein umschließender Kasten um die KPI-Gruppe */
+#panel-rerank .kpi-grid{ background: transparent; border: none; box-shadow: none; padding: 0; }
+
+/* Layout der KPIs im Rerank-Panel */
+#panel-rerank .kpi-grid.compact{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+/* Auction-Widget (lila) – darf gerne auffallen */
+#panel-rerank .kpi.auction{
+  grid-column: span 2;
+  background: rgba(192,155,191,0.16);
+  border: 1px solid rgba(192,155,191,0.45);
+  text-decoration: none;
+  color: #EDE6F1;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+#panel-rerank .kpi.auction .label{ opacity:.9; }
+
+/* Gesamtzeile der Tabelle etwas hervorheben */
+#rerankTable tfoot tr{
+  background: rgba(255,199,177,0.08);
+  font-weight: 800;
+}
+@media (max-width: 1200px){
+  #panel-rerank .kpi-grid.compact{ grid-template-columns: repeat(2, minmax(190px, 1fr)); }
+  #panel-rerank .kpi.auction{ grid-column: span 2; }
+}
