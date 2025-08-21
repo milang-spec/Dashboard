@@ -179,12 +179,16 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 }
 
 /* Inhalt sauber nebeneinander */
-.brand-hero-wrap{ display:flex; align-items:center; gap:16px; }
-.brand-logo{
-  width:56px; height:56px; flex:0 0 56px;
-  border-radius:12px; background: rgba(255,199,177,0.35);
-  border:2px dashed rgba(255,199,177,0.9);
+.brand-hero .brand-logo{
+  width: clamp(40px, 6vw, 80px);  /* min – prefer – max */
+  height: auto;                   /* Proportionen des Logos bleiben erhalten */
+  object-fit: contain;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
+
 .brand-text{ min-width:0; }
 .brand-headline{
   margin:0; font-size:34px; line-height:1.15; font-weight:900;
