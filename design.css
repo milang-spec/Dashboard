@@ -170,7 +170,9 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 /* Hero immer über volle Breite */
 #panel-hero { grid-column: 1 / -1; }
 
-/* Peach-Box sichtbar (überschreibt .card-Defaults) */
+/* ===== Dashboard Header (final) ===== */
+
+/* Peach-Box */
 .card.brand-hero{
   background: rgba(255,199,177,0.14);
   border: 1px solid rgba(255,199,177,0.45);
@@ -178,10 +180,19 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   padding: 14px 18px;
 }
 
-/* Inhalt sauber nebeneinander */
+/* Reihe ohne Umbruch: Logo + Headline */
+.brand-hero-wrap{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap; /* wichtig */
+}
+
+/* Logo ohne Hintergrund/Rand/Shadow – responsiv über clamp */
 .brand-hero .brand-logo{
   width: clamp(40px, 6vw, 80px);  /* min – prefer – max */
-  height: auto;                   /* Proportionen des Logos bleiben erhalten */
+  height: auto;                   /* Proportionen bleiben erhalten */
   object-fit: contain;
   background: transparent !important;
   border: none !important;
@@ -189,11 +200,23 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   box-shadow: none !important;
 }
 
-.brand-text{ min-width:0; }
+/* Textblock darf den restlichen Platz nutzen */
+.brand-text{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Headline */
 .brand-headline{
-  margin:0; font-size:34px; line-height:1.15; font-weight:900;
-  color: var(--theme, #FFC7B1); text-shadow:0 1px 0 rgba(0,0,0,.25);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin: 0;
+  font-size: 34px;          /* gerne 32–42 anpassen */
+  line-height: 1.15;
+  font-weight: 900;
+  color: var(--theme, #FFC7B1);
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Performance Total: Label größer, Werte etwas kleiner */
