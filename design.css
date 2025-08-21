@@ -180,19 +180,36 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   padding: 14px 18px;
 }
 
-/* Reihe ohne Umbruch: Logo + Headline */
-.brand-hero-wrap{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: nowrap; /* wichtig */
+/* Eine gemeinsame Größe für Headline + Logo */
+:root{
+  /* responsive: min 28px, ideal 3.2vw, max 40px */
+  --hero-size: clamp(28px, 3.2vw, 40px);
 }
 
-/* Logo ohne Hintergrund/Rand/Shadow – responsiv über clamp */
+/* Logo + Headline bleiben in einer Reihe */
+.brand-hero-wrap{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:nowrap;
+}
+
+/* Headline nutzt die gemeinsame Größe */
+.brand-headline{
+  margin:0;
+  font-size: var(--hero-size);
+  line-height: 1.1;
+  font-weight: 900;
+  color: var(--theme, #FFC7B1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Logo-Höhe = Headline-Höhe (mit kleinem Puffer) */
 .brand-hero .brand-logo{
-  width: clamp(40px, 6vw, 80px);  /* min – prefer – max */
-  height: auto;                   /* Proportionen bleiben erhalten */
+  height: calc(var(--hero-size) * 1.05); /* 1.00–1.10 je nach Geschmack */
+  width: auto;                           /* behält Seitenverhältnis */
   object-fit: contain;
   background: transparent !important;
   border: none !important;
@@ -200,24 +217,6 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   box-shadow: none !important;
 }
 
-/* Textblock darf den restlichen Platz nutzen */
-.brand-text{
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-/* Headline */
-.brand-headline{
-  margin: 0;
-  font-size: 34px;          /* gerne 32–42 anpassen */
-  line-height: 1.15;
-  font-weight: 900;
-  color: var(--theme, #FFC7B1);
-  text-shadow: 0 1px 0 rgba(0,0,0,.25);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* Performance Total: Label größer, Werte etwas kleiner */
 #panel-kpi .kpi .label{
