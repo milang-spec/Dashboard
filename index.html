@@ -149,13 +149,15 @@
   </div>
 </section>
           
-    <!-- ====================== Sponsored Product Ads ====================== -->
+  <!-- ====================== Sponsored Product Ads ====================== -->
 <section class="card" id="panel-rerank">
   <div class="header header-inline">
     <h2>Sponsored Product Ads</h2>
   </div>
 
-  <!-- KPIs ohne zusätzlichen Umrandungs-Kasten -->
+  <div class="subheader">Total Performance</div>
+
+  <!-- KPI-GRID (nur die KPIs!) -->
   <div class="kpi-grid compact" id="rrKpis">
     <div class="kpi"><div class="label">Budget Total</div>     <div class="value" id="rr-budget">—</div></div>
     <div class="kpi"><div class="label">Ad Spend Total</div>   <div class="value" id="rr-ad">—</div></div>
@@ -165,9 +167,10 @@
     <div class="kpi"><div class="label">Sales</div>            <div class="value" id="rr-sales">—</div></div>
     <div class="kpi"><div class="label">Revenue</div>          <div class="value" id="rr-revenue">—</div></div>
     <div class="kpi"><div class="label">ROAS</div>             <div class="value" id="rr-roas">—</div></div>
+  </div>
 
-
-  <div class="table-wrap">
+  <!-- TABELLE (volle Breite) -->
+  <div class="table-wrap" id="rerankTableWrap">
     <table id="rerankTable">
       <thead>
         <tr>
@@ -186,14 +189,16 @@
       </tfoot>
     </table>
   </div>
-</section>
 
-          <div class="auction-cta">
-  <a class="auction-full" href="auction.html" title="Auction Insights">
-    <span class="label">Auction</span>
-    <span class="value">Insights →</span>
-  </a>
+  <!-- CTA (volle Breite, UNTER der Tabelle) -->
+ <div class="auction-cta">
+  <a class="auction-badge" href="auction.html" title="Auction Insights">Auction Insights</a>
 </div>
+
+</section>
+          
+<!-- ==================== /Sponsored Product Ads ====================== -->
+
 
           
 <!-- ==================== /Sponsored Product Ads ====================== -->
