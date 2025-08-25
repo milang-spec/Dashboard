@@ -354,4 +354,13 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   display: table-cell;
 }
 
+.link-cell {
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px dashed rgba(255,199,177,.65);
+}
+.link-cell:hover {
+  color: var(--theme, #FFC7B1);
+  border-bottom-color: currentColor;
+}
 
