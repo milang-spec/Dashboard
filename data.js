@@ -110,18 +110,72 @@
   D.sov = { total: 0.17 };
   D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
 
-// ---- Exporte/Wiring: ALLES verfügbar machen ----
-window.ALL_2025 = ALL_2025;
-window.ALL_2024 = window.ALL_2024 || [];   // falls noch nicht gesetzt
+/* ==== PATCH: LY erzeugen (falls fehlt), SoV-Daten bereitstellen & alles verkabeln ==== */
+(function(){
+  // 1) Basis: 2025-Kampagnen holen (dein bestehendes Array)
+  var y25 = window.ALL_2025 || (typeof ALL_2025 !== 'undefined' ? ALL_2025 : []);
 
-// Dashboard-Objekt sicherstellen
-window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+  // 2) 2024 automatisch ableiten, falls nicht vorhanden
+  if (!window.ALL_2024 || !window.ALL_2024.length){
+    function y24(d){ return (d||'').replace('2025', '2024'); }
+    var fAd=0.92, fRev=0.90, fImp=0.95, fClk=0.93, fOrd=0.92;
 
-// WICHTIG: auch unter DASHBOARD_DATA bereitstellen (einige Funktionen lesen von hier)
-window.DASHBOARD_DATA.campaigns_2025 = window.ALL_2025;
-window.DASHBOARD_DATA.campaigns_2024 = window.ALL_2024;
+    window.ALL_2024 = y25.map(function(c){
+      var imp = Math.round((c.impressions||0)*fImp);
+      var clk = Math.round((c.clicks||0)*fClk);
+      var ad  = Math.round((c.ad||0)*fAd);
+      return {
+        name: c.name, brand:c.brand, site:c.site, model:c.model, channel:c.channel,
+        start: y24(c.start), end: y24(c.end),
+        booking: Math.round((c.booking||0)*fAd),
+        ad: ad,
+        revenue: Math.round((c.revenue||0)*fRev),
+        orders: Math.round((c.orders||0)*fOrd),
+        impressions: imp,
+        clicks: clk,
+        ctr: imp ? clk/imp : (c.ctr||0),
+        cpc: clk ? ad/clk : (c.cpc||0),
+        products: (c.products||[]).slice(0),
+        placements: (c.placements||[]).map(function(p){
+          return {
+            strategy: p.strategy, type: p.type, placement: p.placement,
+            site: p.site || c.site,
+            start: p.start ? y24(p.start) : undefined,
+            end:   p.end   ? y24(p.end)   : undefined,
+            impressions: Math.round((p.impressions||0)*fImp),
+            clicks:      Math.round((p.clicks||0)*fClk),
+            ad:          Math.round((p.ad||0)*fAd),
+            roas: p.roas,
+            orders: Math.round((p.orders||0)*fOrd),
+            revenue: (typeof p.revenue==='number') ? Math.round(p.revenue*fRev) : undefined
+          };
+        })
+      };
+    });
+  }
 
-// Bequemer Alias (wird im Code teils als D genutzt)
-window.D = window.DASHBOARD_DATA;
+  // 3) SoV-Daten bereitstellen (für Details-Ansicht)
+  window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+  window.DASHBOARD_DATA.sov = window.DASHBOARD_DATA.sov || { total: 0.17 };
+  var sovCats = window.DASHBOARD_DATA.sov_categories || [
+    { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
+    { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
+    { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
+    { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
+  ];
+  window.DASHBOARD_DATA.sov_categories = sovCats;
+  // zusätzliche Aliase, falls die Details-Seite andere Keys erwartet
+  window.DASHBOARD_DATA.sov_cats    = window.DASHBOARD_DATA.sov_cats    || sovCats;
+  window.DASHBOARD_DATA.sov_details = window.DASHBOARD_DATA.sov_details || sovCats;
 
+  // 4) Einheitliches Wiring (nur EINMAL am Dateiende vorhanden lassen!)
+  if (typeof ALL_2025 !== 'undefined' && !window.ALL_2025) window.ALL_2025 = ALL_2025;
+  if (typeof ALL_2024 !== 'undefined' && !window.ALL_2024) window.ALL_2024 = ALL_2024;
+  window.ALL_2025 = window.ALL_2025 || y25;
+  window.ALL_2024 = window.ALL_2024 || [];
+
+  window.DASHBOARD_DATA.campaigns_2025 = window.ALL_2025;
+  window.DASHBOARD_DATA.campaigns_2024 = window.ALL_2024;
+
+  window.D = window.DASHBOARD_DATA; // Alias, wird teils im Code benutzt
 })();
