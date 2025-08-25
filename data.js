@@ -110,10 +110,18 @@
   D.sov = { total: 0.17 };
   D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
 
-  /* ---------- Exporte in den globalen Scope ---------- */
-  window.ALL_2025 = ALL_2025;
-  window.ALL_2024 = ALL_2024;
-  window.DASHBOARD_DATA = D;
-  window.D = D;                  // Bequemlichkeits-Alias
-  D.ALL_2025 = ALL_2025;        // Back-Compat, falls irgendwo erwartet
+// ---- Exporte/Wiring: ALLES verfügbar machen ----
+window.ALL_2025 = ALL_2025;
+window.ALL_2024 = window.ALL_2024 || [];   // falls noch nicht gesetzt
+
+// Dashboard-Objekt sicherstellen
+window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+
+// WICHTIG: auch unter DASHBOARD_DATA bereitstellen (einige Funktionen lesen von hier)
+window.DASHBOARD_DATA.campaigns_2025 = window.ALL_2025;
+window.DASHBOARD_DATA.campaigns_2024 = window.ALL_2024;
+
+// Bequemer Alias (wird im Code teils als D genutzt)
+window.D = window.DASHBOARD_DATA;
+
 })();
