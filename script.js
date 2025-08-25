@@ -378,76 +378,83 @@ function renderCampaignOverview(all){
   el=document.getElementById('ov-ad'); if(el) el.textContent=fmtMoney0(t.ad);
   el=document.getElementById('ov-delivered'); if(el) el.textContent=(t.delivered*100).toFixed(0)+'%';
 }
+// === Campaign Table (passend zu deinem neuen THEAD) ===
 function renderCampaignTable(list, allList){
   list = list || []; allList = allList || [];
   var tbody = document.querySelector('#campaignTable tbody'); if(!tbody) return;
   tbody.innerHTML = '';
 
-  // sortieren (Beispiel: nach Ad Spend)
+  // sortieren (z.B. nach Ad Spend)
   var sorted = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
 
-  for (var i=0; i<sorted.length; i++){
-    var c = sorted[i];
-    var roas = safeDiv(c.revenue, c.ad);
-    var flight = c.start.slice(8,10)+'.'+c.start.slice(5,7)+'.'+c.start.slice(0,4)+'–'+
-                 c.end.slice(8,10)+'.'+c.end.slice(5,7)+'.'+c.end.slice(0,4);
+  function fmtPeriod(s, e){
+    if(!s || !e) return '';
+    return s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4)+'–'+
+           e.slice(8,10)+'.'+e.slice(5,7)+'.'+e.slice(0,4);
+  }
 
+  for (var i=0; i<sorted.length; i++){
+    var c = sorted[i] || {};
     var cid = 'camp_' + i;
     var hasPlacements = Array.isArray(c.placements) && c.placements.length > 0;
 
-    // === Kampagnenzeile
+    var ctr = (c.impressions ? (c.clicks||0)/(c.impressions||1) : null);
+    var roas = (c.ad ? (c.revenue||0)/(c.ad||1) : null);
+
+    // Kampagnenzeile (Reihenfolge exakt wie im THEAD)
     var tr = document.createElement('tr');
     tr.className = 'parent';
     tr.setAttribute('data-cid', cid);
     tr.innerHTML =
-      '<td class="expcol">'+ (hasPlacements
-         ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>'
-         : '') + '</td>'+
-      '<td>'+ (c.name||'—') +'</td>'+
-      '<td>'+ (c.brand||'—') +'</td>'+           // Brand auf Kampagnen-Ebene
-      '<td>'+ (c.site||'—') +'</td>'+
-      '<td>'+ (c.model||'—') +'</td>'+
-      '<td>'+ flight +'</td>'+
-      '<td>—</td>'+                             // Strategy nur auf Platzierungs-Ebene
-      '<td>—</td>'+                             // Type nur auf Platzierungs-Ebene
-      '<td class="right">'+fmtNum(Math.round(c.impressions||0))+'</td>'+
-      '<td class="right">'+fmtNum(Math.round(c.clicks||0))+'</td>'+
-      '<td class="right">'+fmtPct1(safeDiv(c.clicks,c.impressions))+'</td>'+
-      '<td class="right">'+fmtMoney0(c.ad||0)+'</td>'+
-      '<td class="right">'+fmtMoney0(c.revenue||0)+'</td>'+
-      '<td class="right">'+(roas||0).toFixed(2)+'×</td>'+
-      '<td class="right">'+fmtNum(Math.round(c.orders||0))+'</td>';
+      '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>' : '') +'</td>'+
+      '<td>'+ (c.name||'') +'</td>'+
+      '<td>'+ (c.brand||'') +'</td>'+
+      '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
+      '<td></td>'+ // Strategy (nur Placement)
+      '<td>'+ (c.channel || c.site || '') +'</td>'+ // Channel (Fallback: site)
+      '<td></td>'+ // Type (nur Placement)
+      '<td></td>'+ // Placement (nur Placement)
+      '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
+      '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
+      '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
+      '<td class="right">'+ (ctr!=null? fmtPct1(ctr) : '') +'</td>'+
+      '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // "Sales" = orders
+      '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
+      '<td class="right">'+ (roas!=null? roas.toFixed(2)+'×' : '') +'</td>';
     tbody.appendChild(tr);
 
-    // === Platzierungen (falls vorhanden)
+    // Platzierungen (Subrows)
     if (hasPlacements){
       for (var j=0; j<c.placements.length; j++){
         var p = c.placements[j] || {};
-        var rev = (typeof p.revenue === 'number') ? p.revenue : (p.ad||0)*(p.roas||0);
+        var rev = (typeof p.revenue === 'number') ? p.revenue : ((p.ad||0)*(p.roas||0));
+        var pctr = (p.impressions ? (p.clicks||0)/(p.impressions||1) : null);
+        var proas = (p.ad ? (rev||0)/(p.ad||1) : (p.roas!=null ? p.roas : null));
+
         var sub = document.createElement('tr');
         sub.className = 'subrow hidden child-of-'+cid;
         sub.innerHTML =
-          '<td></td>'+ // kein Expander
-          '<td class="indent">↳ '+ (p.placement||'Placement') +'</td>'+
-          '<td>—</td>'+                                    // Brand bleibt oben
-          '<td>—</td>'+                                    // Site optional
-          '<td>—</td>'+                                    // Model optional
-          '<td>—</td>'+                                    // Flight nicht auf Platzierung
-          '<td>'+ (p.strategy||'—') +'</td>'+
-          '<td>'+ (p.type||'—') +'</td>'+
-          '<td class="right">'+fmtNum(Math.round(p.impressions||0))+'</td>'+
-          '<td class="right">'+fmtNum(Math.round(p.clicks||0))+'</td>'+
-          '<td class="right">'+fmtPct1(safeDiv(p.clicks,p.impressions))+'</td>'+
-          '<td class="right">'+fmtMoney0(p.ad||0)+'</td>'+
-          '<td class="right">'+fmtMoney0(rev||0)+'</td>'+
-          '<td class="right">'+(p.roas||safeDiv(rev,p.ad)||0).toFixed(2)+'×</td>'+
-          '<td class="right">'+fmtNum(Math.round(p.orders||0))+'</td>';
+          '<td></td>'+ // expcol
+          '<td class="indent">↳ '+ (p.name || p.placement || '') +'</td>'+
+          '<td></td>'+ // Brand nur oben
+          '<td>'+ (p.start && p.end ? fmtPeriod(p.start,p.end) : '') +'</td>'+ // Period (Placement)
+          '<td>'+ (p.strategy || '') +'</td>'+
+          '<td>'+ (p.channel || c.channel || c.site || '') +'</td>'+ // Channel Fallbacks
+          '<td>'+ (p.type || '') +'</td>'+
+          '<td>'+ (p.placement || '') +'</td>'+
+          '<td class="right">'+ (p.ad!=null? fmtMoney0(p.ad) : '') +'</td>'+
+          '<td class="right">'+ (p.impressions!=null? fmtNum(Math.round(p.impressions)) : '') +'</td>'+
+          '<td class="right">'+ (p.clicks!=null? fmtNum(Math.round(p.clicks)) : '') +'</td>'+
+          '<td class="right">'+ (pctr!=null? fmtPct1(pctr) : '') +'</td>'+
+          '<td class="right">'+ (p.orders!=null? fmtNum(Math.round(p.orders)) : '') +'</td>'+ // Sales
+          '<td class="right">'+ (rev!=null? fmtMoney0(rev) : '') +'</td>'+
+          '<td class="right">'+ (proas!=null? proas.toFixed(2)+'×' : '') +'</td>';
         tbody.appendChild(sub);
       }
     }
   }
 
-  // Toggle einmalig binden (Event-Delegation)
+  // Toggle (einmalig binden)
   if (!tbody.__boundExpander){
     tbody.addEventListener('click', function(e){
       var btn = e.target.closest('.expander'); if(!btn) return;
@@ -463,34 +470,36 @@ function renderCampaignTable(list, allList){
     tbody.__boundExpander = true;
   }
 
-  // Summenzeilen (angepasst auf neue Spaltenzahl)
+  // Summenzeilen entsprechend neuer Spaltenreihenfolge
   var sumF = totals(list), sumA = totals(allList);
   var r1 = document.getElementById('campaignFilterRow'),
       r2 = document.getElementById('campaignGrandRow');
 
-  var prefixCells = '<td></td><td><b>'; // expcol + Campaign Titel öffnet
-  var midCells    = '</b></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>';
+  // 8 Kopfspalten vor den Metriken: expcol, Campaign, Brand, Period, Strategy, Channel, Type, Placement
+  var headColsOpen = '<td></td><td><b>';
+  var headColsRest = '</b></td><td></td><td></td><td></td><td></td><td></td><td></td>';
 
   if(r1) r1.innerHTML =
-    prefixCells+'Summe (Filter)'+midCells+
+    headColsOpen+'Summe (Filter)'+headColsRest+
+    '<td class="right">'+fmtMoney0(sumF.ad)+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumF.impressions))+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumF.clicks))+'</td>'+
     '<td class="right">'+fmtPct1(sumF.ctr)+'</td>'+
-    '<td class="right">'+fmtMoney0(sumF.ad)+'</td>'+
+    '<td class="right">'+fmtNum(Math.round(sumF.orders))+'</td>'+ // Sales
     '<td class="right">'+fmtMoney0(sumF.revenue)+'</td>'+
-    '<td class="right">'+(sumF.roas||0).toFixed(2)+'×</td>'+
-    '<td class="right">'+fmtNum(Math.round(sumF.orders))+'</td>';
+    '<td class="right">'+(sumF.roas||0).toFixed(2)+'×</td>';
 
   if(r2) r2.innerHTML =
-    prefixCells+'Gesamt (Alle)'+midCells+
+    headColsOpen+'Gesamt (Alle)'+headColsRest+
+    '<td class="right">'+fmtMoney0(sumA.ad)+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumA.impressions))+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumA.clicks))+'</td>'+
     '<td class="right">'+fmtPct1(sumA.ctr)+'</td>'+
-    '<td class="right">'+fmtMoney0(sumA.ad)+'</td>'+
+    '<td class="right">'+fmtNum(Math.round(sumA.orders))+'</td>'+ // Sales
     '<td class="right">'+fmtMoney0(sumA.revenue)+'</td>'+
-    '<td class="right">'+(sumA.roas||0).toFixed(2)+'×</td>'+
-    '<td class="right">'+fmtNum(Math.round(sumA.orders))+'</td>';
+    '<td class="right">'+(sumA.roas||0).toFixed(2)+'×</td>';
 }
+
 
 
 /* ========= Re-Rank ========= */
