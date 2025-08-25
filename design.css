@@ -343,3 +343,15 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 }
 #campaignTable tr.subrow td.indent{ padding-left: 24px; }
 .hidden{ display:none !important; }
+
+/* Placement-Spaltenköpfe standardmäßig ausblenden */
+#campaignTable thead .placement-hdr { 
+  opacity: 0; 
+  pointer-events: none; 
+  transition: opacity .2s ease;
+}
+#campaignTable thead .placement-hdr.show { 
+  opacity: 1; 
+  pointer-events: auto; 
+}
+
