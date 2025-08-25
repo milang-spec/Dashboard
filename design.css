@@ -354,13 +354,21 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   display: table-cell;
 }
 
-.link-cell {
-  text-decoration: none;
-  color: inherit;
-  border-bottom: 1px dashed rgba(255,199,177,.65);
+/* Sales-Links dezent stylen und *inline* halten */
+.link-cell{
+  display: inline;               /* wichtig: kein block/inline-block */
+  text-decoration: none;         /* keine Unterstreichung */
+  color: var(--theme, #FFC7B1);  /* dein Peach */
+  border-bottom: 1px dashed rgba(255,199,177,.55);
 }
-.link-cell:hover {
-  color: var(--theme, #FFC7B1);
+.link-cell:hover{
+  color: #FFD9C7;
   border-bottom-color: currentColor;
+}
+
+/* Zahlenspalten sauber halten */
+#campaignTable td.right{
+  white-space: nowrap;           /* verhindert, dass etwas umbricht */
+  position: relative;            /* sichert Layout gegen absolut positionierte Kinder */
 }
 
