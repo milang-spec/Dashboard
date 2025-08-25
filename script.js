@@ -425,84 +425,97 @@ if (table) table.classList.toggle('expanded', expandedMode);
     tr.className = 'parent';
     tr.setAttribute('data-cid', cid);
 
-    // ==== Parent-Row: zwei Varianten (collapsed vs expanded) ====
-    if (!expandedMode){
-      // ---- Collapsed: keine Placement-Spalten, KPI direkt nach Period
-      tr.innerHTML =
-        '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>' : '') +'</td>'+
-        '<td>'+ (c.name||'') +'</td>'+
-        '<td>'+ (c.brand||'') +'</td>'+
-        '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
-        '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
-        '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
-        '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
-        '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
-        // Sales auf Kampagnen-Ebene als Link auf sales.html
-'<td class="right">'+
-  (c.orders!=null
-    ? '<a class="link-cell" href="sales.html?campaign='+encodeURIComponent(c.name)+'">'+fmtNum(Math.round(c.orders))+'</a>'
-    : ''
-  )+
-'</td>'
-        '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
-        '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
-    } else {
-      // ---- Expanded: 4 Placement-Spalten zwischen Period und KPIs
-      tr.innerHTML =
-        '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="'+(isOpen?'true':'false')+'" data-target="'+cid+'">'+(isOpen?'–':'+')+'</button>' : '') +'</td>'+
-        '<td>'+ (c.name||'') +'</td>'+
-        '<td>'+ (c.brand||'') +'</td>'+
-        '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
-        '<td></td>'+ // Strategy nur Placement
-        '<td></td>'+ // Channel nur Placement
-        '<td></td>'+ // Type nur Placement
-        '<td></td>'+ // Placement nur Placement
-        '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
-        '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
-        '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
-        '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
-        // Sales auf Placement-Ebene – Kampagnen- UND Placement-Parameter setzen
-'<td class="right">'+
-  (p.orders!=null
-    ? '<a class="link-cell" href="sales.html?campaign='+encodeURIComponent(c.name)+'&placement='+encodeURIComponent(p.placement||"")+'">'+fmtNum(Math.round(p.orders))+'</a>'
-    : ''
-  )+
-'</td>'
-        '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
-        '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
-    }
-    tbody.appendChild(tr);
+// ==== Parent-Row: zwei Varianten (collapsed vs expanded) ====
+if (!expandedMode){
+  tr.innerHTML =
+    '<td class="expcol">' + (hasPlacements
+        ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>'
+        : '') + '</td>' +
+    '<td>' + (c.name || '') + '</td>' +
+    '<td>' + (c.brand || '') + '</td>' +
+    '<td>' + fmtPeriod(c.start, c.end) + '</td>' +
+    '<td class="right">' + (c.ad != null ? fmtMoney0(c.ad) : '') + '</td>' +
+    '<td class="right">' + (c.impressions != null ? fmtNum(Math.round(c.impressions)) : '') + '</td>' +
+    '<td class="right">' + (c.clicks != null ? fmtNum(Math.round(c.clicks)) : '') + '</td>' +
+    '<td class="right">' + (ctrC != null ? fmtPct1(ctrC) : '') + '</td>' +
+    '<td class="right">' +
+      (c.orders != null
+        ? '<a class="link-cell" href="sales.html?campaign=' + encodeURIComponent(c.name) + '">' +
+            fmtNum(Math.round(c.orders)) +
+          '</a>'
+        : ''
+      ) +
+    '</td>' +
+    '<td class="right">' + (c.revenue != null ? fmtMoney0(c.revenue) : '') + '</td>' +
+    '<td class="right">' + (roasC != null ? roasC.toFixed(2) + '×' : '') + '</td>';
+} else {
+  tr.innerHTML =
+    '<td class="expcol">' + (hasPlacements
+        ? '<button class="expander" aria-expanded="'+(isOpen?'true':'false')+'" data-target="'+cid+'">'+(isOpen?'–':'+')+'</button>'
+        : '') + '</td>' +
+    '<td>' + (c.name || '') + '</td>' +
+    '<td>' + (c.brand || '') + '</td>' +
+    '<td>' + fmtPeriod(c.start, c.end) + '</td>' +
+    '<td></td>' +
+    '<td></td>' +
+    '<td></td>' +
+    '<td></td>' +
+    '<td class="right">' + (c.ad != null ? fmtMoney0(c.ad) : '') + '</td>' +
+    '<td class="right">' + (c.impressions != null ? fmtNum(Math.round(c.impressions)) : '') + '</td>' +
+    '<td class="right">' + (c.clicks != null ? fmtNum(Math.round(c.clicks)) : '') + '</td>' +
+    '<td class="right">' + (ctrC != null ? fmtPct1(ctrC) : '') + '</td>' +
+    '<td class="right">' +
+      (c.orders != null
+        ? '<a class="link-cell" href="sales.html?campaign=' + encodeURIComponent(c.name) + '">' +
+            fmtNum(Math.round(c.orders)) +
+          '</a>'
+        : ''
+      ) +
+    '</td>' +
+    '<td class="right">' + (c.revenue != null ? fmtMoney0(c.revenue) : '') + '</td>' +
+    '<td class="right">' + (roasC != null ? roasC.toFixed(2) + '×' : '') + '</td>';
+}
+tbody.appendChild(tr);
 
-    // ==== Subrows nur im Expanded-Mode ====
-    if (expandedMode && hasPlacements){
-      for (var j=0; j<c.placements.length; j++){
-        var p = c.placements[j] || {};
-        var revP  = (typeof p.revenue === 'number') ? p.revenue : ((p.ad||0)*(p.roas||0));
-        var ctrP  = (p.impressions ? (p.clicks||0)/(p.impressions||1) : null);
-        var roasP = (p.ad ? (revP||0)/(p.ad||1) : (typeof p.roas==='number' ? p.roas : null));
+// ==== Subrows nur im Expanded-Mode ====
+if (expandedMode && hasPlacements){
+  for (var j = 0; j < c.placements.length; j++){
+    var p = c.placements[j] || {};
+    var revP  = (typeof p.revenue === 'number') ? p.revenue : ((p.ad || 0) * (p.roas || 0));
+    var ctrP  = (p.impressions ? (p.clicks || 0) / (p.impressions || 1) : null);
+    var roasP = (p.ad ? (revP || 0) / (p.ad || 1) : (typeof p.roas === 'number' ? p.roas : null));
 
-        var sub = document.createElement('tr');
-        sub.className = 'subrow child-of-'+cid + (isOpen ? '' : ' hidden');
-        sub.innerHTML =
-          '<td></td>'+ // expcol leer
-          '<td class="indent">↳ '+ (p.placement || p.name || '') +'</td>'+
-          '<td></td>'+ // Brand nur oben
-          '<td>'+ (p.start && p.end ? fmtPeriod(p.start,p.end) : '') +'</td>'+ // Period Placement
-          '<td>'+ (p.strategy || '') +'</td>'+
-          '<td>'+ (p.channel  || '') +'</td>'+ // Channel nur Placement
-          '<td>'+ (p.type     || '') +'</td>'+
-          '<td>'+ (p.placement|| '') +'</td>'+
-          '<td class="right">'+ (p.ad!=null? fmtMoney0(p.ad) : '') +'</td>'+
-          '<td class="right">'+ (p.impressions!=null? fmtNum(Math.round(p.impressions)) : '') +'</td>'+
-          '<td class="right">'+ (p.clicks!=null? fmtNum(Math.round(p.clicks)) : '') +'</td>'+
-          '<td class="right">'+ (ctrP!=null? fmtPct1(ctrP) : '') +'</td>'+
-          '<td class="right">'+ (p.orders!=null? fmtNum(Math.round(p.orders)) : '') +'</td>'+ // Sales
-          '<td class="right">'+ (revP!=null? fmtMoney0(revP) : '') +'</td>'+
-          '<td class="right">'+ (roasP!=null? roasP.toFixed(2)+'×' : '') +'</td>';
-        tbody.appendChild(sub);
-      }
-    }
+    var sub = document.createElement('tr');
+    sub.className = 'subrow child-of-' + cid + (isOpen ? '' : ' hidden');
+    sub.innerHTML =
+      '<td></td>' +
+      '<td class="indent">↳ ' + (p.placement || p.name || '') + '</td>' +
+      '<td></td>' +
+      '<td>' + (p.start && p.end ? fmtPeriod(p.start, p.end) : '') + '</td>' +
+      '<td>' + (p.strategy || '') + '</td>' +
+      '<td>' + (p.channel  || '') + '</td>' +
+      '<td>' + (p.type     || '') + '</td>' +
+      '<td>' + (p.placement|| '') + '</td>' +
+      '<td class="right">' + (p.ad != null ? fmtMoney0(p.ad) : '') + '</td>' +
+      '<td class="right">' + (p.impressions != null ? fmtNum(Math.round(p.impressions)) : '') + '</td>' +
+      '<td class="right">' + (p.clicks != null ? fmtNum(Math.round(p.clicks)) : '') + '</td>' +
+      '<td class="right">' + (ctrP != null ? fmtPct1(ctrP) : '') + '</td>' +
+      '<td class="right">' +
+        (p.orders != null
+          ? '<a class="link-cell" href="sales.html?campaign=' + encodeURIComponent(c.name) +
+            '&placement=' + encodeURIComponent(p.placement || '') + '">' +
+              fmtNum(Math.round(p.orders)) +
+            '</a>'
+          : ''
+        ) +
+      '</td>' +
+      '<td class="right">' + (revP != null ? fmtMoney0(revP) : '') + '</td>' +
+      '<td class="right">' + (roasP != null ? roasP.toFixed(2) + '×' : '') + '</td>';
+    tbody.appendChild(sub);
   }
+}
+
+
 
   // ===== Einmaliger Click-Handler für +/– =====
   if (!tbody.__boundExpander){
