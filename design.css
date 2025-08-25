@@ -322,3 +322,24 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
     grid-template-columns: repeat(2, minmax(190px, 1fr));
   }
 }
+
+/* ===== Campaign table: expandable rows ===== */
+#campaignTable th.expcol{ width: 36px; }
+
+#campaignTable .expander{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:6px;
+  background: rgba(255,199,177,0.14);
+  border: 1px solid rgba(255,199,177,0.45);
+  color: var(--theme,#FFC7B1); font-weight:900;
+  cursor:pointer; user-select:none;
+}
+#campaignTable .expander:hover{ filter:brightness(1.06); }
+#campaignTable .expander:focus{ outline:1px dashed rgba(255,199,177,0.6); }
+
+#campaignTable tr.subrow td{
+  background: rgba(255,199,177,0.06);
+  border-top: 1px dashed rgba(255,199,177,0.15);
+}
+#campaignTable tr.subrow td.indent{ padding-left: 24px; }
+.hidden{ display:none !important; }
