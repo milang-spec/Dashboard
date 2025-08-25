@@ -379,28 +379,100 @@ function renderCampaignOverview(all){
   el=document.getElementById('ov-delivered'); if(el) el.textContent=(t.delivered*100).toFixed(0)+'%';
 }
 function renderCampaignTable(list, allList){
-  list=list||[]; allList=allList||[];
-  var tbody=document.querySelector('#campaignTable tbody'); if(!tbody) return;
-  tbody.innerHTML='';
-  var sorted=list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
-  for (var i=0;i<sorted.length;i++){
-    var c=sorted[i];
-    var roas=safeDiv(c.revenue,c.ad);
-    var flight=c.start.slice(8,10)+'.'+c.start.slice(5,7)+'.'+c.start.slice(0,4)+'–'+c.end.slice(8,10)+'.'+c.end.slice(5,7)+'.'+c.end.slice(0,4);
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+c.name+'</td><td>'+c.site+'</td><td>'+c.model+'</td><td>'+flight+'</td>'+
+  list = list || []; allList = allList || [];
+  var tbody = document.querySelector('#campaignTable tbody'); if(!tbody) return;
+  tbody.innerHTML = '';
+
+  // sortieren (Beispiel: nach Ad Spend)
+  var sorted = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
+
+  for (var i=0; i<sorted.length; i++){
+    var c = sorted[i];
+    var roas = safeDiv(c.revenue, c.ad);
+    var flight = c.start.slice(8,10)+'.'+c.start.slice(5,7)+'.'+c.start.slice(0,4)+'–'+
+                 c.end.slice(8,10)+'.'+c.end.slice(5,7)+'.'+c.end.slice(0,4);
+
+    var cid = 'camp_' + i;
+    var hasPlacements = Array.isArray(c.placements) && c.placements.length > 0;
+
+    // === Kampagnenzeile
+    var tr = document.createElement('tr');
+    tr.className = 'parent';
+    tr.setAttribute('data-cid', cid);
+    tr.innerHTML =
+      '<td class="expcol">'+ (hasPlacements
+         ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>'
+         : '') + '</td>'+
+      '<td>'+ (c.name||'—') +'</td>'+
+      '<td>'+ (c.brand||'—') +'</td>'+           // Brand auf Kampagnen-Ebene
+      '<td>'+ (c.site||'—') +'</td>'+
+      '<td>'+ (c.model||'—') +'</td>'+
+      '<td>'+ flight +'</td>'+
+      '<td>—</td>'+                             // Strategy nur auf Platzierungs-Ebene
+      '<td>—</td>'+                             // Type nur auf Platzierungs-Ebene
       '<td class="right">'+fmtNum(Math.round(c.impressions||0))+'</td>'+
       '<td class="right">'+fmtNum(Math.round(c.clicks||0))+'</td>'+
       '<td class="right">'+fmtPct1(safeDiv(c.clicks,c.impressions))+'</td>'+
-      '<td class="right">'+fmtMoney0(c.ad)+'</td>'+
-      '<td class="right">'+fmtMoney0(c.revenue)+'</td>'+
+      '<td class="right">'+fmtMoney0(c.ad||0)+'</td>'+
+      '<td class="right">'+fmtMoney0(c.revenue||0)+'</td>'+
       '<td class="right">'+(roas||0).toFixed(2)+'×</td>'+
-      '<td class="right">'+fmtNum(c.orders||0)+'</td>';
+      '<td class="right">'+fmtNum(Math.round(c.orders||0))+'</td>';
     tbody.appendChild(tr);
+
+    // === Platzierungen (falls vorhanden)
+    if (hasPlacements){
+      for (var j=0; j<c.placements.length; j++){
+        var p = c.placements[j] || {};
+        var rev = (typeof p.revenue === 'number') ? p.revenue : (p.ad||0)*(p.roas||0);
+        var sub = document.createElement('tr');
+        sub.className = 'subrow hidden child-of-'+cid;
+        sub.innerHTML =
+          '<td></td>'+ // kein Expander
+          '<td class="indent">↳ '+ (p.placement||'Placement') +'</td>'+
+          '<td>—</td>'+                                    // Brand bleibt oben
+          '<td>—</td>'+                                    // Site optional
+          '<td>—</td>'+                                    // Model optional
+          '<td>—</td>'+                                    // Flight nicht auf Platzierung
+          '<td>'+ (p.strategy||'—') +'</td>'+
+          '<td>'+ (p.type||'—') +'</td>'+
+          '<td class="right">'+fmtNum(Math.round(p.impressions||0))+'</td>'+
+          '<td class="right">'+fmtNum(Math.round(p.clicks||0))+'</td>'+
+          '<td class="right">'+fmtPct1(safeDiv(p.clicks,p.impressions))+'</td>'+
+          '<td class="right">'+fmtMoney0(p.ad||0)+'</td>'+
+          '<td class="right">'+fmtMoney0(rev||0)+'</td>'+
+          '<td class="right">'+(p.roas||safeDiv(rev,p.ad)||0).toFixed(2)+'×</td>'+
+          '<td class="right">'+fmtNum(Math.round(p.orders||0))+'</td>';
+        tbody.appendChild(sub);
+      }
+    }
   }
-  var sumF=totals(list), sumA=totals(allList);
-  var r1=document.getElementById('campaignFilterRow'), r2=document.getElementById('campaignGrandRow');
-  if(r1) r1.innerHTML='<td>Summe (Filter)</td><td>—</td><td>—</td><td>—</td>'+
+
+  // Toggle einmalig binden (Event-Delegation)
+  if (!tbody.__boundExpander){
+    tbody.addEventListener('click', function(e){
+      var btn = e.target.closest('.expander'); if(!btn) return;
+      var cid = btn.getAttribute('data-target'); if(!cid) return;
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      btn.textContent = open ? '+' : '–';
+      var rows = tbody.querySelectorAll('.child-of-'+cid);
+      for (var r=0; r<rows.length; r++){
+        rows[r].classList.toggle('hidden', open);
+      }
+    });
+    tbody.__boundExpander = true;
+  }
+
+  // Summenzeilen (angepasst auf neue Spaltenzahl)
+  var sumF = totals(list), sumA = totals(allList);
+  var r1 = document.getElementById('campaignFilterRow'),
+      r2 = document.getElementById('campaignGrandRow');
+
+  var prefixCells = '<td></td><td><b>'; // expcol + Campaign Titel öffnet
+  var midCells    = '</b></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>';
+
+  if(r1) r1.innerHTML =
+    prefixCells+'Summe (Filter)'+midCells+
     '<td class="right">'+fmtNum(Math.round(sumF.impressions))+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumF.clicks))+'</td>'+
     '<td class="right">'+fmtPct1(sumF.ctr)+'</td>'+
@@ -408,7 +480,9 @@ function renderCampaignTable(list, allList){
     '<td class="right">'+fmtMoney0(sumF.revenue)+'</td>'+
     '<td class="right">'+(sumF.roas||0).toFixed(2)+'×</td>'+
     '<td class="right">'+fmtNum(Math.round(sumF.orders))+'</td>';
-  if(r2) r2.innerHTML='<td>Gesamt (Alle)</td><td>—</td><td>—</td><td>—</td>'+
+
+  if(r2) r2.innerHTML =
+    prefixCells+'Gesamt (Alle)'+midCells+
     '<td class="right">'+fmtNum(Math.round(sumA.impressions))+'</td>'+
     '<td class="right">'+fmtNum(Math.round(sumA.clicks))+'</td>'+
     '<td class="right">'+fmtPct1(sumA.ctr)+'</td>'+
@@ -417,6 +491,7 @@ function renderCampaignTable(list, allList){
     '<td class="right">'+(sumA.roas||0).toFixed(2)+'×</td>'+
     '<td class="right">'+fmtNum(Math.round(sumA.orders))+'</td>';
 }
+
 
 /* ========= Re-Rank ========= */
 function renderRerankOverview(rerankList, salesDetails){
