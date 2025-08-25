@@ -2,51 +2,112 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>Sales Details – Produktreport</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sales Details</title>
+
+  <!-- Theme / layout (use your existing files) -->
   <link rel="stylesheet" href="design.css" />
+  <link rel="stylesheet" href="layout.css" />
+
+  <style>
+    /* Minor page-specific touches (non-invasive) */
+    .sales-header {
+      display:flex; justify-content:flex-end; align-items:center; gap:12px;
+      margin: 12px 0 8px;
+    }
+    .btn-back {
+      padding:10px 16px; border-radius:12px; border:1px solid rgba(255,199,177,.45);
+      background: rgba(255,199,177,.14); color: #fff; text-decoration:none; font-weight:700;
+    }
+    .filters-row {
+      display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
+    }
+    .filter-card {
+      min-width: 260px;
+    }
+    .filter-card label{
+      display:block; font-size:.9rem; opacity:.85; margin-bottom:6px;
+    }
+    .filter-card select{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,199,177,.35);
+      background:#222; color:#fff;
+    }
+    .kpi-row{
+      display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;
+    }
+    .kpi .value{ font-size:2.2rem; }
+    .section-title{ font-size:1.4rem; font-weight:800; margin: 14px 0 8px; }
+    table.compact td.col-sales{ text-align:right; width: 140px; }
+    table.compact td.col-revenue{ text-align:right; width: 180px; }
+    .hint {
+      font-size:.9rem; opacity:.8; margin-top:6px;
+    }
+  </style>
+
+  <!-- External logic (no inline JS) -->
+  <script src="sales.js" defer></script>
 </head>
-<body style="overflow:auto;">
-  <div style="max-width:1400px;margin:22px auto;padding:0 16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <h1 style="margin:0;font-size:28px;color:var(--theme)">Sales Details (Jan–Aug 2025)</h1>
-      <a href="index.html" class="sales-btn" style="text-decoration:none;">← Zurück zum Dashboard</a>
+<body>
+
+  <main class="page-wrap">
+
+    <!-- Top bar with back button -->
+    <div class="card sales-header">
+      <a class="btn-back" href="index.html">← Zurück zum Dashboard</a>
     </div>
 
-<section class="card" style="margin-bottom:14px;">
-  <h2>Sales Details</h2>
-  <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
-    <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr); flex:1 1 auto; min-width:420px;">
-      <div class="kpi"><div class="label">Sales (Einheiten)</div><div class="value" id="sd-sales">—</div></div>
-      <div class="kpi"><div class="label">Revenue</div><div class="value" id="sd-revenue">—</div></div>
-    </div>
-    <div style="min-width:280px;">
-      <label style="display:block;font-weight:800;color:var(--theme);margin:0 0 6px;">Kampagne</label>
-      <select id="salesCampaign" class="chip" style="width:100%;cursor:pointer;"></select>
-    </div>
-  </div>
-</section>
-
-
+    <!-- Filters + KPIs -->
     <section class="card">
-      <h2>Produktliste</h2>
+      <div class="filters-row">
+        <div class="filter-card">
+          <label for="salesFilterCampaign">Kampagne</label>
+          <select id="salesFilterCampaign">
+            <!-- filled by sales.js -->
+          </select>
+        </div>
+        <div class="filter-card">
+          <label for="salesFilterPlacement">Placement</label>
+          <select id="salesFilterPlacement">
+            <!-- filled by sales.js -->
+          </select>
+          <div id="placementHint" class="hint" style="display:none">
+            Hinweis: Detaillierte Zuordnung Produkt ↔ Placement ist (noch) nicht hinterlegt.
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="label">Sales (Einheiten)</div>
+          <div id="kpi-sales" class="value">–</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Revenue</div>
+          <div id="kpi-revenue" class="value">–</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table: Sold products -->
+    <section class="card">
+      <div class="section-title">Verkaufte Produkte</div>
       <div class="table-wrap">
-        <table id="salesTable">
+        <table id="salesTable" class="compact">
           <thead>
             <tr>
               <th>SKU</th>
-              <th>Produkt</th>
-              <th class="right">Einheiten</th>
+              <th>Item Name</th>
+              <th class="right">Sales</th>
               <th class="right">Revenue</th>
             </tr>
           </thead>
-          <tbody><!-- via JS --></tbody>
+          <tbody id="salesTBody">
+            <!-- rows rendered by sales.js -->
+          </tbody>
         </table>
       </div>
     </section>
-  </div>
 
-  <script src="data.js"></script>
-  <script src="sales.js"></script>
+  </main>
 </body>
 </html>
