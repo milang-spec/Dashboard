@@ -437,7 +437,13 @@ if (table) table.classList.toggle('expanded', expandedMode);
         '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
         '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
         '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
-        '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // Sales
+        // Sales auf Kampagnen-Ebene als Link auf sales.html
+'<td class="right">'+
+  (c.orders!=null
+    ? '<a class="link-cell" href="sales.html?campaign='+encodeURIComponent(c.name)+'">'+fmtNum(Math.round(c.orders))+'</a>'
+    : ''
+  )+
+'</td>'
         '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
         '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
     } else {
@@ -455,7 +461,13 @@ if (table) table.classList.toggle('expanded', expandedMode);
         '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
         '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
         '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
-        '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // Sales
+        // Sales auf Placement-Ebene – Kampagnen- UND Placement-Parameter setzen
+'<td class="right">'+
+  (p.orders!=null
+    ? '<a class="link-cell" href="sales.html?campaign='+encodeURIComponent(c.name)+'&placement='+encodeURIComponent(p.placement||"")+'">'+fmtNum(Math.round(p.orders))+'</a>'
+    : ''
+  )+
+'</td>'
         '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
         '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
     }
