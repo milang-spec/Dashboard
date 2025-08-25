@@ -378,13 +378,7 @@ function renderCampaignOverview(all){
   el=document.getElementById('ov-ad'); if(el) el.textContent=fmtMoney0(t.ad);
   el=document.getElementById('ov-delivered'); if(el) el.textContent=(t.delivered*100).toFixed(0)+'%';
 }
-// ===== Helper: Placement-Header sichtbar/unsichtbar schalten (display, nicht nur opacity)
-function setPlacementHeadersExpanded(expanded){
-  var hdrs = document.querySelectorAll('#campaignTable thead .placement-hdr');
-  for (var i=0;i<hdrs.length;i++){
-    hdrs[i].style.display = expanded ? '' : 'none';
-  }
-}
+
 
 // ===== Helper: Zeitraumformat
 function fmtPeriod(s, e){
@@ -411,7 +405,8 @@ function renderCampaignTable(list, allList){
 
   // sind Kampagnen aufgeklappt?
   var expandedMode = (STATE.expanded && STATE.expanded.size > 0);
-  setPlacementHeadersExpanded(expandedMode);
+  var table = document.getElementById('campaignTable');
+if (table) table.classList.toggle('expanded', expandedMode);
 
   // sortiere optional nach AdSpend
   var rows = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
