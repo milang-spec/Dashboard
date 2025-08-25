@@ -378,78 +378,104 @@ function renderCampaignOverview(all){
   el=document.getElementById('ov-ad'); if(el) el.textContent=fmtMoney0(t.ad);
   el=document.getElementById('ov-delivered'); if(el) el.textContent=(t.delivered*100).toFixed(0)+'%';
 }
-// Kopfzeilen für Placement-Spalten sichtbar/unsichtbar schalten
-function setPlacementHeadersVisible(visible){
+// ===== Helper: Placement-Header sichtbar/unsichtbar schalten (display, nicht nur opacity)
+function setPlacementHeadersExpanded(expanded){
   var hdrs = document.querySelectorAll('#campaignTable thead .placement-hdr');
   for (var i=0;i<hdrs.length;i++){
-    hdrs[i].classList.toggle('show', !!visible);
+    hdrs[i].style.display = expanded ? '' : 'none';
   }
 }
 
-// dd.mm.yyyy–dd.mm.yyyy aus "YYYY-MM-DD"
+// ===== Helper: Zeitraumformat
 function fmtPeriod(s, e){
   if(!s || !e) return '';
-  var ds = s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4);
-  var de = e.slice(8,10)+'.'+e.slice(5,7)+'.'+e.slice(0,4);
-  return ds+'–'+de;
+  return s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4)+'–'+
+         e.slice(8,10)+'.'+e.slice(5,7)+'.'+e.slice(0,4);
 }
 
+// ===== Globaler Expand-Status
+window.STATE = window.STATE || {};
+STATE.expanded = STATE.expanded || new Set();
+
+// ===== Hauptfunktion
 function renderCampaignTable(list, allList){
-  list = list || []; 
+  list    = list    || [];
   allList = allList || [];
 
+  // gespeichert, damit der Click-Handler neu rendern kann
+  renderCampaignTable._last = { list:list, allList:allList };
+
   var tbody = document.querySelector('#campaignTable tbody');
-  if (!tbody) return;
+  if(!tbody) return;
   tbody.innerHTML = '';
 
-  // Placement-Header initial ausblenden
-  setPlacementHeadersVisible(false);
+  // sind Kampagnen aufgeklappt?
+  var expandedMode = (STATE.expanded && STATE.expanded.size > 0);
+  setPlacementHeadersExpanded(expandedMode);
 
-  // sortieren (optional): nach Ad Spend absteigend
-  var sorted = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
+  // sortiere optional nach AdSpend
+  var rows = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
 
-  for (var i=0; i<sorted.length; i++){
-    var c = sorted[i] || {};
-    var cid = 'camp_' + i;
-    var hasPlacements = Array.isArray(c.placements) && c.placements.length > 0;
+  for (var i=0; i<rows.length; i++){
+    var c = rows[i] || {};
+    var cid = 'camp_'+i;
+    var hasPlacements = Array.isArray(c.placements) && c.placements.length>0;
+    var isOpen = expandedMode && STATE.expanded.has(cid);
 
-    // KPIs Kampagne
+    // KPIs der Kampagne
     var ctrC  = (c.impressions ? (c.clicks||0)/(c.impressions||1) : null);
     var roasC = (c.ad ? (c.revenue||0)/(c.ad||1) : null);
 
-    // Parent-Row (Campaign-Zeile) – Strategy/Channel/Type/Placement leer
     var tr = document.createElement('tr');
     tr.className = 'parent';
     tr.setAttribute('data-cid', cid);
-    tr.innerHTML =
-      '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>' : '') +'</td>'+
-      '<td>'+ (c.name||'') +'</td>'+
-      '<td>'+ (c.brand||'') +'</td>'+
-      '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
-      '<td></td>'+ // Strategy nur Placement
-      '<td></td>'+ // Channel nur Placement
-      '<td></td>'+ // Type nur Placement
-      '<td></td>'+ // Placement nur Placement
-      '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
-      '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
-      '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
-      '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
-      '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // Sales
-      '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
-      '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
+
+    // ==== Parent-Row: zwei Varianten (collapsed vs expanded) ====
+    if (!expandedMode){
+      // ---- Collapsed: keine Placement-Spalten, KPI direkt nach Period
+      tr.innerHTML =
+        '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>' : '') +'</td>'+
+        '<td>'+ (c.name||'') +'</td>'+
+        '<td>'+ (c.brand||'') +'</td>'+
+        '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
+        '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
+        '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
+        '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
+        '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
+        '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // Sales
+        '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
+        '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
+    } else {
+      // ---- Expanded: 4 Placement-Spalten zwischen Period und KPIs
+      tr.innerHTML =
+        '<td class="expcol">'+ (hasPlacements ? '<button class="expander" aria-expanded="'+(isOpen?'true':'false')+'" data-target="'+cid+'">'+(isOpen?'–':'+')+'</button>' : '') +'</td>'+
+        '<td>'+ (c.name||'') +'</td>'+
+        '<td>'+ (c.brand||'') +'</td>'+
+        '<td>'+ fmtPeriod(c.start, c.end) +'</td>'+
+        '<td></td>'+ // Strategy nur Placement
+        '<td></td>'+ // Channel nur Placement
+        '<td></td>'+ // Type nur Placement
+        '<td></td>'+ // Placement nur Placement
+        '<td class="right">'+ (c.ad!=null? fmtMoney0(c.ad) : '') +'</td>'+
+        '<td class="right">'+ (c.impressions!=null? fmtNum(Math.round(c.impressions)) : '') +'</td>'+
+        '<td class="right">'+ (c.clicks!=null? fmtNum(Math.round(c.clicks)) : '') +'</td>'+
+        '<td class="right">'+ (ctrC!=null? fmtPct1(ctrC) : '') +'</td>'+
+        '<td class="right">'+ (c.orders!=null? fmtNum(Math.round(c.orders)) : '') +'</td>'+ // Sales
+        '<td class="right">'+ (c.revenue!=null? fmtMoney0(c.revenue) : '') +'</td>'+
+        '<td class="right">'+ (roasC!=null? roasC.toFixed(2)+'×' : '') +'</td>';
+    }
     tbody.appendChild(tr);
 
-    // Subrows (Placements)
-    if (hasPlacements){
+    // ==== Subrows nur im Expanded-Mode ====
+    if (expandedMode && hasPlacements){
       for (var j=0; j<c.placements.length; j++){
         var p = c.placements[j] || {};
-
         var revP  = (typeof p.revenue === 'number') ? p.revenue : ((p.ad||0)*(p.roas||0));
         var ctrP  = (p.impressions ? (p.clicks||0)/(p.impressions||1) : null);
         var roasP = (p.ad ? (revP||0)/(p.ad||1) : (typeof p.roas==='number' ? p.roas : null));
 
         var sub = document.createElement('tr');
-        sub.className = 'subrow hidden child-of-'+cid;
+        sub.className = 'subrow child-of-'+cid + (isOpen ? '' : ' hidden');
         sub.innerHTML =
           '<td></td>'+ // expcol leer
           '<td class="indent">↳ '+ (p.placement || p.name || '') +'</td>'+
@@ -471,50 +497,60 @@ function renderCampaignTable(list, allList){
     }
   }
 
-  // Expander toggeln + Placement-Header ein-/ausblenden
+  // ===== Einmaliger Click-Handler für +/– =====
   if (!tbody.__boundExpander){
     tbody.addEventListener('click', function(e){
-      var btn = e.target.closest('.expander'); 
+      var btn = e.target.closest('.expander');
       if(!btn) return;
 
-      var cid = btn.getAttribute('data-target'); 
+      var cid = btn.getAttribute('data-target');
       if(!cid) return;
 
-      var open = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-      btn.textContent = open ? '+' : '–';
-
-      var rows = tbody.querySelectorAll('.child-of-'+cid);
-      for (var r=0; r<rows.length; r++){
-        rows[r].classList.toggle('hidden', open);
+      // Wenn aktuell collapsed → expand-Modus starten & dieses cid öffnen
+      if (!(STATE.expanded && STATE.expanded.size > 0)){
+        STATE.expanded = new Set([cid]);
+        renderCampaignTable(renderCampaignTable._last.list, renderCampaignTable._last.allList);
+        return;
       }
 
-      // true, wenn irgendeine Subrow sichtbar ist
-      var anyOpen = !!tbody.querySelector('.subrow:not(.hidden)');
-      setPlacementHeadersVisible(anyOpen);
+      // Sonst toggeln
+      if (STATE.expanded.has(cid)) STATE.expanded.delete(cid);
+      else STATE.expanded.add(cid);
+
+      // Wenn kein Eintrag mehr offen → zurück in collapsed
+      if (STATE.expanded.size === 0){
+        renderCampaignTable(renderCampaignTable._last.list, renderCampaignTable._last.allList);
+      } else {
+        // expanded bleibt → neu bauen (zeigt subrows und header)
+        renderCampaignTable(renderCampaignTable._last.list, renderCampaignTable._last.allList);
+      }
     });
     tbody.__boundExpander = true;
   }
 
-  // --- Summenzeile: nur "Gesamt (Alle)" ---
-  var sumA = totals(allList && allList.length ? allList : list);
-  var roasSum = (sumA.ad ? (sumA.revenue||0)/(sumA.ad||1) : (sumA.roas||0));
+  // ===== Summenzeile (nur Gesamt) – je nach Modus Platzhalter anpassen
+  var sum = totals(allList && allList.length ? allList : list);
+  var roasSum = (sum.ad ? (sum.revenue||0)/(sum.ad||1) : (sum.roas||0));
 
   var r2 = document.getElementById('campaignGrandRow');
   if (r2){
-    // 8 Kopfspalten vor den Metriken: expcol, Campaign, Brand, Period, Strategy, Channel, Type, Placement
+    // Collapsed: vor den KPIs gibt’s 4 Spalten (expcol + Campaign + Brand + Period)
+    // Expanded: vor den KPIs gibt’s 8 Spalten (zusätzlich Strategy, Channel, Type, Placement)
+    var preCols = expandedMode ? 8 : 4;
+    var cells = ['<td></td><td><b>Gesamt (Alle)</b></td><td></td><td></td>'];
+    if (expandedMode) cells.push('<td></td><td></td><td></td><td></td>'); // 4 Placement-Spalten
+
     r2.innerHTML =
-      '<td></td><td><b>Gesamt (Alle)</b></td><td></td><td></td><td></td><td></td><td></td><td></td>'+
-      '<td class="right">'+fmtMoney0(sumA.ad)+'</td>'+
-      '<td class="right">'+fmtNum(Math.round(sumA.impressions||0))+'</td>'+
-      '<td class="right">'+fmtNum(Math.round(sumA.clicks||0))+'</td>'+
-      '<td class="right">'+fmtPct1(sumA.ctr||0)+'</td>'+
-      '<td class="right">'+fmtNum(Math.round(sumA.orders||0))+'</td>'+
-      '<td class="right">'+fmtMoney0(sumA.revenue||0)+'</td>'+
+      cells.join('')+
+      '<td class="right">'+fmtMoney0(sum.ad||0)+'</td>'+
+      '<td class="right">'+fmtNum(Math.round(sum.impressions||0))+'</td>'+
+      '<td class="right">'+fmtNum(Math.round(sum.clicks||0))+'</td>'+
+      '<td class="right">'+fmtPct1(sum.ctr||0)+'</td>'+
+      '<td class="right">'+fmtNum(Math.round(sum.orders||0))+'</td>'+
+      '<td class="right">'+fmtMoney0(sum.revenue||0)+'</td>'+
       '<td class="right">'+(roasSum||0).toFixed(2)+'×</td>';
   }
 }
-
 
 
 
