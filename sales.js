@@ -1,210 +1,171 @@
 (function () {
-  // ---------- Utils ----------
-  function fmtMoney0(n) {
-    return (n || 0).toLocaleString('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0
-    });
-  }
-  function fmtNum(n) { return (n || 0).toLocaleString('de-DE'); }
-  function getParam(name) {
-    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
+  // --- helpers ---
+  function fmtMoney0(n){ return (n||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
+  function fmtNum(n){ return (n||0).toLocaleString('de-DE'); }
+  function getParam(name){
+    var m = new RegExp('[?&]'+name+'=([^&]*)').exec(location.search);
     return m ? decodeURIComponent(m[1]) : '';
   }
-  function byIdAny(ids) {
-    for (var i = 0; i < ids.length; i++) {
-      var el = document.getElementById(ids[i]);
-      if (el) return el;
-    }
-    return null;
+  function prettifySku(raw, idx){
+    // prefer SKU-xxx if already present
+    if(/^sku-\d{3}$/i.test(String(raw||''))) return String(raw).toUpperCase();
+    // try to take a trailing number from raw ("SS-03" -> 3)
+    var m = String(raw||'').match(/\d+/g);
+    var num = m ? parseInt(m[m.length-1],10) : (idx+1);
+    return "SKU-" + String(num).padStart(3,'0');
   }
 
-  // ---------- Daten / Scope ----------
+  // --- read global data prepared by data.js ---
   var D = window.DASHBOARD_DATA || {};
+  var campaigns = (D.campaigns_2025 || []).slice();
+
+  // --- scope from dashboard chips (ALL/ONSITE/OFFSITE/CPM/CPC) ---
   var scope = getParam('scope') || 'ALL';
-
-  function predicateFor(filter) {
-    switch (filter) {
-      case 'ONSITE': return function (c) { return c.site === 'Onsite'; };
-      case 'OFFSITE': return function (c) { return c.site === 'Offsite'; };
-      case 'CPM': return function (c) { return c.model === 'CPM'; };
-      case 'CPC': return function (c) { return c.model === 'CPC'; };
-      default: return function () { return true; };
+  function predicateFor(filter){
+    switch(filter){
+      case 'ONSITE': return function(c){ return (c.site||'').toLowerCase()==='onsite'; };
+      case 'OFFSITE':return function(c){ return (c.site||'').toLowerCase()==='offsite'; };
+      case 'CPM':    return function(c){ return (c.model||'').toUpperCase()==='CPM'; };
+      case 'CPC':    return function(c){ return (c.model||'').toUpperCase()==='CPC'; };
+      default:       return function(){ return true; };
     }
   }
+  campaigns = campaigns.filter(predicateFor(scope));
 
-  // Standard: 2025 (Jan–Aug), gefiltert nach scope
-  var all = (D.campaigns_2025 || []).filter(predicateFor(scope));
+  // --- DOM refs ---
+  var selCamp = document.getElementById('salesFilterCampaign');
+  var selPlac = document.getElementById('salesFilterPlacement');
+  var kpiSales = document.getElementById('kpi-sales');
+  var kpiRev   = document.getElementById('kpi-revenue');
+  var tbody    = document.getElementById('salesTBody');
+  var sumSales = document.getElementById('sumSales');
+  var sumRev   = document.getElementById('sumRevenue');
 
-  // Optionales Produkt→Placement-Mapping (wenn vorhanden → echter Placement-Filter)
-  var PLMAP = D.product_placement_map || null;
+  // --- build campaign dropdown ---
+  var campOpts = [{value:'ALL', label:'Alle Kampagnen'}]
+    .concat(campaigns.map(function(c){ return {value:c.name, label:c.name}; }));
+  selCamp.innerHTML = campOpts.map(function(o){
+    return '<option value="'+o.value+'">'+o.label+'</option>';
+  }).join('');
 
-  // ---------- DOM Targets (alte & neue IDs werden unterstützt) ----------
-  var selCampaign = byIdAny(['salesFilterCampaign', 'salesCampaign']);
-  var selPlacement = byIdAny(['salesFilterPlacement']); // nur neue HTML hat den expliziten Placement-Select
-  var tableBody =
-    (function () {
-      var t = document.querySelector('#salesTable tbody');
-      if (t) return t;
-      return byIdAny(['salesTBody']);
-    })();
-
-  // KPIs: alt (sd-*) ODER neu (kpi-*)
-  var kpiSales = byIdAny(['kpi-sales', 'sd-sales']);
-  var kpiRevenue = byIdAny(['kpi-revenue', 'sd-revenue']);
-
-  // ---------- Hilfsfunktionen ----------
-  function listProductsForCampaigns(campaigns) {
-    var map = {}; // key: sku || name
-    campaigns.forEach(function (c) {
-      (c.products || []).forEach(function (p) {
-        var key = (p.sku || p.name || '').toLowerCase();
-        if (!map[key]) map[key] = { sku: p.sku || '', name: p.name, units: 0, revenue: 0 };
-        map[key].units += (p.units || 0);
-        map[key].revenue += (p.revenue || 0);
+  // --- build placement dropdown (depends on selected campaign) ---
+  function updatePlacementOptions(){
+    var camp = selCamp.value;
+    var placements = [];
+    if(camp==='ALL'){
+      campaigns.forEach(function(c){
+        (c.placements||[]).forEach(function(p){
+          var key = (p.placement||'')+'@@'+c.name; // keep duplicates separated by campaign
+          placements.push({ value:key, label:p.placement+' — '+c.name, placement:p.placement, campaign:c.name });
+        });
       });
-    });
-    var arr = Object.keys(map).map(function (k) { return map[k]; });
-    arr.sort(function (a, b) { return (b.revenue || 0) - (a.revenue || 0); });
-    return arr;
-  }
-
-  function totalsFromCampaigns(campaigns) {
-    var u = 0, r = 0;
-    campaigns.forEach(function (c) {
-      (c.products || []).forEach(function (p) {
-        u += (p.units || 0);
-        r += (p.revenue || 0);
+    } else {
+      var c = campaigns.find(function(x){return x.name===camp;});
+      (c && c.placements || []).forEach(function(p){
+        placements.push({ value:(p.placement||''), label:(p.placement||'') });
       });
-    });
-    return { units: u, revenue: r };
-  }
-
-  function campaignByName(name) {
-    return all.find(function (c) { return c.name === name; });
-  }
-
-  function productNamesForCampaign(name) {
-    var c = campaignByName(name);
-    return c ? (c.products || []).map(function (p) { return p.name; }) : [];
-  }
-
-  function placementsForCampaign(name) {
-    // Alle Placements (Union) für gewählte Kampagne; bei leerer Kampagne: alle Placements
-    if (!name) {
-      var setAll = new Set();
-      all.forEach(function (c) { (c.placements || []).forEach(function (p) { if (p.placement) setAll.add(p.placement); }); });
-      return Array.from(setAll).sort();
     }
-    var c = campaignByName(name);
-    if (!c) return [];
-    var set = new Set((c.placements || []).map(function (p) { return p.placement || ''; }));
-    set.delete('');
-    return Array.from(set).sort();
-  }
+    placements.unshift({value:'ALL', label:'Alle Placements'});
 
-  function productMatchesPlacement(prodName, placement) {
-    if (!placement) return true; // kein Placement ausgewählt
-    if (PLMAP && PLMAP[prodName]) {
-      var v = PLMAP[prodName];
-      return Array.isArray(v) ? v.includes(placement) : (v === placement);
-    }
-    // kein Mapping → wir können nicht wirklich einschränken
-    return true;
-  }
-
-  // ---------- UI aufbauen ----------
-  function buildCampaignOptions(preSelected) {
-    if (!selCampaign) return;
-
-    var options = [{ value: 'ALL', label: 'Alle Kampagnen' }].concat(
-      all.map(function (c) { return { value: c.name, label: c.name }; })
-    );
-    selCampaign.innerHTML = options
-      .map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; })
-      .join('');
-
-    if (preSelected && all.some(function (c) { return c.name === preSelected; })) {
-      selCampaign.value = preSelected;
-    } else {
-      selCampaign.value = selCampaign.value || 'ALL';
-    }
-  }
-
-  function buildPlacementOptions(campaignName, prePlacement) {
-    if (!selPlacement) return; // alte HTML hat keinen Placement-Select
-
-    var plist = placementsForCampaign(campaignName === 'ALL' ? '' : campaignName);
-    selPlacement.innerHTML =
-      '<option value="">Alle Placements</option>' +
-      plist.map(function (p) { return '<option>' + p + '</option>'; }).join('');
-
-    if (prePlacement && plist.includes(prePlacement)) {
-      selPlacement.value = prePlacement;
-    } else {
-      selPlacement.value = '';
-    }
-  }
-
-  // ---------- Render ----------
-  function render() {
-    var selection = selCampaign ? selCampaign.value : 'ALL';
-    var placement = selPlacement ? selPlacement.value : '';
-
-    var selCamps = (selection === 'ALL')
-      ? all
-      : all.filter(function (c) { return c.name === selection; });
-
-    // Produktliste auf Kampagnenbasis
-    var list = listProductsForCampaigns(selCamps);
-
-    // Wenn Kampagne gesetzt → auf deren Produkte einschränken (Safety, falls SALES_DETAILS genutzt würden)
-    if (selection !== 'ALL') {
-      var prodSet = new Set(productNamesForCampaign(selection));
-      list = list.filter(function (p) { return prodSet.has(p.name); });
-    }
-
-    // ECHTER Placement-Filter nur, wenn Mapping existiert
-    if (placement) {
-      list = list.filter(function (p) { return productMatchesPlacement(p.name, placement); });
-    }
-
-    // KPIs (Totals immer aus Kampagnenprodukten, nicht aus list, damit konsistent)
-    var totals = totalsFromCampaigns(selCamps);
-    if (kpiSales) kpiSales.textContent = fmtNum(totals.units);
-    if (kpiRevenue) kpiRevenue.textContent = fmtMoney0(totals.revenue);
-
-    // Tabelle
-    if (!tableBody) return;
-    tableBody.innerHTML = list.map(function (p) {
-      return '<tr>' +
-        '<td>' + (p.sku || '') + '</td>' +
-        '<td>' + (p.name || '') + '</td>' +
-        '<td class="col-sales">' + fmtNum(p.units) + '</td>' +
-        '<td class="col-revenue">' + fmtMoney0(p.revenue) + '</td>' +
-        '</tr>';
+    selPlac.innerHTML = placements.map(function(o){
+      return '<option value="'+o.value+'">'+o.label+'</option>';
     }).join('');
   }
 
-  // ---------- Boot ----------
-  document.addEventListener('DOMContentLoaded', function () {
-    var preCampaign = getParam('campaign');   // aus Link vom Campaign-Table
-    var prePlacement = getParam('placement'); // dito
+  // --- collect & aggregate products according to current filters ---
+  function collect(selectionCamp, selectionPlac){
+    var list = [];
+    var map = {}; // key by sku+name for stable sums
+    var rowIdx = 0;
 
-    buildCampaignOptions(preCampaign || 'ALL');
-    buildPlacementOptions((selCampaign ? selCampaign.value : 'ALL'), prePlacement);
+    campaigns.forEach(function(c){
+      if(selectionCamp!=='ALL' && c.name!==selectionCamp) return;
 
-    if (selCampaign) {
-      selCampaign.addEventListener('change', function (e) {
-        buildPlacementOptions(e.target.value, '');
-        render();
+      var products = c.products||[];
+      var placements = c.placements||[];
+
+      // when a placement is chosen:
+      if(selectionPlac && selectionPlac!=='ALL'){
+        var placName = selectionCamp==='ALL'
+          ? (selectionPlac.split('@@')[0]||'')
+          : selectionPlac;
+
+        // optional: filter products by placement if you later store per-placement product splits
+        // For now we use full campaign products (as your data has products per campaign).
+      }
+
+      products.forEach(function(p){
+        var key = (String(p.sku||'')+'|'+String(p.name||'')).toLowerCase();
+        if(!map[key]){
+          map[key] = {
+            skuRaw:p.sku, name:p.name, units:0, revenue:0, row:rowIdx++
+          };
+        }
+        map[key].units   += (p.units||0);
+        map[key].revenue += (p.revenue||0);
       });
-    }
-    if (selPlacement) {
-      selPlacement.addEventListener('change', render);
-    }
+    });
 
+    Object.keys(map).forEach(function(k){ list.push(map[k]); });
+    // sort by revenue desc
+    list.sort(function(a,b){ return (b.revenue||0)-(a.revenue||0); });
+
+    // assign pretty SKU codes
+    list.forEach(function(r,i){ r.sku = prettifySku(r.skuRaw, i); });
+
+    return list;
+  }
+
+  function render(){
+    var camp = selCamp.value;
+    var plac = selPlac.value;
+
+    var rows = collect(camp, plac);
+    var u=0, r=0;
+
+    tbody.innerHTML = rows.map(function(p){
+      u += (p.units||0);
+      r += (p.revenue||0);
+      return (
+        '<tr>'+
+          '<td>'+ (p.sku||'') +'</td>'+
+          '<td>'+ (p.name||'') +'</td>'+
+          '<td class="right">'+ fmtNum(p.units||0) +'</td>'+
+          '<td class="right">'+ fmtMoney0(p.revenue||0) +'</td>'+
+        '</tr>'
+      );
+    }).join('');
+
+    kpiSales.textContent = fmtNum(u);
+    kpiRev.textContent   = fmtMoney0(r);
+    sumSales.textContent = fmtNum(u);
+    sumRev.textContent   = fmtMoney0(r);
+  }
+
+  // --- preselect from dashboard deep-link ---
+  var preCamp = getParam('campaign') || 'ALL';
+  var prePlac = getParam('placement') || 'ALL';
+  if (campOpts.some(function(o){return o.value===preCamp;})){
+    selCamp.value = preCamp;
+  }
+
+  updatePlacementOptions();
+  // Try to select placement if present
+  var hasPlac = false;
+  for (var i=0;i<selPlac.options.length;i++){
+    if(selPlac.options[i].value===prePlac || selPlac.options[i].text===prePlac){
+      selPlac.selectedIndex = i; hasPlac = true; break;
+    }
+  }
+  if(!hasPlac){ selPlac.value = 'ALL'; }
+
+  // events
+  selCamp.addEventListener('change', function(){
+    updatePlacementOptions();
     render();
   });
+  selPlac.addEventListener('change', render);
+
+  // initial
+  render();
 })();
