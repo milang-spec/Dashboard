@@ -1,145 +1,105 @@
-// data.js — vollständige, kompatible Datenbasis
+window.ALL_2025 = [
+  {
+    name: "New Year Boost", brand: "Redcare", site: "Offsite", model: "CPC", channel: "Search",
+    start: "2025-01-01", end: "2025-02-15",
+    booking: 60000, ad: 54000, revenue: 162000, orders: 1350,
+    ctr: 0.024, cpc: 0.90, impressions: 2500000, clicks: 60000,
+    products: [
+      { sku:"P-1001", name:"Vitamin D 2000 IU", units:500, revenue:54000 },
+      { sku:"P-1002", name:"Magnesium 400 mg",  units:450, revenue:49500 },
+      { sku:"P-1003", name:"Omega-3 Fischöl",   units:400, revenue:58500 }
+    ],
+    placements: [
+      { strategy:"Upper Funnel", type:"Display",  placement:"Homepage Hero",
+        impressions: 1100000, clicks: 24000, ad: 21600, roas: 2.9, orders: 520, revenue: 62640 },
+      { strategy:"Mid Funnel",   type:"Search",   placement:"Category / Search",
+        impressions: 900000,  clicks: 22800, ad: 19440, roas: 2.8, orders: 460, revenue: 54432 },
+      { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        impressions: 500000,  clicks: 13200, ad: 12960, roas: 3.5, orders: 370, revenue: 45360 }
+    ]
+  },
 
-window.DASHBOARD_DATA = {
-  // --- 2025 ---
-  campaigns_2025: [
-    {
-      name:"New Year Boost", site:"Offsite", model:"CPC", channel:"Search",
-      start:"2025-01-01", end:"2025-02-15",
-      booking:60000, ad:54000, revenue:162000, orders:1350,
-      ctr:0.024, cpc:0.90, impressions:2500000, clicks:60000,
-      products:[
-        { sku:"P-1001", name:"Vitamin D 2000 IU", units:500, revenue:54000 },
-        { sku:"P-1002", name:"Magnesium 400 mg",  units:450, revenue:49500 },
-        { sku:"P-1003", name:"Omega-3 Fischöl",   units:400, revenue:58500 }
-      ]
-    },
-    {
-      name:"Spring Awareness", site:"Offsite", model:"CPM", channel:"Display",
-      start:"2025-02-20", end:"2025-03-31",
-      booking:50000, ad:44000, revenue:99000, orders:620,
-      ctr:0.012, cpm:12.00, impressions:3666667, clicks:44000,
-      products:[
-        { sku:"P-2001", name:"Awareness Pack", units:220, revenue:35200 },
-        { sku:"P-2002", name:"Skin Lotion",    units:200, revenue:29000 },
-        { sku:"P-2003", name:"Sun Cream",      units:200, revenue:34800 }
-      ]
-    },
-    {
-      name:"Easter Drive", site:"Offsite", model:"CPM", channel:"Paid Social",
-      start:"2025-03-20", end:"2025-04-30",
-      booking:80000, ad:76000, revenue:209000, orders:1580,
-      ctr:0.017, cpm:10.00, impressions:7600000, clicks:129200,
-      products:[
-        { sku:"P-3001", name:"Powergum",              units:600, revenue:72000 },
-        { sku:"P-3002", name:"Allergie Antihistamin", units:500, revenue:65000 },
-        { sku:"P-3003", name:"Energy Drink",          units:480, revenue:72000 }
-      ]
-    },
-    {
-      name:"Early Summer Sale", site:"Onsite", model:"CPC", channel:"Search",
-      start:"2025-05-01", end:"2025-06-15",
-      booking:70000, ad:63000, revenue:176000, orders:1280,
-      ctr:0.026, cpc:0.95, impressions:2550615, clicks:66316,
-      products:[
-        { sku:"P-4001", name:"Sun Cream SPF50", units:500, revenue:70000 },
-        { sku:"P-4002", name:"After Sun",      units:380, revenue:45600 },
-        { sku:"P-4003", name:"Electrolytes",   units:400, revenue:60400 }
-      ]
-    },
-    {
-      name:"Prime Push", site:"Offsite", model:"CPC", channel:"Affiliate",
-      start:"2025-06-20", end:"2025-07-20",
-      booking:90000, ad:84000, revenue:210000, orders:1700,
-      ctr:0.022, cpc:0.80, impressions:4772727, clicks:105000,
-      products:[
-        { sku:"P-5001", name:"Vitamin D 2000 IU", units:650, revenue:78000 },
-        { sku:"P-5002", name:"Magnesium 400 mg",  units:550, revenue:66000 },
-        { sku:"P-5003", name:"Probiotika Forte",  units:500, revenue:66000 }
-      ]
-    },
-    {
-      name:"Back to Routine", site:"Onsite", model:"CPM", channel:"Paid Social",
-      start:"2025-07-25", end:"2025-08-31",
-      booking:75000, ad:69000, revenue:165000, orders:1200,
-      ctr:0.018, cpm:14.00, impressions:4928571, clicks:88714,
-      products:[
-        { sku:"P-6001", name:"Multivitamin Kids", units:400, revenue:36000 },
-        { sku:"P-6002", name:"Omega-3 Fischöl",   units:350, revenue:45500 },
-        { sku:"P-6003", name:"Zink + C Immune",   units:450, revenue:83500 }
-      ]
-    }
-  ],
+  {
+    name: "Super Sale", brand: "Redcare", site: "Offsite", model: "CPC", channel: "Search",
+    start: "2025-03-01", end: "2025-04-15",
+    booking: 95000, ad: 90000, revenue: 225000, orders: 1900,
+    ctr: 0.020, cpc: 0.90, impressions: 5000000, clicks: 100000,
+    products: [
+      { sku:"P-2101", name:"Allergie Antihistamin", units:650, revenue:65000 },
+      { sku:"P-2102", name:"Probiotika Forte",      units:520, revenue:56000 },
+      { sku:"P-2103", name:"Zink + C Immun",        units:480, revenue:104000 }
+    ],
+    placements: [
+      { strategy:"Upper Funnel", type:"Display",  placement:"Homepage Hero",
+        impressions: 2200000, clicks: 38000, ad: 34200, roas: 2.4, orders: 700, revenue: 82080 },
+      { strategy:"Mid Funnel",   type:"Search",   placement:"Category / Search",
+        impressions: 1800000, clicks: 42000, ad: 37800, roas: 2.6, orders: 760, revenue: 98280 },
+      { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        impressions: 1000000, clicks: 20000, ad: 18000, roas: 2.5, orders: 440, revenue: 45000 }
+    ]
+  },
 
-  // --- 2024 ---
-  campaigns_2024: [
-    {
-      name:"New Year Boost", site:"Offsite", model:"CPC", channel:"Search",
-      start:"2024-01-01", end:"2024-02-15",
-      booking:62000, ad:56000, revenue:158000, orders:1260,
-      ctr:0.023, cpc:0.92, impressions:2646521, clicks:60870,
-      products:[
-        { sku:"P-1001", name:"Vitamin D 2000 IU", units:460, revenue:52000 },
-        { sku:"P-1002", name:"Magnesium 400 mg",  units:400, revenue:44000 },
-        { sku:"P-1005", name:"Probiotika Forte",  units:400, revenue:62000 }
-      ]
-    },
-    {
-      name:"Spring Awareness", site:"Offsite", model:"CPM", channel:"Display",
-      start:"2024-02-20", end:"2024-03-31",
-      booking:52000, ad:46000, revenue:95000, orders:600,
-      ctr:0.0115, cpm:12.50, impressions:3680000, clicks:42320,
-      products:[
-        { sku:"P-2001", name:"Awareness Pack", units:200, revenue:26000 },
-        { sku:"P-2002", name:"Skin Lotion",    units:200, revenue:33000 },
-        { sku:"P-2003", name:"Sun Cream",      units:200, revenue:36000 }
-      ]
-    },
-    {
-      name:"Easter Drive", site:"Offsite", model:"CPM", channel:"Paid Social",
-      start:"2024-03-20", end:"2024-04-30",
-      booking:78000, ad:72000, revenue:202000, orders:1520,
-      ctr:0.016, cpm:10.50, impressions:6857143, clicks:109714,
-      products:[
-        { sku:"P-3001", name:"Powergum",              units:580, revenue:69000 },
-        { sku:"P-3002", name:"Allergie Antihistamin", units:480, revenue:61000 },
-        { sku:"P-3003", name:"Energy Drink",          units:460, revenue:72000 }
-      ]
-    },
-    {
-      name:"Early Summer Sale", site:"Onsite", model:"CPC", channel:"Search",
-      start:"2024-05-01", end:"2024-06-15",
-      booking:68000, ad:60000, revenue:170000, orders:1230,
-      ctr:0.025, cpc:0.98, impressions:2448960, clicks:61224,
-      products:[
-        { sku:"P-4001", name:"Sun Cream SPF50", units:480, revenue:63000 },
-        { sku:"P-4002", name:"After Sun",      units:350, revenue:42000 },
-        { sku:"P-4003", name:"Electrolytes",   units:400, revenue:65000 }
-      ]
-    },
-    {
-      name:"Prime Push", site:"Offsite", model:"CPC", channel:"Affiliate",
-      start:"2024-06-20", end:"2024-07-20",
-      booking:88000, ad:80000, revenue:205000, orders:1650,
-      ctr:0.021, cpc:0.82, impressions:4649571, clicks:97561,
-      products:[
-        { sku:"P-5001", name:"Vitamin D 2000 IU", units:700, revenue:82000 },
-        { sku:"P-5002", name:"Magnesium 400 mg",  units:600, revenue:69000 },
-        { sku:"P-5005", name:"Probiotika Forte",  units:350, revenue:54000 }
-      ]
-    },
-    {
-      name:"Back to Routine", site:"Onsite", model:"CPM", channel:"Paid Social",
-      start:"2024-07-25", end:"2024-08-31",
-      booking:73000, ad:67000, revenue:160000, orders:1160,
-      ctr:0.017, cpm:14.50, impressions:4620690, clicks:78552,
-      products:[
-        { sku:"P-6001", name:"Multivitamin Kids", units:360, revenue:33000 },
-        { sku:"P-6002", name:"Omega-3 Fischöl",   units:400, revenue:54000 },
-        { sku:"P-6003", name:"Zink + C Immune",   units:400, revenue:73000 }
-      ]
-    }
-  ],
+  {
+    name: "Winter Push", brand: "Redcare", site: "Offsite", model: "CPC", channel: "Search",
+    start: "2025-11-15", end: "2025-12-31",
+    booking: 83000, ad: 80000, revenue: 220000, orders: 1650,
+    ctr: 0.016, cpc: 0.70, impressions: 7200000, clicks: 115000,
+    products: [
+      { sku:"P-2201", name:"Hustensaft Kids",      units:530, revenue:52000 },
+      { sku:"P-2202", name:"Vitamin C 1000",       units:600, revenue:61000 },
+      { sku:"P-2203", name:"Nasenspray Mild",      units:490, revenue:107000 }
+    ],
+    placements: [
+      { strategy:"Upper Funnel", type:"Display",  placement:"Seasonal HP Banner",
+        impressions: 3000000, clicks: 42000, ad: 28000, roas: 2.3, orders: 560, revenue: 64400 },
+      { strategy:"Mid Funnel",   type:"Search",   placement:"Category / Search",
+        impressions: 2600000, clicks: 50000, ad: 36000, roas: 2.7, orders: 720, revenue: 97200 },
+      { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        impressions: 1600000, clicks: 23000, ad: 16000, roas: 2.9, orders: 370, revenue: 46400 }
+    ]
+  },
+
+  {
+    name: "Summer Branding", brand: "Redcare", site: "Onsite", model: "CPM", channel: "Display",
+    start: "2025-07-01", end: "2025-08-31",
+    booking: 72000, ad: 69000, revenue: 165000, orders: 1200,
+    ctr: 0.018, cpc: 0.78, impressions: 4928571, clicks: 88000,
+    products: [
+      { sku:"P-2301", name:"Sonnencreme LSF 50",   units:420, revenue:42000 },
+      { sku:"P-2302", name:"After Sun Gel",        units:380, revenue:36000 },
+      { sku:"P-2303", name:"Magnesium 400 mg",     units:450, revenue:87000 }
+    ],
+    placements: [
+      { strategy:"Upper Funnel", type:"Display",  placement:"Homepage Hero",
+        impressions: 2200000, clicks: 33000, ad: 27600, roas: 2.3, orders: 430, revenue: 63480 },
+      { strategy:"Mid Funnel",   type:"Display",  placement:"Category Teaser",
+        impressions: 1700000, clicks: 32000, ad: 24800, roas: 2.5, orders: 420, revenue: 62000 },
+      { strategy:"Lower Funnel", type:"Search",   placement:"Brand Search",
+        impressions: 1028571, clicks: 23000, ad: 16600, roas: 2.5, orders: 350, revenue: 41500 }
+    ]
+  },
+
+  {
+    name: "Always-On", brand: "Redcare", site: "Offsite", model: "CPC", channel: "Mixed",
+    start: "2025-01-01", end: "2025-12-31",
+    booking: 102000, ad: 97000, revenue: 257000, orders: 1630,
+    ctr: 0.020, cpc: 0.75, impressions: 6500000, clicks: 130000,
+    products: [
+      { sku:"P-2401", name:"Hautcreme Sensitive",  units:520,  revenue:52000 },
+      { sku:"P-2402", name:"Omega-3 Fischöl",      units:600,  revenue:78000 },
+      { sku:"P-2403", name:"Zink + C Immun",       units:510,  revenue:127000 }
+    ],
+    placements: [
+      { strategy:"Upper Funnel", type:"Display",  placement:"Always-On Banner",
+        impressions: 2600000, clicks: 42000, ad: 31500, roas: 2.3, orders: 520, revenue: 72450 },
+      { strategy:"Mid Funnel",   type:"Search",   placement:"Generic Search",
+        impressions: 2300000, clicks: 53000, ad: 39700, roas: 2.6, orders: 670, revenue: 103220 },
+      { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        impressions: 1600000, clicks: 35000, ad: 25800, roas: 3.1, orders: 440, revenue: 79980 }
+    ]
+  }
+];
+
 
   // Re-Rank (unverändert)
   rerank: [
