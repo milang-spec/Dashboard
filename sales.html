@@ -2,113 +2,119 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sales Details</title>
 
-  <!-- Theme / layout (use your existing files) -->
+  <!-- Your shared theme -->
   <link rel="stylesheet" href="design.css" />
-  <link rel="stylesheet" href="layout.css" />
 
+  <!-- Small page-local polish to align header + tighten table -->
   <style>
-    /* Minor page-specific touches (non-invasive) */
-    .sales-header {
-      display:flex; justify-content:flex-end; align-items:center; gap:12px;
-      margin: 12px 0 8px;
+    .page-wrap{max-width:1400px;margin:0 auto;padding:24px;}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    .page-title{font-size:28px;font-weight:800;color:var(--theme,#FFC7B1);}
+    .btn-back{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+      background:rgba(255,199,177,.15);border:1px solid rgba(255,199,177,.45);color:#fff;text-decoration:none;}
+    .btn-back:hover{background:rgba(255,199,177,.25);}
+
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    @media (max-width:840px){ .filters{grid-template-columns:1fr;} }
+
+    .card{border-radius:18px;background:rgba(255,199,177,.08);border:1px solid rgba(255,199,177,.35);padding:16px;}
+    .card h4{margin:0 0 8px 0;font-weight:700;color:#fff;opacity:.9;}
+
+    .kpi-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin:18px 0;}
+    @media (max-width:840px){ .kpi-grid{grid-template-columns:1fr;} }
+    .kpi .label{opacity:.8;margin-bottom:6px}
+    .kpi .value{font-size:40px;font-weight:800}
+
+    .controls select{
+      width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,199,177,.35);
+      background:#1f1f1f;color:#fff;
     }
-    .btn-back {
-      padding:10px 16px; border-radius:12px; border:1px solid rgba(255,199,177,.45);
-      background: rgba(255,199,177,.14); color: #fff; text-decoration:none; font-weight:700;
+
+    /* Table tweaks: bring Sales nearer to Item Name */
+    table.sales{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
+    table.sales thead th{
+      text-align:left;padding:14px;background:rgba(255,199,177,.12);
+      border-bottom:1px solid rgba(255,199,177,.25);
     }
-    .filters-row {
-      display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
+    table.sales tbody td{padding:12px 14px;border-bottom:1px dashed rgba(255,199,177,.15);}
+    table.sales tfoot td{
+      padding:14px 14px;font-weight:800;background:rgba(255,199,177,.12);
+      border-top:1px solid rgba(255,199,177,.25);
     }
-    .filter-card {
-      min-width: 260px;
-    }
-    .filter-card label{
-      display:block; font-size:.9rem; opacity:.85; margin-bottom:6px;
-    }
-    .filter-card select{
-      width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,199,177,.35);
-      background:#222; color:#fff;
-    }
-    .kpi-row{
-      display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;
-    }
-    .kpi .value{ font-size:2.2rem; }
-    .section-title{ font-size:1.4rem; font-weight:800; margin: 14px 0 8px; }
-    table.compact td.col-sales{ text-align:right; width: 140px; }
-    table.compact td.col-revenue{ text-align:right; width: 180px; }
-    .hint {
-      font-size:.9rem; opacity:.8; margin-top:6px;
-    }
+    .right{text-align:right}
+    .link-cell{color:#FFC7B1;text-decoration:none}
+    .link-cell:hover{opacity:.9}
+
+    /* make the middle columns (SKU + Item) wider, Sales closer to Item Name */
+    .col-sku{width:140px}
+    .col-item{width:48%}
+    .col-sales{width:140px}
+    .col-rev{width:1%}
   </style>
 
-  <!-- External logic (no inline JS) -->
-  <script src="data.js?v=2" defer></script>
-<script src="sales.js?v=2" defer></script>
+  <!-- IMPORTANT: data.js must load before sales.js -->
+  <script src="data.js" defer></script>
+  <script src="sales.js" defer></script>
 </head>
 <body>
+  <div class="page-wrap">
 
-  <main class="page-wrap">
-
-    <!-- Top bar with back button -->
-    <div class="card sales-header">
-      <a class="btn-back" href="index.html">← Zurück zum Dashboard</a>
+    <div class="page-header">
+      <h1 class="page-title">Sales Details (Jan–Aug 2025)</h1>
+      <a class="btn-back" href="./">← Zurück zum Dashboard</a>
     </div>
 
-    <!-- Filters + KPIs -->
-    <section class="card">
-      <div class="filters-row">
-        <div class="filter-card">
-          <label for="salesFilterCampaign">Kampagne</label>
-          <select id="salesFilterCampaign">
-            <!-- filled by sales.js -->
-          </select>
-        </div>
-        <div class="filter-card">
-          <label for="salesFilterPlacement">Placement</label>
-          <select id="salesFilterPlacement">
-            <!-- filled by sales.js -->
-          </select>
-          <div id="placementHint" class="hint" style="display:none">
-            Hinweis: Detaillierte Zuordnung Produkt ↔ Placement ist (noch) nicht hinterlegt.
-          </div>
-        </div>
+    <!-- Filters -->
+    <div class="filters">
+      <div class="controls card">
+        <h4>Kampagne</h4>
+        <select id="salesFilterCampaign" aria-label="Kampagne wählen"></select>
       </div>
-
-      <div class="kpi-row">
-        <div class="kpi">
-          <div class="label">Sales (Einheiten)</div>
-          <div id="kpi-sales" class="value">–</div>
-        </div>
-        <div class="kpi">
-          <div class="label">Revenue</div>
-          <div id="kpi-revenue" class="value">–</div>
-        </div>
+      <div class="controls card">
+        <h4>Placement</h4>
+        <select id="salesFilterPlacement" aria-label="Placement wählen"></select>
       </div>
-    </section>
+    </div>
 
-    <!-- Table: Sold products -->
-    <section class="card">
-      <div class="section-title">Verkaufte Produkte</div>
-      <div class="table-wrap">
-        <table id="salesTable" class="compact">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Item Name</th>
-              <th class="right">Sales</th>
-              <th class="right">Revenue</th>
-            </tr>
-          </thead>
-          <tbody id="salesTBody">
-            <!-- rows rendered by sales.js -->
-          </tbody>
-        </table>
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="card kpi">
+        <div class="label">Sales (Einheiten)</div>
+        <div class="value" id="kpi-sales">0</div>
       </div>
-    </section>
+      <div class="card kpi">
+        <div class="label">Revenue</div>
+        <div class="value" id="kpi-revenue">0 €</div>
+      </div>
+    </div>
 
-  </main>
+    <!-- Table -->
+    <div class="card">
+      <h4>Verkaufte Produkte</h4>
+      <table class="sales" id="salesTable">
+        <thead>
+          <tr>
+            <th class="col-sku">SKU</th>
+            <th class="col-item">Item Name</th>
+            <th class="right col-sales">Sales</th>
+            <th class="right col-rev">Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="salesTBody"></tbody>
+        <tfoot>
+          <tr>
+            <td>Gesamt</td>
+            <td></td>
+            <td class="right" id="sumSales">0</td>
+            <td class="right" id="sumRevenue">0 €</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </div>
 </body>
 </html>
