@@ -7,8 +7,8 @@
   var ALL_2025 = [
     {
       name:"Super Sale", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Search",
-      start:"2025-03-01", end:"2025-04-15",
-      booking:95000, ad:120000, revenue:270000, orders:2000,
+      start:"2025-06-01", end:"2025-09-15",
+      booking:140000, ad:120000, revenue:270000, orders:2000,
       impressions:7200000, clicks:120000, ctr:120000/7200000, cpc:120000/120000,
       products:[
         { sku:"SS-01", name:"Allergie Antihistamin", units:750, revenue:90000 },
@@ -27,7 +27,7 @@
     {
       name:"Winter Push", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Search",
       start:"2025-11-15", end:"2025-12-31",
-      booking:83000, ad:100000, revenue:270000, orders:1900,
+      booking:123000, ad:100000, revenue:270000, orders:1900,
       impressions:6500000, clicks:115000, ctr:115000/6500000, cpc:100000/115000,
       products:[
         { sku:"WP-01", name:"Hustensaft Kids",  units:700, revenue:90000 },
@@ -46,7 +46,7 @@
     {
       name:"Summer Branding", brand:"Redcare", site:"Onsite", model:"CPM", channel:"Display",
       start:"2025-07-01", end:"2025-08-31",
-      booking:72000, ad:80000, revenue:220000, orders:1800,
+      booking:106000, ad:80000, revenue:220000, orders:1800,
       impressions:5500000, clicks:100000, ctr:100000/5500000, cpc:80000/100000,
       products:[
         { sku:"SB-01", name:"Sonnencreme LSF 50", units:600, revenue:68000 },
@@ -65,7 +65,7 @@
     {
       name:"Always-On", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Mixed",
       start:"2025-01-01", end:"2025-12-31",
-      booking:102000, ad:90000, revenue:261000, orders:2030,
+      booking:151000, ad:90000, revenue:261000, orders:2030,
       impressions:6818580, clicks:158230, ctr:158230/6818580, cpc:90000/158230,
       products:[
         { sku:"AO-01", name:"Hautcreme Sensitive", units:800,  revenue:82000 },
