@@ -1,9 +1,9 @@
-
-(function(){
+/* ========================= data.js (bereinigt) ========================= */
+(function () {
   // Basisobjekt
-  var D = window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+  var D = window.DASHBOARD_DATA || {};
 
-  /* ---------- Kampagnen 2025 (EXAKT deine Namen, mit 3 Placements je Kampagne) ---------- */
+  /* ---------- Kampagnen 2025 (deine Namen, 3 Placements je Kampagne) ---------- */
   var ALL_2025 = [
     {
       name:"Super Sale", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Search",
@@ -16,15 +16,14 @@
         { sku:"SS-03", name:"Zink + C Immun",        units:600, revenue:95000 }
       ],
       placements:[
-        { strategy:"Upper Funnel", type:"Display",  placement:"Homepage Hero",
+        { strategy:"Upper Funnel", type:"Display", placement:"Homepage Hero", channel:"Display",
           impressions:2700000, clicks:45000, ad:45000, roas:2.2, orders:700, revenue:99000 },
-        { strategy:"Mid Funnel",   type:"Search",   placement:"Category / Search",
+        { strategy:"Mid Funnel",   type:"Search",  placement:"Category / Search", channel:"Search",
           impressions:3000000, clicks:50000, ad:50000, roas:2.3, orders:800, revenue:115000 },
-        { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored", channel:"Search",
           impressions:1500000, clicks:25000, ad:25000, roas:2.24, orders:500, revenue:56000 }
       ]
     },
-
     {
       name:"Winter Push", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Search",
       start:"2025-11-15", end:"2025-12-31",
@@ -36,15 +35,14 @@
         { sku:"WP-03", name:"Nasenspray Mild", units:550, revenue:95000 }
       ],
       placements:[
-        { strategy:"Upper Funnel", type:"Display",  placement:"Seasonal HP Banner",
+        { strategy:"Upper Funnel", type:"Display", placement:"Seasonal HP Banner", channel:"Display",
           impressions:2300000, clicks:40000, ad:35000, roas:2.5,   orders:600, revenue:87500 },
-        { strategy:"Mid Funnel",   type:"Search",   placement:"Category / Search",
+        { strategy:"Mid Funnel",   type:"Search",  placement:"Category / Search", channel:"Search",
           impressions:2700000, clicks:52000, ad:45000, roas:2.6,   orders:800, revenue:117000 },
-        { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored",     channel:"Search",
           impressions:1500000, clicks:23000, ad:20000, roas:3.275, orders:500, revenue:65500 } // Summe = 270.000
       ]
     },
-
     {
       name:"Summer Branding", brand:"Redcare", site:"Onsite", model:"CPM", channel:"Display",
       start:"2025-07-01", end:"2025-08-31",
@@ -56,15 +54,14 @@
         { sku:"SB-03", name:"Magnesium 400 mg",   units:650, revenue:86000 }
       ],
       placements:[
-        { strategy:"Upper Funnel", type:"Display",  placement:"Homepage Hero",
+        { strategy:"Upper Funnel", type:"Display", placement:"Homepage Hero", channel:"Display",
           impressions:2200000, clicks:37000, ad:30000, roas:2.2,   orders:450, revenue:66000 },
-        { strategy:"Mid Funnel",   type:"Display",  placement:"Category Teaser",
+        { strategy:"Mid Funnel",   type:"Display", placement:"Category Teaser", channel:"Display",
           impressions:1800000, clicks:35000, ad:28000, roas:2.4,   orders:400, revenue:67200 },
-        { strategy:"Lower Funnel", type:"Search",   placement:"Brand Search",
+        { strategy:"Lower Funnel", type:"Search",  placement:"Brand Search", channel:"Search",
           impressions:1500000, clicks:28000, ad:22000, roas:3.945, orders:350, revenue:86800 } // Summe = 220.000
       ]
     },
-
     {
       name:"Always-On", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Mixed",
       start:"2025-01-01", end:"2025-12-31",
@@ -76,23 +73,23 @@
         { sku:"AO-03", name:"Zink + C Immun",      units:700,  revenue:92000 }
       ],
       placements:[
-        { strategy:"Upper Funnel", type:"Display",  placement:"Always-On Banner",
+        { strategy:"Upper Funnel", type:"Display", placement:"Always-On Banner", channel:"Display",
           impressions:2500000, clicks:50000, ad:30000, roas:2.2, orders:500, revenue:66000 },
-        { strategy:"Mid Funnel",   type:"Search",   placement:"Generic Search",
+        { strategy:"Mid Funnel",   type:"Search",  placement:"Generic Search", channel:"Search",
           impressions:2800000, clicks:70000, ad:40000, roas:2.7, orders:700, revenue:108000 },
-        { strategy:"Lower Funnel", type:"PDP",      placement:"PDP Sponsored",
+        { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored", channel:"Search",
           impressions:1518580, clicks:38230, ad:20000, roas:4.35, orders:830, revenue:87000 }
       ]
     }
   ];
 
-  // (optional) 2024 – leer, aber vorhanden für Kompatibilität
-  var ALL_2024 = [];
+  /* ---------- (optional) 2024 – wird gleich ggf. automatisch erzeugt ---------- */
+  var ALL_2024 = window.ALL_2024 || [];
 
   /* ---------- Rerank / Sales Details / SOV / Funnel ---------- */
   D.rerank_budget = 17500;
   D.rerank = [
-    { sku:"SKU-001", item:"Vitamin D 2000 IU", ad:3200,  ecpc:0.22, roas:2.80 },
+    { sku:"SKU-001", item:"Vitamin D 2000 IU", ad:3200, ecpc:0.22, roas:2.80 },
     { sku:"SKU-006", item:"Allergie Antihistamin", ad:2600, ecpc:0.24, roas:2.60 },
     { sku:"SKU-003", item:"Omega-3 Fischöl", ad:2100, ecpc:0.20, roas:3.10 },
     { sku:"SKU-002", item:"Magnesium 400 mg", ad:2800, ecpc:0.25, roas:2.20 },
@@ -107,20 +104,15 @@
     { name:"Hautcreme Sensitive", units:4000, revenue:2280 },
     { name:"Zink + C Immun", units:8333, revenue:3600 }
   ];
-  D.sov = { total: 0.17 };
-  D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
+  D.sov = D.sov || { total: 0.17 };
+  D.funnel = D.funnel || { awareness: 0.30, engagement: 0.40, performance: 0.30 };
 
-/* ==== PATCH: LY erzeugen (falls fehlt), SoV-Daten bereitstellen & alles verkabeln ==== */
-(function(){
-  // 1) Basis: 2025-Kampagnen holen (dein bestehendes Array)
-  var y25 = window.ALL_2025 || (typeof ALL_2025 !== 'undefined' ? ALL_2025 : []);
-
-  // 2) 2024 automatisch ableiten, falls nicht vorhanden
-  if (!window.ALL_2024 || !window.ALL_2024.length){
-    function y24(d){ return (d||'').replace('2025', '2024'); }
+  /* ---------- LY (2024) automatisch aus 2025 ableiten, falls leer ---------- */
+  if (!Array.isArray(ALL_2024) || !ALL_2024.length) {
+    function y24(d){ return (d||'').replace('2025','2024'); }
     var fAd=0.92, fRev=0.90, fImp=0.95, fClk=0.93, fOrd=0.92;
 
-    window.ALL_2024 = y25.map(function(c){
+    ALL_2024 = ALL_2025.map(function(c){
       var imp = Math.round((c.impressions||0)*fImp);
       var clk = Math.round((c.clicks||0)*fClk);
       var ad  = Math.round((c.ad||0)*fAd);
@@ -138,8 +130,8 @@
         products: (c.products||[]).slice(0),
         placements: (c.placements||[]).map(function(p){
           return {
-            strategy: p.strategy, type: p.type, placement: p.placement,
-            site: p.site || c.site,
+            strategy:p.strategy, type:p.type, placement:p.placement,
+            channel:p.channel, site:p.site || c.site,
             start: p.start ? y24(p.start) : undefined,
             end:   p.end   ? y24(p.end)   : undefined,
             impressions: Math.round((p.impressions||0)*fImp),
@@ -154,28 +146,25 @@
     });
   }
 
-  // 3) SoV-Daten bereitstellen (für Details-Ansicht)
-  window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
-  window.DASHBOARD_DATA.sov = window.DASHBOARD_DATA.sov || { total: 0.17 };
-  var sovCats = window.DASHBOARD_DATA.sov_categories || [
+  /* ---------- SoV-Details (für share.html etc.) ---------- */
+  var sovCats = D.sov_categories || [
     { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
     { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
     { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
     { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
   ];
-  window.DASHBOARD_DATA.sov_categories = sovCats;
-  // zusätzliche Aliase, falls die Details-Seite andere Keys erwartet
-  window.DASHBOARD_DATA.sov_cats    = window.DASHBOARD_DATA.sov_cats    || sovCats;
-  window.DASHBOARD_DATA.sov_details = window.DASHBOARD_DATA.sov_details || sovCats;
+  D.sov_categories = sovCats;
+  D.sov_cats    = D.sov_cats    || sovCats;  // Aliase
+  D.sov_details = D.sov_details || sovCats;
 
-  // 4) Einheitliches Wiring (nur EINMAL am Dateiende vorhanden lassen!)
-  if (typeof ALL_2025 !== 'undefined' && !window.ALL_2025) window.ALL_2025 = ALL_2025;
-  if (typeof ALL_2024 !== 'undefined' && !window.ALL_2024) window.ALL_2024 = ALL_2024;
-  window.ALL_2025 = window.ALL_2025 || y25;
-  window.ALL_2024 = window.ALL_2024 || [];
+  /* ---------- Exporte/Wiring ---------- */
+  window.ALL_2025 = ALL_2025;
+  window.ALL_2024 = ALL_2024;
+  window.DASHBOARD_DATA = D;
 
-  window.DASHBOARD_DATA.campaigns_2025 = window.ALL_2025;
-  window.DASHBOARD_DATA.campaigns_2024 = window.ALL_2024;
+  // Manche Funktionen lesen hier:
+  D.campaigns_2025 = ALL_2025;
+  D.campaigns_2024 = ALL_2024;
+  window.D = D; // Alias
 
-  window.D = window.DASHBOARD_DATA; // Alias, wird teils im Code benutzt
-})();
+})();  // <— eine IIFE, sauber geschlossen
