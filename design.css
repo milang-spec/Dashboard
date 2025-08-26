@@ -199,7 +199,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 .brand-headline{
   margin:0;
   font-size: var(--hero-size);
-  line-height: 1.23;
+  line-height: 1.3;
   font-weight: 900;
   color: var(--theme, #FFC7B1);
   white-space: nowrap;
