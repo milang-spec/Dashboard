@@ -1,7 +1,8 @@
 /* ========================= data.js (bereinigt) ========================= */
 (function () {
   // Basisobjekt
-  var D = window.DASHBOARD_DATA || {};
+  var D = window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+
 
   /* ---------- Kampagnen 2025 (deine Namen, 3 Placements je Kampagne) ---------- */
   var ALL_2025 = [
@@ -146,16 +147,20 @@
     });
   }
 
-  /* ---------- SoV-Details (für share.html etc.) ---------- */
-  var sovCats = D.sov_categories || [
-    { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
-    { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
-    { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
-    { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
-  ];
-  D.sov_categories = sovCats;
-  D.sov_cats    = D.sov_cats    || sovCats;  // Aliase
-  D.sov_details = D.sov_details || sovCats;
+
+// Eine Quelle definieren:
+var sovCats = [
+  { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
+  { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
+  { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
+  { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
+];
+
+// Alle Aliase auf dieselbe Referenz zeigen lassen:
+D.sov_categories = sovCats;
+D.sov_cats       = D.sov_cats       || sovCats;
+D.sov_details    = D.sov_details    || sovCats;
+
 
   /* ---------- Exporte/Wiring ---------- */
   window.ALL_2025 = ALL_2025;
