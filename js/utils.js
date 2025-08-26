@@ -28,3 +28,43 @@ window.addEventListener('error', function (e) {
     document.body.appendChild(box);
   }catch(_){}
 });
+
+/* ===== Compact number formatting (de-DE): 26,2 Tsd / 26,2 Mio / 1,3 Mrd ===== */
+export function fmtCompactDE(n, digits = 1) {
+  if (n == null || isNaN(n)) return '–';
+  const abs = Math.abs(n);
+  const steps = [
+    { v: 1e9, s: ' Mrd' },
+    { v: 1e6, s: ' Mio' },
+    { v: 1e3, s: ' Tsd' },
+  ];
+  for (const m of steps) {
+    if (abs >= m.v) {
+      return (n / m.v).toLocaleString('de-DE', {
+        minimumFractionDigits: digits, maximumFractionDigits: digits
+      }) + m.s;
+    }
+  }
+  return n.toLocaleString('de-DE'); // < 1.000 normal
+}
+
+export function fmtMoneyCompactDE(n, digits = 1) {
+  const core = fmtCompactDE(n, digits);
+  return core === '–' ? core : core + ' €';
+}
+
+/* ===== LY helpers ===== */
+export function lyPercent(cur, ly, overridePct = null) {
+  if (overridePct != null) return overridePct;  // manuelle Vorgabe überschreibt
+  if (ly == null || ly === 0) return null;
+  return (cur - ly) / Math.abs(ly);
+}
+
+export function renderLyDelta(el, pct) {
+  if (!el) return;
+  if (pct == null) { el.innerHTML = '–'; return; }
+  const up = pct >= 0;
+  const val = Math.abs(pct * 100).toFixed(1).replace('.', ',');
+  el.innerHTML = `<span class="${up?'up':'down'}">${up?'▲':'▼'} ${val}% <span class="muted">vs LY</span></span>`;
+}
+
