@@ -1,17 +1,3 @@
-/* ---- Compact formatter (DE) nur wo gewünscht einsetzen ---- */
-function fmtCompactDE(n, digits){
-  var v = Number(n)||0, a = Math.abs(v);
-  if (a >= 1e9) return (v/1e9).toFixed(digits).replace('.', ',') + ' Mrd';
-  if (a >= 1e6) return (v/1e6).toFixed(digits).replace('.', ',') + ' Mio';
-  return Math.round(v).toLocaleString('de-DE');
-}
-function fmtMoneyCompactDE(n, digits){
-  var v = Number(n)||0, a = Math.abs(v);
-  if (a >= 1e9) return (v/1e9).toFixed(digits).replace('.', ',') + ' Mrd €';
-  if (a >= 1e6) return (v/1e6).toFixed(digits).replace('.', ',') + ' Mio €';
-  return fmtMoney0(v); // deine bestehende Funktion
-}
-
 /* ========= KPIs ========= */
 var KPI_DEF=[
   {key:'ad',label:'Ad Spend Total',fmt:fmtMoney0,better:'higher'},
