@@ -77,3 +77,12 @@ export function renderLyDelta(el, pct) {
   el.innerHTML = `<span class="${up?'up':'down'}">${up?'▲':'▼'} ${val}% <span class="muted">vs LY</span></span>`;
 }
 
+// utils.js – ganz unten
+window.fmtMoney0 = fmtMoney0;
+window.fmtMoney2 = fmtMoney2;
+window.fmtNum = fmtNum;
+window.fmtPct1 = fmtPct1;
+window.safeDiv = safeDiv;
+window.fmtCompactDE = fmtCompactDE;
+window.fmtMoneyCompactDE = fmtMoneyCompactDE;
+
