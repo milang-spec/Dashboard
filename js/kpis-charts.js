@@ -1,11 +1,25 @@
+/* ---- Compact formatter (DE) nur wo gewünscht einsetzen ---- */
+function fmtCompactDE(n, digits){
+  var v = Number(n)||0, a = Math.abs(v);
+  if (a >= 1e9) return (v/1e9).toFixed(digits).replace('.', ',') + ' Mrd';
+  if (a >= 1e6) return (v/1e6).toFixed(digits).replace('.', ',') + ' Mio';
+  return Math.round(v).toLocaleString('de-DE');
+}
+function fmtMoneyCompactDE(n, digits){
+  var v = Number(n)||0, a = Math.abs(v);
+  if (a >= 1e9) return (v/1e9).toFixed(digits).replace('.', ',') + ' Mrd €';
+  if (a >= 1e6) return (v/1e6).toFixed(digits).replace('.', ',') + ' Mio €';
+  return fmtMoney0(v); // deine bestehende Funktion
+}
+
 /* ========= KPIs ========= */
 var KPI_DEF=[
   {key:'ad',label:'Ad Spend Total',fmt:fmtMoney0,better:'higher'},
-  {key:'impressions',label:'Impressions Total',fmt:fmtNum,better:'higher'},
+  {key:'impressions',label:'Impressions Total',fmt:function(v){return fmtCompactDE(v,1);}, better:'higher'},
   {key:'clicks',label:'Klicks Total',fmt:fmtNum,better:'higher'},
   {key:'ctr',label:'CTR',fmt:function(v){return fmtPct1(v);},better:'higher'},
   {key:'orders',label:'Media Sales Total',fmt:fmtNum,better:'higher'},
-  {key:'revenue',label:'Media Revenue Total',fmt:fmtMoney0,better:'higher'},
+  {key:'revenue',label:'Media Revenue Total',fmt:function(v){return fmtMoneyCompactDE(v,1);}, better:'higher'},
   {key:'roas',label:'ROAS',fmt:function(v){return (v||0).toFixed(2)+'×';},better:'higher'},
   {key:'cpm',label:'CPM',fmt:fmtMoney2,better:'lower'},
   {key:'cpc',label:'CPC',fmt:fmtMoney2,better:'lower'}
