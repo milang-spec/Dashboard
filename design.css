@@ -177,8 +177,9 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   background: rgba(255,199,177,0.14);
   border: 1px solid rgba(255,199,177,0.45);
   border-radius: 18px;
-  padding: 14px 18px;
+  padding: 14px 32px 14px 18px; 
 }
+
 
 /* Eine gemeinsame Größe für Headline + Logo */
 :root{
@@ -216,7 +217,6 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   padding: 0 !important;
   box-shadow: none !important;
 }
-
 
 /* Performance Total: Label größer, Werte etwas kleiner */
 #panel-kpi .kpi .label{
