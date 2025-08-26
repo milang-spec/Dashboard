@@ -29,29 +29,38 @@ window.addEventListener('error', function (e) {
   }catch(_){}
 });
 
-/* ===== Compact number formatting (de-DE): 26,2 Tsd / 26,2 Mio / 1,3 Mrd ===== */
-export function fmtCompactDE(n, digits = 1) {
-  if (n == null || isNaN(n)) return '–';
-  const abs = Math.abs(n);
-  const steps = [
-    { v: 1e9, s: ' Mrd' },
-    { v: 1e6, s: ' Mio' },
-    { v: 1e3, s: ' Tsd' },
-  ];
-  for (const m of steps) {
-    if (abs >= m.v) {
-      return (n / m.v).toLocaleString('de-DE', {
-        minimumFractionDigits: digits, maximumFractionDigits: digits
-      }) + m.s;
-    }
+// --- Compact number format (de-DE) ---
+function fmtCompactDE(n, decimals = 1) {
+  n = Number(n) || 0;
+  if (Math.abs(n) >= 1e9) {
+    return (n / 1e9).toLocaleString('de-DE', {
+      minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    }) + ' Mrd.';
   }
-  return n.toLocaleString('de-DE'); // < 1.000 normal
+  if (Math.abs(n) >= 1e6) {
+    return (n / 1e6).toLocaleString('de-DE', {
+      minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    }) + ' Mio';
+  }
+  return n.toLocaleString('de-DE');
 }
 
-export function fmtMoneyCompactDE(n, digits = 1) {
-  const core = fmtCompactDE(n, digits);
-  return core === '–' ? core : core + ' €';
+function fmtMoneyCompactDE(n, decimals = 1) {
+  n = Number(n) || 0;
+  if (Math.abs(n) >= 1e9) {
+    return (n / 1e9).toLocaleString('de-DE', {
+      minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    }) + ' Mrd. €';
+  }
+  if (Math.abs(n) >= 1e6) {
+    return (n / 1e6).toLocaleString('de-DE', {
+      minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    }) + ' Mio €';
+  }
+  // Fallback auf normales €-Format ohne Kompakt-Schreibweise
+  return fmtMoney0(n);
 }
+
 
 /* ===== LY helpers ===== */
 export function lyPercent(cur, ly, overridePct = null) {
