@@ -5,52 +5,74 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Share of Voice – Kategorien & Brands</title>
 
-  <!-- zentrales Stylesheet (wie bei sales/index) -->
+  <!-- Gemeinsames Theme -->
   <link rel="stylesheet" href="design.css" />
+
+  <!-- Seiten-spezifisches Feintuning (an sales.html angelehnt) -->
+  <style>
+    .page-wrap{max-width:1400px;margin:0 auto;padding:24px;}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    .page-title{font-size:28px;font-weight:800;color:var(--theme,#FFC7B1);}
+    .btn-back{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+      background:rgba(255,199,177,.15);border:1px solid rgba(255,199,177,.45);color:#fff;text-decoration:none;}
+    .btn-back:hover{background:rgba(255,199,177,.25);}
+
+    .card{border-radius:18px;background:rgba(255,199,177,.08);border:1px solid rgba(255,199,177,.35);padding:16px;}
+
+    /* Tabelle wie auf sales.html */
+    table.sov{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
+    table.sov thead th{
+      text-align:left;padding:14px;background:rgba(255,199,177,.12);
+      border-bottom:1px solid rgba(255,199,177,.25);
+    }
+    table.sov tbody td{padding:12px 14px;border-bottom:1px dashed rgba(255,199,177,.15);}
+    table.sov tfoot td{
+      padding:14px 14px;font-weight:800;background:rgba(255,199,177,.12);
+      border-top:1px solid rgba(255,199,177,.25);
+    }
+    .right{text-align:right}
+
+    /* Spaltenbreiten */
+    .col-cat{width:42%}
+    .col-brand{width:28%}
+    .col-sov{width:15%}
+    .col-ms{width:15%}
+  </style>
+
+  <!-- Wichtig: Reihenfolge einhalten -->
+  <script src="data.js" defer></script>
+  <script src="share.js" defer></script>
 </head>
 <body>
+  <div class="page-wrap">
 
-  <!-- Hero / Headline -->
-  <div class="card brand-hero" id="panel-hero">
-    <div class="brand-hero-wrap">
-      <!-- Logo (Optional: passe den Pfad zu deinem Logo an) -->
-      <img class="brand-logo" src="Redcare_Symbol_Red.svg" alt="Logo" />
-
-      <div class="brand-text">
-        <div class="brand-headline">Share of Voice – Kategorien &amp; Brands</div>
-      </div>
-
-      <!-- Back-Button: share.js setzt den scope-Query automatisch -->
-      <a id="backLink" class="btn back-btn" href="index.html">← Zurück zum Dashboard</a>
+    <div class="page-header">
+      <h1 class="page-title">Share of Voice – Kategorien &amp; Brands</h1>
+      <a class="btn-back" href="./">← Zurück zum Dashboard</a>
     </div>
-  </div>
 
-  <!-- SoV Tabelle -->
-  <div class="card" id="panel-sov">
-    <table class="table compact" id="sovTable">
-      <thead>
-        <tr>
-          <th>Kategorie</th>
-          <th>Brand</th>
-          <th class="right">SoV</th>
-          <th class="right">Market Share</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr id="sovTotalRow">
-          <td><b>Gesamt</b></td>
-          <td></td>
-          <td class="right"></td>
-          <td class="right"></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+    <div class="card">
+      <table class="sov" id="sovTable">
+        <thead>
+          <tr>
+            <th class="col-cat">Kategorie</th>
+            <th class="col-brand">Brand</th>
+            <th class="right col-sov">SoV</th>
+            <th class="right col-ms">Market Share</th>
+          </tr>
+        </thead>
+        <tbody id="shareTBody"><!-- wird von share.js befüllt --></tbody>
+        <tfoot>
+          <tr>
+            <td><b>Gesamt</b></td>
+            <td></td>
+            <td class="right" id="sumSov">0%</td>
+            <td class="right" id="sumMarket">0%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
-  <!-- Scripts: Reihenfolge ist wichtig -->
-  <script src="js/utils.js?v=17"></script>
-  <script src="js/data.js?v=17"></script>
-  <script src="share.js?v=17" defer></script>
+  </div>
 </body>
 </html>
