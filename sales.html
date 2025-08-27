@@ -92,28 +92,36 @@
     </div>
 
     <!-- Table -->
-    <div class="card">
-      <h4>Verkaufte Produkte</h4>
-      <table class="sales" id="salesTable">
-        <thead>
-          <tr>
-            <th class="col-sku">SKU</th>
-            <th class="col-item">Item Name</th>
-            <th class="right col-sales">Sales</th>
-            <th class="right col-rev">Revenue</th>
-          </tr>
-        </thead>
-        <tbody id="salesTBody"></tbody>
-        <tfoot>
-          <tr>
-            <td>Gesamt</td>
-            <td></td>
-            <td class="right" id="sumSales">0</td>
-            <td class="right" id="sumRevenue">0 €</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+  <div class="card">
+  <h4>Verkaufte Produkte</h4>
+
+  <table class="sales" id="salesTable">
+    <colgroup>
+      <col class="col-sku">
+      <col class="col-item">
+      <col class="col-sales">
+      <col class="col-rev">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="col-sku">SKU</th>
+        <th class="col-item">Item Name</th>
+        <th class="right col-sales">Sales</th>
+        <th class="right col-rev">Revenue</th>
+      </tr>
+    </thead>
+    <tbody id="salesTBody"><!-- wird von sales.js befüllt --></tbody>
+    <tfoot>
+      <tr>
+        <td><b>Gesamt</b></td>
+        <td></td>
+        <td class="right" id="sumSales">0</td>
+        <td class="right" id="sumRevenue">0 €</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
 
   </div>
 </body>
