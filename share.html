@@ -2,63 +2,55 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Share of Voice – Kategorien & Brands</title>
 
-  <!-- Zentrales Styling wie auf index/sales -->
-  <link rel="stylesheet" href="design.css?v=17" />
+  <!-- zentrales Stylesheet (wie bei sales/index) -->
+  <link rel="stylesheet" href="design.css" />
 </head>
-<body class="page">
+<body>
 
-  <!-- Hero / Header -->
-  <section class="card brand-hero">
+  <!-- Hero / Headline -->
+  <div class="card brand-hero" id="panel-hero">
     <div class="brand-hero-wrap">
-      <img class="brand-logo" src="Redcare_Symbol_Red.svg" alt="" />
+      <!-- Logo (Optional: passe den Pfad zu deinem Logo an) -->
+      <img class="brand-logo" src="Redcare_Symbol_Red.svg" alt="Logo" />
+
       <div class="brand-text">
-        <h1 class="brand-headline">Share of Voice – Kategorien &amp; Brands</h1>
+        <div class="brand-headline">Share of Voice – Kategorien &amp; Brands</div>
       </div>
-      <!-- Zurück-Button rechts neben der Headline -->
+
+      <!-- Back-Button: share.js setzt den scope-Query automatisch -->
       <a id="backLink" class="btn back-btn" href="index.html">← Zurück zum Dashboard</a>
     </div>
-  </section>
+  </div>
 
-  <!-- Tabelle -->
-  <section class="card">
-    <div class="table-wrap">
-      <table class="table compact" id="sovTable">
-        <thead>
-          <tr>
-            <th>Kategorie</th>
-            <th>Brand</th>
-            <th class="right">SoV</th>
-            <th class="right">Market Share</th>
-          </tr>
-        </thead>
-        <tbody><!-- wird von share.js befüllt --></tbody>
-        <tfoot>
-          <tr id="sovTotalRow">
-            <td><b>Gesamt</b></td>
-            <td></td>
-            <td class="right"></td>
-            <td class="right"></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </section>
+  <!-- SoV Tabelle -->
+  <div class="card" id="panel-sov">
+    <table class="table compact" id="sovTable">
+      <thead>
+        <tr>
+          <th>Kategorie</th>
+          <th>Brand</th>
+          <th class="right">SoV</th>
+          <th class="right">Market Share</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr id="sovTotalRow">
+          <td><b>Gesamt</b></td>
+          <td></td>
+          <td class="right"></td>
+          <td class="right"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-  <!-- Skripte: Reihenfolge ist wichtig -->
+  <!-- Scripts: Reihenfolge ist wichtig -->
   <script src="js/utils.js?v=17"></script>
   <script src="js/data.js?v=17"></script>
-  <script src="js/share.js?v=17" defer></script>
-  <script>
-    // Back-Link Scope beibehalten (wie auf sales.html)
-    (function(){
-      var u = new URL(window.location.href);
-      var scope = u.searchParams.get('scope') || 'ALL';
-      var a = document.getElementById('backLink');
-      if (a) a.href = 'index.html?scope=' + encodeURIComponent(scope);
-    })();
-  </script>
+  <script src="share.js?v=17" defer></script>
 </body>
 </html>
