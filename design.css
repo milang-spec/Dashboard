@@ -380,3 +380,16 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 
 table.sov thead th.right,
 table.sov td.right { text-align: right; }
+
+/* Sales-Tabelle */
+.col-sku   { width: 16ch; }   /* Platz für "SKU-001" etc. */
+.col-item  { width: auto; }   /* füllt den Rest */
+.col-sales { width: 12%; }
+.col-rev   { width: 16%; }
+
+table.sales thead th.right,
+table.sales td.right { text-align: right; }
+
+/* Optional: etwas engeren Zeilenabstand wie auf sales.html gewünscht */
+table.sales td, table.sales th { vertical-align: middle; }
+
