@@ -51,27 +51,34 @@
       <a class="btn-back" href="./">← Zurück zum Dashboard</a>
     </div>
 
-    <div class="card">
-      <table class="sov" id="sovTable">
-        <thead>
-          <tr>
-            <th class="col-cat">Kategorie</th>
-            <th class="col-brand">Brand</th>
-            <th class="right col-sov">SoV</th>
-            <th class="right col-ms">Market Share</th>
-          </tr>
-        </thead>
-        <tbody id="shareTBody"><!-- wird von share.js befüllt --></tbody>
-        <tfoot>
-          <tr>
-            <td><b>Gesamt</b></td>
-            <td></td>
-            <td class="right" id="sumSov">0%</td>
-            <td class="right" id="sumMarket">0%</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+<div class="card">
+  <table class="sov" id="sovTable">
+    <colgroup>
+      <col class="col-cat">
+      <col class="col-brand">
+      <col class="col-sov">
+      <col class="col-ms">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="col-cat">Kategorie</th>
+        <th class="col-brand">Brand</th>
+        <th class="right col-sov">SoV</th>
+        <th class="right col-ms">Market Share</th>
+      </tr>
+    </thead>
+    <tbody id="shareTBody"></tbody>
+    <tfoot>
+      <tr>
+        <td><b>Gesamt</b></td>
+        <td></td>
+        <td class="right" id="sumSov">0%</td>
+        <td class="right" id="sumMarket">0%</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
 
   </div>
 </body>
