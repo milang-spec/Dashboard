@@ -1,10 +1,9 @@
-/* ========================= data.js (bereinigt) ========================= */
+/* ========================= data.js ========================= */
 (function () {
   // Basisobjekt
   var D = window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
 
-
-  /* ---------- Kampagnen 2025 (deine Namen, 3 Placements je Kampagne) ---------- */
+  /* ---------- Kampagnen 2025 ---------- */
   var ALL_2025 = [
     {
       name:"Super Sale", brand:"Redcare", site:"Offsite", model:"CPC", channel:"Search",
@@ -18,11 +17,11 @@
       ],
       placements:[
         { strategy:"Upper Funnel", type:"Display", placement:"Homepage Hero", channel:"Display",
-          impressions:2700000, clicks:45000, ad:45000, roas:2.2, orders:700, revenue:99000 },
+          impressions:2700000, clicks:45000, ad:45000, roas:2.2, orders:700, revenue: 99000 },
         { strategy:"Mid Funnel",   type:"Search",  placement:"Category / Search", channel:"Search",
           impressions:3000000, clicks:50000, ad:50000, roas:2.3, orders:800, revenue:115000 },
         { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored", channel:"Search",
-          impressions:1500000, clicks:25000, ad:25000, roas:2.24, orders:500, revenue:56000 }
+          impressions:1500000, clicks:25000, ad:25000, roas:2.24,orders:500, revenue: 56000 }
       ]
     },
     {
@@ -37,11 +36,11 @@
       ],
       placements:[
         { strategy:"Upper Funnel", type:"Display", placement:"Seasonal HP Banner", channel:"Display",
-          impressions:2300000, clicks:40000, ad:35000, roas:2.5,   orders:600, revenue:87500 },
+          impressions:2300000, clicks:40000, ad:35000, roas:2.5,   orders:600, revenue: 87500 },
         { strategy:"Mid Funnel",   type:"Search",  placement:"Category / Search", channel:"Search",
           impressions:2700000, clicks:52000, ad:45000, roas:2.6,   orders:800, revenue:117000 },
         { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored",     channel:"Search",
-          impressions:1500000, clicks:23000, ad:20000, roas:3.275, orders:500, revenue:65500 } // Summe = 270.000
+          impressions:1500000, clicks:23000, ad:20000, roas:3.275, orders:500, revenue: 65500 }
       ]
     },
     {
@@ -55,12 +54,12 @@
         { sku:"SB-03", name:"Magnesium 400 mg",   units:650, revenue:86000 }
       ],
       placements:[
-        { strategy:"Upper Funnel", type:"Display", placement:"Homepage Hero", channel:"Display",
-          impressions:2200000, clicks:37000, ad:30000, roas:2.2,   orders:450, revenue:66000 },
+        { strategy:"Upper Funnel", type:"Display", placement:"Homepage Hero",   channel:"Display",
+          impressions:2200000, clicks:37000, ad:30000, roas:2.2,   orders:675, revenue:  66000 },
         { strategy:"Mid Funnel",   type:"Display", placement:"Category Teaser", channel:"Display",
-          impressions:1800000, clicks:35000, ad:28000, roas:2.4,   orders:400, revenue:67200 },
-        { strategy:"Lower Funnel", type:"Search",  placement:"Brand Search", channel:"Search",
-          impressions:1500000, clicks:28000, ad:22000, roas:3.945, orders:350, revenue:86800 } // Summe = 220.000
+          impressions:1800000, clicks:35000, ad:28000, roas:2.4,   orders:630, revenue:  67200 },
+        { strategy:"Lower Funnel", type:"Search",  placement:"Brand Search",    channel:"Search",
+          impressions:1500000, clicks:28000, ad:22000, roas:3.945, orders:495, revenue:  86800 }
       ]
     },
     {
@@ -75,44 +74,20 @@
       ],
       placements:[
         { strategy:"Upper Funnel", type:"Display", placement:"Always-On Banner", channel:"Display",
-          impressions:2500000, clicks:50000, ad:30000, roas:2.2, orders:500, revenue:66000 },
-        { strategy:"Mid Funnel",   type:"Search",  placement:"Generic Search", channel:"Search",
+          impressions:2500000, clicks:50000, ad:30000, roas:2.2, orders:500, revenue: 66000 },
+        { strategy:"Mid Funnel",   type:"Search",  placement:"Generic Search",  channel:"Search",
           impressions:2800000, clicks:70000, ad:40000, roas:2.7, orders:700, revenue:108000 },
-        { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored", channel:"Search",
-          impressions:1518580, clicks:38230, ad:20000, roas:4.35, orders:830, revenue:87000 }
+        { strategy:"Lower Funnel", type:"PDP",     placement:"PDP Sponsored",   channel:"Search",
+          impressions:1518580, clicks:38230, ad:20000, roas:4.35,orders:830, revenue: 87000 }
       ]
     }
   ];
 
-  /* ---------- (optional) 2024 – wird gleich ggf. automatisch erzeugt ---------- */
+  /* ---------- 2024 ggf. automatisch ableiten ---------- */
   var ALL_2024 = window.ALL_2024 || [];
-
-  /* ---------- Rerank / Sales Details / SOV / Funnel ---------- */
-  D.rerank_budget = 17500;
-  D.rerank = [
-    { sku:"SKU-001", item:"Vitamin D 2000 IU", ad:3200, ecpc:0.22, roas:2.80 },
-    { sku:"SKU-006", item:"Allergie Antihistamin", ad:2600, ecpc:0.24, roas:2.60 },
-    { sku:"SKU-003", item:"Omega-3 Fischöl", ad:2100, ecpc:0.20, roas:3.10 },
-    { sku:"SKU-002", item:"Magnesium 400 mg", ad:2800, ecpc:0.25, roas:2.20 },
-    { sku:"SKU-008", item:"Hautcreme Sensitive", ad:2300, ecpc:0.27, roas:1.90 },
-    { sku:"SKU-004", item:"Zink + C Immun", ad:1500, ecpc:0.18, roas:2.40 }
-  ];
-  D.sales_details = [
-    { name:"Vitamin D 2000 IU", units:14545, revenue:8960 },
-    { name:"Allergie Antihistamin", units:10833, revenue:6760 },
-    { name:"Omega-3 Fischöl", units:10500, revenue:6510 },
-    { name:"Magnesium 400 mg", units:11200, revenue:6160 },
-    { name:"Hautcreme Sensitive", units:4000, revenue:2280 },
-    { name:"Zink + C Immun", units:8333, revenue:3600 }
-  ];
-  D.sov = D.sov || { total: 0.17 };
-  D.funnel = D.funnel || { awareness: 0.30, engagement: 0.40, performance: 0.30 };
-
-  /* ---------- LY (2024) automatisch aus 2025 ableiten, falls leer ---------- */
   if (!Array.isArray(ALL_2024) || !ALL_2024.length) {
     function y24(d){ return (d||'').replace('2025','2024'); }
     var fAd=0.92, fRev=0.90, fImp=0.95, fClk=0.93, fOrd=0.92;
-
     ALL_2024 = ALL_2025.map(function(c){
       var imp = Math.round((c.impressions||0)*fImp);
       var clk = Math.round((c.clicks||0)*fClk);
@@ -147,36 +122,43 @@
     });
   }
 
+  /* ---------- SoV / Funnel etc. ---------- */
+  D.rerank_budget = 17500;
+  D.rerank = [
+    { sku:"SKU-001", item:"Vitamin D 2000 IU", ad:3200, ecpc:0.22, roas:2.80 },
+    { sku:"SKU-006", item:"Allergie Antihistamin", ad:2600, ecpc:0.24, roas:2.60 },
+    { sku:"SKU-003", item:"Omega-3 Fischöl", ad:2100, ecpc:0.20, roas:3.10 },
+    { sku:"SKU-002", item:"Magnesium 400 mg", ad:2800, ecpc:0.25, roas:2.20 },
+    { sku:"SKU-008", item:"Hautcreme Sensitive", ad:2300, ecpc:0.27, roas:1.90 },
+    { sku:"SKU-004", item:"Zink + C Immun", ad:1500, ecpc:0.18, roas:2.40 }
+  ];
+  D.sales_details = [
+    { name:"Vitamin D 2000 IU",       units:14545, revenue: 8960 },
+    { name:"Allergie Antihistamin",   units:10833, revenue: 6760 },
+    { name:"Omega-3 Fischöl",         units:10500, revenue: 6510 },
+    { name:"Magnesium 400 mg",        units:11200, revenue: 6160 },
+    { name:"Hautcreme Sensitive",     units: 4000, revenue: 2280 },
+    { name:"Zink + C Immun",          units: 8333, revenue: 3600 }
+  ];
+  D.sov    = D.sov    || { total: 0.17 };
+  D.funnel = D.funnel || { awareness: 0.30, engagement: 0.40, performance: 0.30 };
 
-// --- SoV-Daten (Kategorien & Brands) ---
-// Stelle sicher, dass DASHBOARD_DATA existiert
-window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+  /* ---------- SoV-Kategorien ---------- */
+  var sovCats = [
+    { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
+    { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
+    { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
+    { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
+  ];
+  D.sov_categories = sovCats;
+  D.sov_cats       = D.sov_cats       || sovCats;
+  D.sov_details    = D.sov_details    || sovCats;
 
-var sovCats = [
-  { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
-  { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
-  { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
-  { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
-];
-
-// Eine Quelle + sinnvolle Aliase (einige Seiten erwarten alternative Keys)
-window.DASHBOARD_DATA.sov_categories = sovCats;
-window.DASHBOARD_DATA.sov_cats       = window.DASHBOARD_DATA.sov_cats       || sovCats;
-window.DASHBOARD_DATA.sov_details    = window.DASHBOARD_DATA.sov_details    || sovCats;
-
-// Bequemer Alias wie im restlichen Code
-window.D = window.DASHBOARD_DATA;
-
-
-
-  /* ---------- Exporte/Wiring ---------- */
+  /* ---------- Export/Wiring ---------- */
   window.ALL_2025 = ALL_2025;
   window.ALL_2024 = ALL_2024;
-  window.DASHBOARD_DATA = D;
-
-  // Manche Funktionen lesen hier:
   D.campaigns_2025 = ALL_2025;
   D.campaigns_2024 = ALL_2024;
-  window.D = D; // Alias
-
-})();  // <— eine IIFE, sauber geschlossen
+  window.DASHBOARD_DATA = D;
+  window.D = D;
+})();
