@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sales Details</title>
 
-  <!-- Your shared theme -->
+  <!-- Gemeinsames Theme -->
   <link rel="stylesheet" href="design.css" />
 
-  <!-- Small page-local polish to align header + tighten table -->
+  <!-- Seite: feines Layout -->
   <style>
     .page-wrap{max-width:1400px;margin:0 auto;padding:24px;}
     .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
@@ -23,17 +23,12 @@
     .card{border-radius:18px;background:rgba(255,199,177,.08);border:1px solid rgba(255,199,177,.35);padding:16px;}
     .card h4{margin:0 0 8px 0;font-weight:700;color:#fff;opacity:.9;}
 
-    .kpi-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin:18px 0;}
-    @media (max-width:840px){ .kpi-grid{grid-template-columns:1fr;} }
-    .kpi .label{opacity:.8;margin-bottom:6px}
-    .kpi .value{font-size:40px;font-weight:800}
-
     .controls select{
       width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,199,177,.35);
       background:#1f1f1f;color:#fff;
     }
 
-    /* Table tweaks: bring Sales nearer to Item Name */
+    /* Tabelle wie auf sales/share gestylt + Spaltenbreiten */
     table.sales{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
     table.sales thead th{
       text-align:left;padding:14px;background:rgba(255,199,177,.12);
@@ -45,17 +40,14 @@
       border-top:1px solid rgba(255,199,177,.25);
     }
     .right{text-align:right}
-    .link-cell{color:#FFC7B1;text-decoration:none}
-    .link-cell:hover{opacity:.9}
 
-    /* make the middle columns (SKU + Item) wider, Sales closer to Item Name */
-    .col-sku{width:140px}
-    .col-item{width:48%}
-    .col-sales{width:140px}
-    .col-rev{width:1%}
+    .col-sku{width:16ch}
+    .col-item{width:auto}
+    .col-sales{width:12%}
+    .col-rev{width:16%}
   </style>
 
-  <!-- IMPORTANT: data.js must load before sales.js -->
+  <!-- Scripts: Reihenfolge wichtig -->
   <script src="data.js" defer></script>
   <script src="sales.js" defer></script>
 </head>
@@ -67,61 +59,48 @@
       <a class="btn-back" href="./">← Zurück zum Dashboard</a>
     </div>
 
-    <!-- Filters -->
+    <!-- Filter -->
     <div class="filters">
       <div class="controls card">
         <h4>Kampagne</h4>
-        <select id="salesFilterCampaign" aria-label="Kampagne wählen"></select>
+        <select id="salesCampaign" aria-label="Kampagne wählen"></select>
       </div>
       <div class="controls card">
         <h4>Placement</h4>
-        <select id="salesFilterPlacement" aria-label="Placement wählen"></select>
+        <select id="salesPlacement" aria-label="Placement wählen"></select>
       </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="kpi-grid">
-      <div class="card kpi">
-        <div class="label">Sales (Einheiten)</div>
-        <div class="value" id="kpi-sales">0</div>
-      </div>
-      <div class="card kpi">
-        <div class="label">Revenue</div>
-        <div class="value" id="kpi-revenue">0 €</div>
-      </div>
+    <!-- Tabelle -->
+    <div class="card">
+      <h4>Verkaufte Produkte</h4>
+
+      <table class="sales" id="salesTable">
+        <colgroup>
+          <col class="col-sku">
+          <col class="col-item">
+          <col class="col-sales">
+          <col class="col-rev">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-sku">SKU</th>
+            <th class="col-item">Item Name</th>
+            <th class="right col-sales">Sales</th>
+            <th class="right col-rev">Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="salesTBody"><!-- wird von sales.js befüllt --></tbody>
+        <tfoot>
+          <tr>
+            <td><b>Gesamt</b></td>
+            <td></td>
+            <td class="right" id="sumSales">0</td>
+            <td class="right" id="sumRevenue">0 €</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
-
-    <!-- Table -->
-  <div class="card">
-  <h4>Verkaufte Produkte</h4>
-
-  <table class="sales" id="salesTable">
-    <colgroup>
-      <col class="col-sku">
-      <col class="col-item">
-      <col class="col-sales">
-      <col class="col-rev">
-    </colgroup>
-    <thead>
-      <tr>
-        <th class="col-sku">SKU</th>
-        <th class="col-item">Item Name</th>
-        <th class="right col-sales">Sales</th>
-        <th class="right col-rev">Revenue</th>
-      </tr>
-    </thead>
-    <tbody id="salesTBody"><!-- wird von sales.js befüllt --></tbody>
-    <tfoot>
-      <tr>
-        <td><b>Gesamt</b></td>
-        <td></td>
-        <td class="right" id="sumSales">0</td>
-        <td class="right" id="sumRevenue">0 €</td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
-
 
   </div>
 </body>
