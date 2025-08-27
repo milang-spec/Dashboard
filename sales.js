@@ -87,59 +87,86 @@
     return list;
   }
 
-  function render(){
-    var campValue = selCamp.value || 'ALL';
-    var placValue = selPlac.value || 'ALL';
+ function render(){
+  var campValue = selCamp.value || 'ALL';
+  var placValue = selPlac.value || 'ALL';
 
-    var campaigns = (campValue==='ALL') ? ALL : ALL.filter(function(c){ return c.name===campValue; });
+  // DOM-Refs für KPIs + Fußzeile (idempotent; falls schon global vorhanden, kein Problem)
+  var kpiSalesEl    = document.getElementById('kpiSales');
+  var kpiRevenueEl  = document.getElementById('kpiRevenue');
+  var sumSalesEl    = document.getElementById('sumSales');
+  var sumRevenueEl  = document.getElementById('sumRevenue');
 
-    var rows = [];
-    var sumSales=0, sumRev=0;
+  var campaigns = (campValue === 'ALL')
+    ? ALL
+    : ALL.filter(function(c){ return c.name === campValue; });
 
-    if (campValue==='ALL' && placValue==='ALL'){
-      // Alle Kampagnen, alle Placements -> echte Aggregation der Kampagnen-Produkte
-      rows = aggregateProducts(campaigns);
-      rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
-    }
-    else if (campValue!=='ALL' && placValue==='ALL'){
-      // Eine Kampagne komplett (direkt Kampagnen-Produkte)
-      var c = campaigns[0];
-      rows = (c && c.products) ? c.products.slice(0) : [];
-      rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
-    }
-    else {
-      // Eine Kampagne + ein Placement
-      var c = campaigns[0];
-      var placement = c && (c.placements||[]).find(function(p){ return (p.placement||'')===placValue; });
+  var rows = [];
+  var sumSales = 0, sumRev = 0;
 
-      if (c && placement){
-        // Anteil des Placements an Kampagnen-Sales/Revenue
-        var campUnits = (c.placements||[]).reduce(function(acc,p){ return acc + (p.orders||0); },0) || 1;
-        var campRev   = (c.placements||[]).reduce(function(acc,p){ return acc + (p.revenue||0);},0) || 1;
-
-        var shareUnits   = (placement.orders||0)/campUnits;
-        var shareRevenue = (placement.revenue||0)/campRev;
-
-        // Falls es keine Kampagnen-Produkte gibt, nichts zeigen (oder Dummy erzeugen).
-        var base = (c.products||[]).length ? c.products : [];
-        rows = scaleProducts(base, shareUnits, shareRevenue);
-        rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
-      }
-    }
-
-    // Render
-    tbody.innerHTML = rows.map(function(p){
-      return '<tr>' +
-        '<td>'+(p.sku||'')+'</td>' +
-        '<td>'+(p.name||'')+'</td>' +
-        '<td class="right">'+fmtNum(p.units||0)+'</td>' +
-        '<td class="right">'+fmtMoney0(p.revenue||0)+'</td>' +
-      '</tr>';
-    }).join('');
-
-    sumSalesEl.textContent   = fmtNum(Math.round(sumSales));
-    sumRevenueEl.textContent = fmtMoney0(Math.round(sumRev));
+  if (campValue === 'ALL' && placValue === 'ALL') {
+    // Alle Kampagnen, alle Placements -> echte Aggregation der Kampagnen-Produkte
+    rows = aggregateProducts(campaigns);
+    rows.forEach(function(r){
+      sumSales += (r.units || 0);
+      sumRev   += (r.revenue || 0);
+    });
   }
+  else if (campValue !== 'ALL' && placValue === 'ALL') {
+    // Eine Kampagne komplett (direkt Kampagnen-Produkte)
+    var c = campaigns[0];
+    rows = (c && c.products) ? c.products.slice(0) : [];
+    rows.forEach(function(r){
+      sumSales += (r.units || 0);
+      sumRev   += (r.revenue || 0);
+    });
+  }
+  else {
+    // Eine Kampagne + ein Placement
+    var c = campaigns[0];
+    var placement = c && (c.placements||[]).find(function(p){
+      return (p.placement || '') === placValue;
+    });
+
+    if (c && placement){
+      // Anteil des Placements an Kampagnen-Sales/Revenue
+      var campUnits = (c.placements||[]).reduce(function(acc,p){ return acc + (p.orders||0); }, 0) || 1;
+      var campRev   = (c.placements||[]).reduce(function(acc,p){ return acc + (p.revenue||0);}, 0) || 1;
+
+      var shareUnits   = (placement.orders   || 0) / campUnits;
+      var shareRevenue = (placement.revenue  || 0) / campRev;
+
+      // Falls es keine Kampagnen-Produkte gibt, nichts zeigen
+      var base = (c.products || []).length ? c.products : [];
+      rows = scaleProducts(base, shareUnits, shareRevenue);
+      rows.forEach(function(r){
+        sumSales += (r.units || 0);
+        sumRev   += (r.revenue || 0);
+      });
+    }
+  }
+
+  // ==== Tabelle rendern ====
+  tbody.innerHTML = rows.map(function(p){
+    return '<tr>' +
+      '<td>' + (p.sku || '') + '</td>' +
+      '<td>' + (p.name || '') + '</td>' +
+      '<td class="right">' + fmtNum(p.units || 0) + '</td>' +
+      '<td class="right">' + fmtMoney0(p.revenue || 0) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // ==== Totals (unten in Fußzeile) ====
+  var totalUnits = Math.round(sumSales);
+  var totalRev   = Math.round(sumRev);
+
+  if (sumSalesEl)   sumSalesEl.textContent   = fmtNum(totalUnits);
+  if (sumRevenueEl) sumRevenueEl.textContent = fmtMoney0(totalRev);
+
+  // ==== KPIs (oben in den Karten) ====
+  if (kpiSalesEl)   kpiSalesEl.textContent   = fmtNum(totalUnits);
+  if (kpiRevenueEl) kpiRevenueEl.textContent = fmtMoney0(totalRev);
+}
 
   /* ---------- Init ---------- */
   fillCampaigns();
