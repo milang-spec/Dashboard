@@ -1,172 +1,167 @@
-(function () {
-  // --- kleine Helfer ---
-  function getParam(name) {
-    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
-  function setSelectValue(sel, val) {
-    if (!sel) return;
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value === val) { sel.selectedIndex = i; return; }
-    }
+// Dashboard/js/sales.js
+(function(){
+  /* ---------- lokale Utils (unabhängig von utils.js) ---------- */
+  function fmtMoney0(n){ return (n||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
+  function fmtNum(n){ return (n||0).toLocaleString('de-DE'); }
+
+  function getParam(name){
+    var m = new RegExp('[?&]'+name+'=([^&]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
   }
 
-  // Scope aus URL (ONSITE/OFFSITE/CPM/CPC/ALL)
-  var D = window.DASHBOARD_DATA || {};
-  var scope = getParam('scope') || 'ALL';
+  /* ---------- Daten holen ---------- */
+  var D    = window.DASHBOARD_DATA || {};
+  var ALL  = (D.campaigns_2025 && D.campaigns_2025.length) ? D.campaigns_2025
+           : (window.ALL_2025 || []);
 
-  function predicateFor(filter) {
-    switch (filter) {
-      case 'ONSITE': return function (c) { return c.site === 'Onsite'; };
-      case 'OFFSITE': return function (c) { return c.site === 'Offsite'; };
-      case 'CPM': return function (c) { return c.model === 'CPM'; };
-      case 'CPC': return function (c) { return c.model === 'CPC'; };
-      default: return function () { return true; };
-    }
-  }
+  // Fallback: nichts? -> leeres Array.
+  ALL = Array.isArray(ALL) ? ALL : [];
 
-  var campaigns = (D.campaigns_2025 || []).filter(predicateFor(scope));
-
-  // DOM
-  var selCampaign  = document.getElementById('salesCampaign');
-  var selPlacement = document.getElementById('salesPlacement');
-  var tbody        = document.querySelector('#salesTable tbody');
+  /* ---------- DOM ---------- */
+  var selCamp = document.getElementById('salesCampaign');
+  var selPlac = document.getElementById('salesPlacement');
+  var tbody   = document.getElementById('salesTBody');
   var sumSalesEl   = document.getElementById('sumSales');
-  var sumRevEl     = document.getElementById('sumRevenue');
+  var sumRevenueEl = document.getElementById('sumRevenue');
 
-  // Dropdowns füllen
-  function fillCampaignOptions() {
-    var opts = [{ value: 'ALL', label: 'Alle Kampagnen' }]
-      .concat(campaigns.map(function (c) { return { value: c.name, label: c.name }; }));
-    selCampaign.innerHTML = opts.map(function (o) {
-      return '<option value="' + o.value + '">' + o.label + '</option>';
+  if(!selCamp || !selPlac || !tbody) return;
+
+  /* ---------- Filter-Optionen befüllen ---------- */
+  function uniquePlacements(campaign){
+    // Entweder alle Placements einer Kampagne oder global (über alle)
+    var list = [];
+    var src = campaign ? (campaign.placements||[]) : ALL.reduce(function(acc,c){ return acc.concat(c.placements||[]); },[]);
+    src.forEach(function(p){
+      var name = p && p.placement ? p.placement : '';
+      if(name && list.indexOf(name)===-1) list.push(name);
+    });
+    list.sort();
+    return list;
+  }
+
+  function fillCampaigns(){
+    var opts = [{value:'ALL', label:'Alle Kampagnen'}]
+      .concat(ALL.map(function(c){ return {value:c.name, label:c.name}; }));
+    selCamp.innerHTML = opts.map(function(o){
+      return '<option value="'+o.value+'">'+o.label+'</option>';
     }).join('');
   }
 
-  function fillPlacementOptions(campName) {
-    if (campName && campName !== 'ALL') {
-      var c = campaigns.find(function (x) { return x.name === campName; });
-      var places = (c && c.placements) || [];
-      var opts = [{ value: 'ALL', label: 'Alle Placements' }]
-        .concat(places.map(function (p) {
-          var label = p.placement || p.name || '';
-          return { value: label, label: label };
-        }));
-      selPlacement.innerHTML = opts.map(function (o) {
-        return '<option value="' + o.value + '">' + o.label + '</option>';
-      }).join('');
-      selPlacement.disabled = false;
-    } else {
-      selPlacement.innerHTML = '<option value="ALL">Alle Placements</option>';
-      selPlacement.disabled = true;
-    }
+  function fillPlacements(campName){
+    var c = ALL.find(function(x){return x.name===campName;});
+    var list = uniquePlacements(campName==='ALL'?null:c);
+    var opts = [{value:'ALL', label:'Alle Placements'}]
+      .concat(list.map(function(p){return {value:p, label:p};}));
+    selPlac.innerHTML = opts.map(function(o){
+      return '<option value="'+o.value+'">'+o.label+'</option>';
+    }).join('');
   }
 
-  // Produkte sammeln und ggf. nach Placement skalieren
-  function productsForCampaign(c, placementName) {
-    var out = [];
-    var prods = c.products || [];
-    if (!prods.length) return out;
-
-    if (placementName && placementName !== 'ALL') {
-      var pObj = (c.placements || []).find(function (p) {
-        return (p.placement || p.name) === placementName;
+  /* ---------- Produktliste berechnen ---------- */
+  function aggregateProducts(campaigns){
+    // Aggregiert über mehrere Kampagnen
+    var map={}; // key: sku||name (toLowerCase)
+    campaigns.forEach(function(c){
+      (c.products||[]).forEach(function(p){
+        var key = (p.sku||p.name||'').toLowerCase();
+        if(!map[key]) map[key]={ sku:p.sku||'', name:p.name||'', units:0, revenue:0 };
+        map[key].units   += (p.units||0);
+        map[key].revenue += (p.revenue||0);
       });
-      if (pObj) {
-        // Skalierungsfaktoren (robust gegen 0)
-        var unitsFactor = safeDiv((pObj.orders || 0), (c.orders || 0));
-        var revFactor   = safeDiv((pObj.revenue || 0), (c.revenue || 0));
-        for (var i = 0; i < prods.length; i++) {
-          var pr = prods[i];
-          out.push({
-            sku: pr.sku || '',
-            name: pr.name || '',
-            units: Math.round((pr.units || 0) * unitsFactor),
-            revenue: Math.round((pr.revenue || 0) * revFactor)
-          });
-        }
-        return out;
+    });
+    return Object.keys(map).map(function(k){return map[k];})
+      .sort(function(a,b){ return (b.revenue||0)-(a.revenue||0); });
+  }
+
+  function scaleProducts(products, shareUnits, shareRevenue){
+    // verteilt Produkte proportional (z.B. für ein einzelnes Placement)
+    var list = (products||[]).map(function(p){
+      return {
+        sku: p.sku||'',
+        name:p.name||'',
+        units: Math.round((p.units||0)   * shareUnits),
+        revenue: Math.round((p.revenue||0)* shareRevenue)
+      };
+    });
+    // Korrekturen, damit Rundungsfehler klein bleiben:
+    return list;
+  }
+
+  function render(){
+    var campValue = selCamp.value || 'ALL';
+    var placValue = selPlac.value || 'ALL';
+
+    var campaigns = (campValue==='ALL') ? ALL : ALL.filter(function(c){ return c.name===campValue; });
+
+    var rows = [];
+    var sumSales=0, sumRev=0;
+
+    if (campValue==='ALL' && placValue==='ALL'){
+      // Alle Kampagnen, alle Placements -> echte Aggregation der Kampagnen-Produkte
+      rows = aggregateProducts(campaigns);
+      rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
+    }
+    else if (campValue!=='ALL' && placValue==='ALL'){
+      // Eine Kampagne komplett (direkt Kampagnen-Produkte)
+      var c = campaigns[0];
+      rows = (c && c.products) ? c.products.slice(0) : [];
+      rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
+    }
+    else {
+      // Eine Kampagne + ein Placement
+      var c = campaigns[0];
+      var placement = c && (c.placements||[]).find(function(p){ return (p.placement||'')===placValue; });
+
+      if (c && placement){
+        // Anteil des Placements an Kampagnen-Sales/Revenue
+        var campUnits = (c.placements||[]).reduce(function(acc,p){ return acc + (p.orders||0); },0) || 1;
+        var campRev   = (c.placements||[]).reduce(function(acc,p){ return acc + (p.revenue||0);},0) || 1;
+
+        var shareUnits   = (placement.orders||0)/campUnits;
+        var shareRevenue = (placement.revenue||0)/campRev;
+
+        // Falls es keine Kampagnen-Produkte gibt, nichts zeigen (oder Dummy erzeugen).
+        var base = (c.products||[]).length ? c.products : [];
+        rows = scaleProducts(base, shareUnits, shareRevenue);
+        rows.forEach(function(r){ sumSales+= (r.units||0); sumRev += (r.revenue||0); });
       }
     }
 
-    // Ohne Placement Filter: volle Kampagnenprodukte
-    for (var j = 0; j < prods.length; j++) {
-      var pr2 = prods[j];
-      out.push({
-        sku: pr2.sku || '',
-        name: pr2.name || '',
-        units: (pr2.units || 0),
-        revenue: (pr2.revenue || 0)
-      });
-    }
-    return out;
-  }
-
-  function aggregateProducts(selCampaigns, placementName) {
-    var map = {};
-    for (var i = 0; i < selCampaigns.length; i++) {
-      var c = selCampaigns[i];
-      var arr = productsForCampaign(c, placementName);
-      for (var k = 0; k < arr.length; k++) {
-        var p = arr[k];
-        var key = (p.sku || p.name || '').toLowerCase();
-        if (!map[key]) map[key] = { sku: p.sku || '', name: p.name || '', units: 0, revenue: 0 };
-        map[key].units   += (p.units || 0);
-        map[key].revenue += (p.revenue || 0);
-      }
-    }
-    var out = Object.keys(map).map(function (k) { return map[k]; });
-    out.sort(function (a, b) { return (b.revenue || 0) - (a.revenue || 0); });
-    return out;
-  }
-
-  function updateUrl(cName, pName) {
-    var params = new URLSearchParams(location.search);
-    params.set('scope', scope);
-    if (cName && cName !== 'ALL') params.set('campaign', cName); else params.delete('campaign');
-    if (pName && pName !== 'ALL' && cName !== 'ALL') params.set('placement', pName); else params.delete('placement');
-    history.replaceState(null, '', location.pathname + '?' + params.toString());
-  }
-
-  function render() {
-    var cName = selCampaign.value;
-    var pName = selPlacement.value;
-
-    var selected = (cName === 'ALL') ? campaigns : campaigns.filter(function (c) { return c.name === cName; });
-    var rows = aggregateProducts(selected, (cName === 'ALL') ? 'ALL' : pName);
-
-    var html = '', tUnits = 0, tRevenue = 0;
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      tUnits += (r.units || 0);
-      tRevenue += (r.revenue || 0);
-      html += '<tr>' +
-        '<td>' + (r.sku || '') + '</td>' +
-        '<td>' + (r.name || '') + '</td>' +
-        '<td class="right">' + fmtNum(r.units || 0) + '</td>' +
-        '<td class="right">' + fmtMoney0(r.revenue || 0) + '</td>' +
+    // Render
+    tbody.innerHTML = rows.map(function(p){
+      return '<tr>' +
+        '<td>'+(p.sku||'')+'</td>' +
+        '<td>'+(p.name||'')+'</td>' +
+        '<td class="right">'+fmtNum(p.units||0)+'</td>' +
+        '<td class="right">'+fmtMoney0(p.revenue||0)+'</td>' +
       '</tr>';
-    }
-    tbody.innerHTML = html;
-    sumSalesEl.textContent = fmtNum(tUnits);
-    sumRevEl.textContent   = fmtMoney0(tRevenue);
-    updateUrl(cName, pName);
+    }).join('');
+
+    sumSalesEl.textContent   = fmtNum(Math.round(sumSales));
+    sumRevenueEl.textContent = fmtMoney0(Math.round(sumRev));
   }
 
-  // Init
-  fillCampaignOptions();
+  /* ---------- Init ---------- */
+  fillCampaigns();
 
-  var initialCampaign  = getParam('campaign')  || 'ALL';
-  var initialPlacement = getParam('placement') || 'ALL';
-  setSelectValue(selCampaign, initialCampaign);
-  fillPlacementOptions(initialCampaign);
-  setSelectValue(selPlacement, initialPlacement);
+  // URL-Voreinstellung übernehmen
+  var qCampaign  = getParam('campaign') || 'ALL';
+  var qPlacement = getParam('placement') || 'ALL';
 
-  render();
+  // Kampagne setzen + Placements nachziehen
+  selCamp.value = (qCampaign && ALL.some(function(c){return c.name===qCampaign;})) ? qCampaign : 'ALL';
+  fillPlacements(selCamp.value);
+  selPlac.value = (qPlacement && uniquePlacements(selCamp.value==='ALL'?null:ALL.find(function(x){return x.name===selCamp.value;})).indexOf(qPlacement)>-1)
+                    ? qPlacement : 'ALL';
 
-  selCampaign.addEventListener('change', function () {
-    fillPlacementOptions(this.value);
+  // Events
+  selCamp.addEventListener('change', function(){
+    fillPlacements(selCamp.value);
+    selPlac.value = 'ALL';
     render();
   });
-  selPlacement.addEventListener('change', render);
+  selPlac.addEventListener('change', render);
+
+  // Erstes Rendern
+  render();
 })();
