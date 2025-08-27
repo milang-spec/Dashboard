@@ -148,7 +148,10 @@
   }
 
 
-// Eine Quelle definieren:
+// --- SoV-Daten (Kategorien & Brands) ---
+// Stelle sicher, dass DASHBOARD_DATA existiert
+window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
+
 var sovCats = [
   { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
   { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
@@ -156,10 +159,14 @@ var sovCats = [
   { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
 ];
 
-// Alle Aliase auf dieselbe Referenz zeigen lassen:
-D.sov_categories = sovCats;
-D.sov_cats       = D.sov_cats       || sovCats;
-D.sov_details    = D.sov_details    || sovCats;
+// Eine Quelle + sinnvolle Aliase (einige Seiten erwarten alternative Keys)
+window.DASHBOARD_DATA.sov_categories = sovCats;
+window.DASHBOARD_DATA.sov_cats       = window.DASHBOARD_DATA.sov_cats       || sovCats;
+window.DASHBOARD_DATA.sov_details    = window.DASHBOARD_DATA.sov_details    || sovCats;
+
+// Bequemer Alias wie im restlichen Code
+window.D = window.DASHBOARD_DATA;
+
 
 
   /* ---------- Exporte/Wiring ---------- */
