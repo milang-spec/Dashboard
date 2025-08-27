@@ -372,3 +372,11 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   position: relative;            /* sichert Layout gegen absolut positionierte Kinder */
 }
 
+/* Share of Voice Tabelle */
+.col-cat   { width: 42%; }
+.col-brand { width: 28%; }
+.col-sov   { width: 15%; }
+.col-ms    { width: 15%; }
+
+table.sov thead th.right,
+table.sov td.right { text-align: right; }
