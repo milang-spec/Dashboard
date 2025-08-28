@@ -196,16 +196,30 @@
     };
   });
 
-  // ===== ReRank / SoV / Funnel (klein & stabil) =====
-  D.rerank_budget = 150000;
-  D.rerank = [
-    { sku:"SKU-01", item:"Zink + C Immun",        ad:32000,  ecpc:0.23, roas:3.8 },
-    { sku:"SKU-02", item:"Nasenspray Mild",       ad:28000,  ecpc:0.22, roas:3.6 },
-    { sku:"SKU-03", item:"Allergie Antihistamin", ad:26000,  ecpc:0.24, roas:3.4 },
-    { sku:"SKU-04", item:"Magnesium 400 mg",      ad:24000,  ecpc:0.26, roas:3.2 },
-    { sku:"SKU-05", item:"Probiotika Forte",      ad:20000,  ecpc:0.28, roas:3.0 },
-    { sku:"SKU-06", item:"Vitamin C 1000",        ad:18000,  ecpc:0.27, roas:2.8 }
-  ];
+ /* ---------- Sponsored Product Ads (Rerank/SPA Panel) ---------- */
+/* Budget (Plan) fürs Widget */
+D.rerank_budget = 225000; // 225.000 € Budget
+
+/* Einzel-Items. Summe ad = 150.000 €. eCPC 0,60–2,00 €, ROAS ~3.6–4.2, Sales realistisch. */
+D.rerank = [
+  { sku:"SKU-01", item:"Zink + C Immun",         ad:32000, ecpc:0.90, roas:4.00, sales:900  },
+  { sku:"SKU-02", item:"Nasenspray Mild",        ad:28000, ecpc:0.75, roas:3.90, sales:820  },
+  { sku:"SKU-03", item:"Allergie Antihistamin",  ad:26000, ecpc:1.20, roas:3.80, sales:680  },
+  { sku:"SKU-04", item:"Magnesium 400 mg",       ad:24000, ecpc:1.10, roas:4.20, sales:620  },
+  { sku:"SKU-05", item:"Probiotika Forte",       ad:20000, ecpc:1.60, roas:3.60, sales:420  },
+  { sku:"SKU-06", item:"Vitamin C 1000",         ad:20000, ecpc:0.80, roas:3.70, sales:360  }
+];
+
+/* HINWEIS: Klicks & Revenue werden im Widget aus obigen Werten berechnet:
+   clicks  = ad / ecpc
+   revenue = ad * roas
+   Totals: Ad = 150.000 €, Clicks ≈ 154k, Revenue ≈ 582.800 € → ROAS ~ 3,89
+*/
+
+
+  // ---- Funnel mix (Anteil Awareness / Engagement / Performance) ----
+D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
+
 
   D.sov = { total: 0.17 };
   var sovCats = [
