@@ -155,12 +155,12 @@
 
       // Die gleichen Produkte wie in sales.html (SKU-01..)
       products: [
-        { sku:"SKU-01", name:"Zink + C Immun",        units:2200, revenue:155000 },
-        { sku:"SKU-02", name:"Nasenspray Mild",       units:1900, revenue:135000 },
-        { sku:"SKU-03", name:"Allergie Antihistamin", units:1700, revenue:120000 },
-        { sku:"SKU-04", name:"Magnesium 400 mg",      units:1400, revenue: 95000 },
-        { sku:"SKU-05", name:"Probiotika Forte",      units:1300, revenue: 95000 },
-        { sku:"SKU-06", name:"Vitamin C 1000",        units:1000, revenue: 85000 }
+        { sku:"SKU-01", name:"Zink + C Immun",        units:2100, revenue:125000 },
+        { sku:"SKU-02", name:"Nasenspray Mild",       units:1900, revenue:105000 },
+        { sku:"SKU-03", name:"Allergie Antihistamin", units:1700, revenue:100000 },
+        { sku:"SKU-04", name:"Magnesium 400 mg",      units:1000, revenue: 90000 },
+        { sku:"SKU-05", name:"Probiotika Forte",      units:1000, revenue: 95000 },
+        { sku:"SKU-06", name:"Vitamin C 1000",        units:800, revenue: 85000 }
       ]
     }
   ];
@@ -219,6 +219,44 @@ D.rerank = [
 
   // ---- Funnel mix (Anteil Awareness / Engagement / Performance) ----
 D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
+
+  /* === Harmonisierung: Produkte auf Kampagnen-Orders/Revenue skalieren === */
+(function(){
+  var list = window.ALL_2025 || [];
+  list.forEach(function(c){
+    var prods = c.products || [];
+    if (!prods.length) return;
+
+    // Units -> Orders
+    var wantU = Math.round(c.orders || 0);
+    var curU  = prods.reduce(function(s,p){ return s + (p.units||0); }, 0);
+    if (wantU > 0 && curU !== wantU){
+      if (curU <= 0){
+        var per = Math.floor(wantU/prods.length), rem = wantU - per*prods.length;
+        prods.forEach(function(p,i){ p.units = per + (i<rem?1:0); });
+      } else {
+        var rU = wantU/curU, acc=0;
+        prods.forEach(function(p){ p.units = Math.floor((p.units||0)*rU); acc+=p.units; });
+        for (var i=0; i<prods.length && acc<wantU; i++,acc++) prods[i].units++;
+      }
+    }
+
+    // Revenue -> Kampagnenrevenue
+    var wantR = Math.round(c.revenue || 0);
+    var curR  = prods.reduce(function(s,p){ return s + (p.revenue||0); }, 0);
+    if (wantR > 0 && curR !== wantR){
+      if (curR <= 0){
+        var perR = Math.floor(wantR/prods.length), remR = wantR - perR*prods.length;
+        prods.forEach(function(p,i){ p.revenue = perR + (i<remR?1:0); });
+      } else {
+        var rR = wantR/curR, accR=0;
+        prods.forEach(function(p){ p.revenue = Math.floor((p.revenue||0)*rR); accR+=p.revenue; });
+        for (var j=0; j<prods.length && accR<wantR; j++,accR++) prods[j].revenue++;
+      }
+    }
+  });
+})();
+
 
 
   D.sov = { total: 0.17 };
