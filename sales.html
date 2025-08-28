@@ -2,86 +2,127 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sales Details (Jan–Aug 2025)</title>
 
-  <!-- Design / Fonts -->
-  <link rel="stylesheet" href="js/cdn.jsdelivr.net.css"><!-- (falls du hier deine Font/CSS lädst) -->
+  <!-- Gemeinsames Theme -->
   <link rel="stylesheet" href="design.css" />
 
-  <!-- Wichtig: utils.js und data.js vor sales.js laden -->
-  <script defer src="js/utils.js"></script>
-  <script defer src="data.js"></script>
-  <script defer src="sales.js"></script>
+  <!-- Page-Layout wie share.html -->
+  <style>
+    .page-wrap{max-width:1400px;margin:0 auto;padding:24px;}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    .page-title{font-size:28px;font-weight:800;color:var(--theme,#FFC7B1);}
+    .btn-back{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+      background:rgba(255,199,177,.15);border:1px solid rgba(255,199,177,.45);color:#fff;text-decoration:none;}
+    .btn-back:hover{background:rgba(255,199,177,.25);}
+
+    .card{border-radius:18px;background:rgba(255,199,177,.08);border:1px solid rgba(255,199,177,.35);padding:16px;}
+
+    /* Eine Zeile: Sales / Revenue / Kampagne / Placement */
+    .metrics-row{
+      display:grid; gap:14px; grid-template-columns:repeat(4, 1fr);
+      margin-bottom:18px;
+    }
+    .metric .label{color:var(--theme);font-weight:800;margin-bottom:6px;}
+    .metric .value{font-weight:900;font-size:40px;line-height:1.06;white-space:nowrap;}
+
+    .filter-card label{display:block;font-weight:800;color:var(--theme);margin-bottom:8px;}
+    .filter-card select{
+      width:100%; padding:10px 12px; border-radius:12px; outline:none;
+      background:#10141c; color:var(--text);
+      border:1px solid rgba(255,199,177,.35);
+    }
+
+    /* Tabelle wie in share.html / sales */
+    table.sales{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
+    table.sales thead th{
+      text-align:left;padding:14px;background:rgba(255,199,177,.12);
+      border-bottom:1px solid rgba(255,199,177,.25);
+    }
+    table.sales tbody td{padding:12px 14px;border-bottom:1px dashed rgba(255,199,177,.15);}
+    table.sales tfoot td{
+      padding:14px 14px;font-weight:800;background:rgba(255,199,177,.12);
+      border-top:1px solid rgba(255,199,177,.25);
+    }
+    .right{text-align:right}
+
+    /* Spaltenbreiten wie besprochen (Sales näher an Item Name) */
+    .col-sku{width:16ch}
+    .col-item{width:auto}
+    .col-sales{width:12%}
+    .col-rev{width:16%}
+  </style>
+
+  <!-- Wichtig: Reihenfolge beibehalten -->
+  <script src="data.js" defer></script>
+  <script src="sales.js" defer></script>
 </head>
 <body>
+  <div class="page-wrap">
 
-  <!-- Brand-Header wie bei share.html -->
-  <header class="card brand-hero">
-    <div class="brand-hero-wrap">
-      <!-- Passe den Pfad zu deinem Logo an; gleich wie in share.html -->
-      <img class="brand-logo" src="assets/logo.svg" alt="Logo" />
-      <div class="brand-text">
-        <h1 class="brand-headline">Sales Details (Jan–Aug 2025)</h1>
+    <!-- Header analog share.html -->
+    <div class="page-header">
+      <h1 class="page-title">Sales Details (Jan–Aug 2025)</h1>
+      <a class="btn-back" href="./">← Zurück zum Dashboard</a>
+    </div>
+
+    <!-- KPI + Filter in EINER Zeile -->
+    <div class="metrics-row">
+      <div class="card metric">
+        <div class="label">Sales (Einheiten)</div>
+        <div class="value" id="sd-sales">0</div>
       </div>
-      <a class="btn-back" href="index.html">← Zurück zum Dashboard</a>
-    </div>
-  </header>
-
-  <!-- KPI + Filter: eine Zeile, 4 Karten -->
-  <section class="cards-row cards-4">
-    <!-- KPI: Sales -->
-    <div class="card kpi">
-      <div class="label">Sales (Einheiten)</div>
-      <div class="value" id="kpiSales">0</div>
-    </div>
-
-    <!-- KPI: Revenue -->
-    <div class="card kpi">
-      <div class="label">Revenue</div>
-      <div class="value" id="kpiRevenue">0 €</div>
-    </div>
-
-    <!-- Filter: Kampagne -->
-    <div class="card card-filter">
-      <label for="salesCampaign">Kampagne</label>
-      <select id="salesCampaign">
-        <option>Alle Kampagnen</option>
-      </select>
+      <div class="card metric">
+        <div class="label">Revenue</div>
+        <div class="value" id="sd-revenue">0 €</div>
+      </div>
+      <div class="card filter-card">
+        <label for="salesCampaign">Kampagne</label>
+        <select id="salesCampaign">
+          <option value="ALL">Alle Kampagnen</option>
+          <!-- sales.js füllt die Liste dynamisch -->
+        </select>
+      </div>
+      <div class="card filter-card">
+        <label for="salesPlacement">Placement</label>
+        <select id="salesPlacement">
+          <option value="ALL">Alle Placements</option>
+          <!-- sales.js füllt die Liste dynamisch -->
+        </select>
+      </div>
     </div>
 
-    <!-- Filter: Placement -->
-    <div class="card card-filter">
-      <label for="salesPlacement">Placement</label>
-      <select id="salesPlacement">
-        <option>Alle Placements</option>
-      </select>
+    <!-- Tabelle -->
+    <div class="card">
+      <h4 style="margin:0 0 10px;color:var(--theme)">Verkaufte Produkte</h4>
+      <table class="sales" id="salesTable">
+        <colgroup>
+          <col class="col-sku">
+          <col class="col-item">
+          <col class="col-sales">
+          <col class="col-rev">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-sku">SKU</th>
+            <th class="col-item">Item Name</th>
+            <th class="right col-sales">Sales</th>
+            <th class="right col-rev">Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="salesTBody"><!-- durch sales.js befüllt --></tbody>
+        <tfoot>
+          <tr>
+            <td><b>Gesamt</b></td>
+            <td></td>
+            <td class="right" id="sumSales">0</td>
+            <td class="right" id="sumRevenue">0 €</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
-  </section>
 
-  <!-- Tabelle wie share.html (kompakte Kartenoptik) -->
-  <section class="card">
-    <h4>Verkaufte Produkte</h4>
-    <table class="sales" id="salesTable">
-      <thead>
-        <tr>
-          <th class="col-sku">SKU</th>
-          <th class="col-item">Item Name</th>
-          <th class="right col-sales">Sales</th>
-          <th class="right col-rev">Revenue</th>
-        </tr>
-      </thead>
-      <tbody id="salesTBody"><!-- wird von sales.js befüllt --></tbody>
-      <tfoot>
-        <tr>
-          <td><b>Gesamt</b></td>
-          <td></td>
-          <td class="right" id="sumSales">0</td>
-          <td class="right" id="sumRevenue">0 €</td>
-        </tr>
-      </tfoot>
-    </table>
-  </section>
-
+  </div>
 </body>
 </html>
