@@ -134,6 +134,17 @@ function renderTrend(list){
   });
 }
 
+// Leicht unterschiedliche Verteilungen pro KPI
+// (mehr in Jan–März & Jun–Aug, weniger in Apr–Mai)
+var MP_W_IMP = [0.168,0.158,0.150,0.092,0.084,0.115,0.117,0.116]; // Impressions
+var MP_W_CLK = [0.173,0.152,0.145,0.095,0.085,0.110,0.122,0.118]; // Clicks
+var MP_W_AD  = [0.167,0.156,0.150,0.092,0.082,0.115,0.118,0.120]; // Ad Spend
+var MP_W_REV = [0.168,0.156,0.150,0.092,0.083,0.115,0.122,0.114]; // Revenue
+var MP_W_ORD = [0.168,0.156,0.150,0.092,0.083,0.116,0.120,0.115]; // Sales
+
+// SoV-Faktoren um den globalen SoV – Mittelwert ≈ 1
+var MP_W_SOV = [1.14,1.06,1.02,0.86,0.85,0.96,1.03,0.98];
+
 /* ========= Monthly Breakdown (gewichtet + mit Jitter) ========= */
 // Gewichte: Jan–März & Jun–Aug höher, Apr–Mai niedriger; Summe = 1.00
 const MP_WEIGHTS = [0.17, 0.16, 0.14, 0.09, 0.08, 0.12, 0.12, 0.12]; // Jan..Aug
@@ -187,20 +198,24 @@ function getGrandTotalsFromList(list){
 }
 
 function monthlyBreakdown(list, grandTotalsOptional){
-  // 1) Totals holen (wenn t25 schon vorhanden ist, gern als 2. Arg übergeben)
+  // Totals holen (wie bisher)
   var G = grandTotalsOptional || getGrandTotalsFromList(list||[]);
 
-  // 2) Gewichte mit leichtem Jitter
-  var w = normalizeWeights(MP_WEIGHTS, MP_JITTER);
+  // pro KPI unterschiedliche, leicht gejitterte Gewichte
+  var impW = normalizeWeights(MP_W_IMP, MP_JITTER);
+  var clkW = normalizeWeights(MP_W_CLK, MP_JITTER);
+  var adW  = normalizeWeights(MP_W_AD,  MP_JITTER);
+  var revW = normalizeWeights(MP_W_REV, MP_JITTER);
+  var ordW = normalizeWeights(MP_W_ORD, MP_JITTER);
 
-  // 3) Auf Monate verteilen (ganze Zahlen für Stückzahlen/Traffic; Geldeinheiten als Float)
-  var imp = distribute(G.impressions||0, w, true);
-  var clk = distribute(G.clicks     ||0, w, true);
-  var ad  = distribute(G.ad         ||0, w, false);
-  var rev = distribute(G.revenue    ||0, w, false);
-  var ord = distribute(G.orders     ||0, w, true);
+  // Verteilung
+  var imp = distribute(G.impressions||0, impW, true);
+  var clk = distribute(G.clicks     ||0, clkW, true);
+  var ad  = distribute(G.ad         ||0, adW , false);
+  var rev = distribute(G.revenue    ||0, revW, false);
+  var ord = distribute(G.orders     ||0, ordW, true);
 
-  // 4) Abgeleitete KPIs je Monat
+  // Abgeleitete KPIs je Monat
   var months = [];
   for (var i=0;i<8;i++){
     var m = {
@@ -212,17 +227,24 @@ function monthlyBreakdown(list, grandTotalsOptional){
     };
     m.ctr  = safeDiv(m.clicks, m.impressions);
     m.cpc  = safeDiv(m.ad,     m.clicks);
-    m.cpm  = safeDiv(m.ad,     m.impressions/1000);
+    m.cpm  = safeDiv(m.ad,     (m.impressions||0)/1000);
     m.roas = safeDiv(m.revenue,m.ad);
     months.push(m);
   }
+
+  // SoV je Monat leicht variieren, Mittelwert = globaler SoV
+  var globalSov = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov
+                   ? window.DASHBOARD_DATA.sov.total : 0.17);
+  var avg = MP_W_SOV.reduce(function(a,b){return a+b;},0)/MP_W_SOV.length;
+  for (var j=0;j<8;j++){
+    months[j].sov = globalSov * (MP_W_SOV[j]/avg);
+  }
+
   return months;
 }
 
-
 function renderMonthlyTable(monthsData, grandTotals){
   var tbody = document.querySelector('#monthlyTable tbody'); if (!tbody) return;
-  var sovVal = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov) ? window.DASHBOARD_DATA.sov.total : null;
   var labels = MONTHS.slice(0,8);
 
   var rowsHtml = '';
@@ -230,36 +252,54 @@ function renderMonthlyTable(monthsData, grandTotals){
     var m = monthsData[i];
     rowsHtml += '<tr>'+
       '<td>'+labels[i]+'</td>'+
+      '<td class="right">'+fmtMoney0(m.ad)+'</td>'+                       // <-- Ad Spend direkt nach Monat
       '<td class="right">'+fmtNum(Math.round(m.impressions))+'</td>'+
       '<td class="right">'+fmtNum(Math.round(m.clicks))+'</td>'+
       '<td class="right">'+fmtPct1(m.ctr)+'</td>'+
-      '<td class="right">'+fmtMoney0(m.ad)+'</td>'+
       '<td class="right">'+fmtMoney2(m.cpc)+'</td>'+
       '<td class="right">'+fmtMoney2(m.cpm)+'</td>'+
       '<td class="right">'+fmtNum(Math.round(m.orders))+'</td>'+
       '<td class="right">'+fmtMoney0(m.revenue)+'</td>'+
       '<td class="right">'+(m.roas||0).toFixed(2)+'×</td>'+
-      '<td class="right">'+(sovVal!=null? ((sovVal*100).toFixed(0)+'%') : '—')+'</td>'+
+      '<td class="right">'+(m.sov!=null ? ((m.sov*100).toFixed(0)+'%') : '—')+'</td>'+
     '</tr>';
   }
   tbody.innerHTML = rowsHtml;
 
+  // Totals aus Monaten oder grandTotals
+  var G = grandTotals || monthsData.reduce(function(acc,m){
+    acc.impressions += (m.impressions||0);
+    acc.clicks      += (m.clicks||0);
+    acc.ad          += (m.ad||0);
+    acc.revenue     += (m.revenue||0);
+    acc.orders      += (m.orders||0);
+    return acc;
+  }, {impressions:0, clicks:0, ad:0, revenue:0, orders:0});
+
   var tr = document.getElementById('monthlyTotalRow');
-  if (tr && grandTotals){
+  if (tr){
+    var ctrTot  = safeDiv(G.clicks, G.impressions);
+    var cpcTot  = safeDiv(G.ad,     G.clicks);
+    var cpmTot  = safeDiv(G.ad,     (G.impressions||0)/1000);
+    var roasTot = safeDiv(G.revenue,G.ad);
+    var sovTot  = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.sov
+                   ? window.DASHBOARD_DATA.sov.total : null);
+
     tr.innerHTML =
       '<td><b>Summe</b></td>'+
-      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.impressions))+'</b></td>'+
-      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.clicks))+'</b></td>'+
-      '<td class="right"><b>'+fmtPct1(grandTotals.ctr)+'</b></td>'+
-      '<td class="right"><b>'+fmtMoney0(grandTotals.ad)+'</b></td>'+
-      '<td class="right"><b>'+fmtMoney2(grandTotals.cpc)+'</b></td>'+
-      '<td class="right"><b>'+fmtMoney2(grandTotals.cpm)+'</b></td>'+
-      '<td class="right"><b>'+fmtNum(Math.round(grandTotals.orders))+'</b></td>'+
-      '<td class="right"><b>'+fmtMoney0(grandTotals.revenue)+'</b></td>'+
-      '<td class="right"><b>'+(grandTotals.roas||0).toFixed(2)+'×</b></td>'+
-      '<td class="right"><b>'+(sovVal!=null? ((sovVal*100).toFixed(0)+'%') : '—')+'</b></td>';
+      '<td class="right"><b>'+fmtMoney0(G.ad)+'</b></td>'+
+      '<td class="right"><b>'+fmtNum(Math.round(G.impressions))+'</b></td>'+
+      '<td class="right"><b>'+fmtNum(Math.round(G.clicks))+'</b></td>'+
+      '<td class="right"><b>'+fmtPct1(ctrTot)+'</b></td>'+
+      '<td class="right"><b>'+fmtMoney2(cpcTot)+'</b></td>'+
+      '<td class="right"><b>'+fmtMoney2(cpmTot)+'</b></td>'+
+      '<td class="right"><b>'+fmtNum(Math.round(G.orders))+'</b></td>'+
+      '<td class="right"><b>'+fmtMoney0(G.revenue)+'</b></td>'+
+      '<td class="right"><b>'+roasTot.toFixed(2)+'×</b></td>'+
+      '<td class="right"><b>'+(sovTot!=null? ((sovTot*100).toFixed(0)+'%') : '—')+'</b></td>';
   }
 }
+
 
 /* === SoV-KPI + Funnel === */
 function renderSOVandFunnel(){
