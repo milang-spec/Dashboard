@@ -134,44 +134,91 @@ function renderTrend(list){
   });
 }
 
-function monthlyBreakdown(list){
-  var months = []; for (var i=0;i<8;i++) months.push({ impressions:0, clicks:0, ad:0, revenue:0, orders:0 });
-  list = list || [];
+/* ========= Monthly Breakdown (gewichtet + mit Jitter) ========= */
+// Gewichte: Jan–März & Jun–Aug höher, Apr–Mai niedriger; Summe = 1.00
+const MP_WEIGHTS = [0.17, 0.16, 0.14, 0.09, 0.08, 0.12, 0.12, 0.12]; // Jan..Aug
+const MP_JITTER  = 0.08; // ±8% pro Monat, damit nicht jeder Monat gleich aussieht
 
-  for (var i=0;i<list.length;i++){
-    var c = list[i];
-    var s = new Date(c.start+'T00:00:00');
-    var e = new Date(c.end  +'T00:00:00');
+function normalizeWeights(base, jitter){
+  // w' = max(0, w * (1 + rand(-j..+j))), danach normalisieren auf 1.0
+  var w = base.map(function(x){
+    var f = 1 + (Math.random()*2 - 1) * (jitter||0);
+    return Math.max(0, x * f);
+  });
+  var s = w.reduce((a,b)=>a+b,0) || 1;
+  return w.map(x => x/s);
+}
 
-    var spans = [], cur = new Date(s); cur.setDate(1);
-    while (cur <= e){
-      var m = cur.getMonth(), y = cur.getFullYear();
-      if (y === 2025 && m <= 7) spans.push(m);
-      cur.setMonth(cur.getMonth()+1); cur.setDate(1);
-    }
-    var share = spans.length ? 1/spans.length : 0;
-
-    var rev = c.products ? sumProducts(c,'revenue') : (c.revenue||0);
-    var ord = c.products ? sumProducts(c,'units')   : (c.orders  ||0);
-
-    for (var j=0;j<spans.length;j++){
-      var idx = spans[j];
-      months[idx].impressions += (c.impressions||0) * share;
-      months[idx].clicks      += (c.clicks||0)      * share;
-      months[idx].ad          += (c.ad||0)          * share;
-      months[idx].revenue     +=  rev               * share;
-      months[idx].orders      +=  ord               * share;
-    }
+// Verteilung eines Totals auf 8 Monate – mit exakter Restsumme im letzten Monat
+function distribute(total, weights, intRounding){
+  var out = new Array(8).fill(0);
+  var acc = 0;
+  for (var i=0;i<7;i++){
+    var v = total * weights[i];
+    out[i] = intRounding ? Math.round(v) : v;
+    acc += out[i];
   }
-  for (var k=0;k<8;k++){
-    var m = months[k];
+  out[7] = intRounding ? Math.round(total - acc) : (total - acc);
+  return out;
+}
+
+// Robuste Totals (falls keine globale totals()-Funktion verfügbar ist)
+function getGrandTotalsFromList(list){
+  if (typeof totals === 'function') return totals(list||[]);
+  var g = { impressions:0, clicks:0, ad:0, revenue:0, orders:0 };
+  (list||[]).forEach(function(c){
+    g.impressions += +c.impressions || 0;
+    g.clicks      += +c.clicks      || 0;
+    g.ad          += +c.ad          || 0;
+
+    var rev = (typeof c.revenue === 'number') ? c.revenue : 0;
+    var ord = (typeof c.orders  === 'number') ? c.orders  : 0;
+    if ((!rev || !ord) && Array.isArray(c.products)){
+      var r=0, u=0;
+      c.products.forEach(function(p){ r += +p.revenue||0; u += +p.units||0; });
+      if (!rev) rev = r;
+      if (!ord) ord = u;
+    }
+    g.revenue += rev || 0;
+    g.orders  += ord || 0;
+  });
+  // abgeleitete Kennzahlen berechnet später pro Monat
+  return g;
+}
+
+function monthlyBreakdown(list, grandTotalsOptional){
+  // 1) Totals holen (wenn t25 schon vorhanden ist, gern als 2. Arg übergeben)
+  var G = grandTotalsOptional || getGrandTotalsFromList(list||[]);
+
+  // 2) Gewichte mit leichtem Jitter
+  var w = normalizeWeights(MP_WEIGHTS, MP_JITTER);
+
+  // 3) Auf Monate verteilen (ganze Zahlen für Stückzahlen/Traffic; Geldeinheiten als Float)
+  var imp = distribute(G.impressions||0, w, true);
+  var clk = distribute(G.clicks     ||0, w, true);
+  var ad  = distribute(G.ad         ||0, w, false);
+  var rev = distribute(G.revenue    ||0, w, false);
+  var ord = distribute(G.orders     ||0, w, true);
+
+  // 4) Abgeleitete KPIs je Monat
+  var months = [];
+  for (var i=0;i<8;i++){
+    var m = {
+      impressions: imp[i],
+      clicks:      clk[i],
+      ad:          ad[i],
+      revenue:     rev[i],
+      orders:      ord[i]
+    };
     m.ctr  = safeDiv(m.clicks, m.impressions);
     m.cpc  = safeDiv(m.ad,     m.clicks);
     m.cpm  = safeDiv(m.ad,     m.impressions/1000);
     m.roas = safeDiv(m.revenue,m.ad);
+    months.push(m);
   }
   return months;
 }
+
 
 function renderMonthlyTable(monthsData, grandTotals){
   var tbody = document.querySelector('#monthlyTable tbody'); if (!tbody) return;
