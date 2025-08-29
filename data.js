@@ -20,24 +20,33 @@
       orders: 2000,
       revenue: 60000,
 
-      // Placements (exakt aus deiner Liste, 3 unterschiedliche)
-      placements: [
-        { // Awareness | Onsite | Display_Ads | Homepage Hero Banner
-          strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
-          placement: "Homepage Hero Banner",
-          ad: 40000, impressions: 2600000, clicks: 45000, orders: 700, revenue: 21000
-        },
-        { // Awareness | Onsite | Display_Ads | Header Banner
-          strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
-          placement: "Header Banner",
-          ad: 30000, impressions: 2000000, clicks: 40000, orders: 650, revenue: 19500
-        },
-        { // Performance | Onsite | Search_Ads | Search Hero Banner
-          strategy: "Performance", channel: "Onsite", type: "Search_Ads",
-          placement: "Search Hero Banner",
-          ad: 30000, impressions: 1900000, clicks: 35000, orders: 650, revenue: 19500
-        }
-      ],
+     placements: [
+  {
+    // Awareness | Onsite | Display_Ads | Homepage Hero Banner
+    strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
+    placement: "Homepage Hero Banner",
+    booking: 55000, ad: 40000,
+    start: "2026-06-01", end: "2026-06-30",
+    impressions: 2600000, clicks: 45000, orders: 700, revenue: 21000
+  },
+  {
+    // Awareness | Onsite | Display_Ads | Header Banner
+    strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
+    placement: "Header Banner",
+    booking: 45000, ad: 30000,
+    start: "2026-07-01", end: "2026-07-31",
+    impressions: 2000000, clicks: 40000, orders: 650, revenue: 19500
+  },
+  {
+    // Performance | Onsite | Search_Ads | Search Hero Banner
+    strategy: "Performance", channel: "Onsite", type: "Search_Ads",
+    placement: "Search Hero Banner",
+    booking: 45000, ad: 30000,
+    start: "2026-08-01", end: "2026-09-15",
+    impressions: 1900000, clicks: 35000, orders: 650, revenue: 19500
+  }
+],
+
 
       // Produkte (für sales.html; Summe ~ 2 000 Units, ~ 60k €)
       products: [
@@ -63,24 +72,33 @@
       orders: 1000,
       revenue: 100000,
 
-      // 3 verschiedene Placements aus deiner Liste (Offsite + CRM)
-      placements: [
-        { // Awareness | Offsite | Programmatic_Ads | Display & Social
-          strategy: "Awareness", channel: "Offsite", type: "Programmatic_Ads",
-          placement: "Display & Social",
-          ad: 32500, impressions: 1200000, clicks: 16000, orders: 250, revenue: 25000
-        },
-        { // Performance | Offsite | Search_Ads | Paid Shopping Ad Google
-          strategy: "Performance", channel: "Offsite", type: "Search_Ads",
-          placement: "Paid Shopping Ad Google",
-          ad: 42500, impressions: 1100000, clicks: 20000, orders: 500, revenue: 55000
-        },
-        { // Engagement | CRM | CRM_Media | App Push Notification
-          strategy: "Engagement", channel: "CRM", type: "CRM_Media",
-          placement: "App Push Notification",
-          ad: 22500, impressions: 700000, clicks: 9000, orders: 250, revenue: 20000
-        }
-      ],
+     placements: [
+  {
+    // Awareness | Offsite | Programmatic_Ads | Display & Social
+    strategy: "Awareness", channel: "Offsite", type: "Programmatic_Ads",
+    placement: "Display & Social",
+    booking: 33000, ad: 32500,
+    start: "2026-01-15", end: "2026-02-10",
+    impressions: 1200000, clicks: 16000, orders: 250, revenue: 25000
+  },
+  {
+    // Performance | Offsite | Search_Ads | Paid Shopping Ad Google
+    strategy: "Performance", channel: "Offsite", type: "Search_Ads",
+    placement: "Paid Shopping Ad Google",
+    booking: 42000, ad: 42500,
+    start: "2026-02-01", end: "2026-03-15",
+    impressions: 1100000, clicks: 20000, orders: 500, revenue: 55000
+  },
+  {
+    // Engagement | CRM | CRM_Media | App Push Notification
+    strategy: "Engagement", channel: "CRM", type: "CRM_Media",
+    placement: "App Push Notification",
+    booking: 25000, ad: 22500,
+    start: "2026-02-20", end: "2026-03-10",
+    impressions: 700000, clicks: 9000, orders: 250, revenue: 20000
+  }
+],
+
 
       products: [
         { sku:"SKU-06", name:"Vitamin C 1000",        units:350, revenue:35000 },
@@ -104,24 +122,33 @@
       orders: 1000,
       revenue: 50000,
 
-      // 3 Onsite-Varianten aus deiner Liste
-      placements: [
-        { // Awareness | Onsite | Display_Ads | Onsite Display Booster
-          strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
-          placement: "Onsite Display Booster",
-          ad: 15000, impressions: 1100000, clicks: 15000, orders: 350, revenue: 17500
-        },
-        { // Awareness | Onsite | Display_Ads | App Hero Banner
-          strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
-          placement: "App Hero Banner",
-          ad: 15000, impressions: 1000000, clicks: 13000, orders: 325, revenue: 16000
-        },
-        { // Awareness | Onsite | Display_Ads | Homepage Hero Banner
-          strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
-          placement: "Homepage Hero Banner",
-          ad: 12500, impressions: 900000, clicks: 12000, orders: 325, revenue: 16500
-        }
-      ],
+    placements: [
+  {
+    // Awareness | Onsite | Display_Ads | Onsite Display Booster
+    strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
+    placement: "Onsite Display Booster",
+    booking: 18000, ad: 15000,
+    start: "2026-07-01", end: "2026-07-20",
+    impressions: 1100000, clicks: 15000, orders: 350, revenue: 17500
+  },
+  {
+    // Awareness | Onsite | Display_Ads | App Hero Banner
+    strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
+    placement: "App Hero Banner",
+    booking: 17000, ad: 15000,
+    start: "2026-07-21", end: "2026-08-10",
+    impressions: 1000000, clicks: 13000, orders: 325, revenue: 16000
+  },
+  {
+    // Awareness | Onsite | Display_Ads | Homepage Hero Banner
+    strategy: "Awareness", channel: "Onsite", type: "Display_Ads",
+    placement: "Homepage Hero Banner",
+    booking: 15000, ad: 12500,
+    start: "2026-08-11", end: "2026-08-31",
+    impressions: 900000, clicks: 12000, orders: 325, revenue: 16500
+  }
+],
+
 
       products: [
         { sku:"SKU-10", name:"Sonnencreme LSF50",     units:420, revenue:21000 },
@@ -144,16 +171,17 @@
       orders: 8500,
       revenue: 600000, // ROAS ~ 4
 
-      // nur EIN Placement – Sponsored Product Ads
-      placements: [
-        { // Performance | Onsite | Sponsored Product Ads | Sponsored Product Ads
-          strategy: "Performance", channel: "Onsite", type: "Sponsored Product Ads",
-          placement: "Sponsored Product Ads",
-          ad: 150000, impressions: 5500000, clicks: 160000, orders: 8500, revenue: 600000
-        }
-      ],
-
-      // Die gleichen Produkte wie in sales.html (SKU-01..)
+    placements: [
+  {
+    // Performance | Onsite | Sponsored Product Ads
+    strategy: "Performance", channel: "Onsite", type: "Sponsored Product Ads",
+    placement: "Sponsored Product Ads",
+    booking: 225000, ad: 150000,
+    start: "2026-01-01", end: "2026-12-31",
+    impressions: 5500000, clicks: 160000, orders: 8500, revenue: 600000
+  }
+],
+  // Die gleichen Produkte wie in sales.html (SKU-01..)
       products: [
         { sku:"SKU-01", name:"Zink + C Immun",        units:2100, revenue:125000 },
         { sku:"SKU-02", name:"Nasenspray Mild",       units:1900, revenue:105000 },
