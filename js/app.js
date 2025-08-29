@@ -8,6 +8,8 @@ function renderAll(){
   __guard('renderSOVandFunnel', function(){ renderSOVandFunnel(); });
   __guard('autoSizeChart',      function(){ autoSizeChart(); });
   __guard('renderTrend',        function(){ renderTrend(list25); });
+  var months = monthlyBreakdown(list25, t25);   
+__guard('monthly table',      function(){ renderMonthlyTable(months, t25); });
   __guard('overview campaigns', function(){ renderCampaignOverview(ALL_2025); });
 
   // HIER WICHTIG: nur den NEUEN Call stehen lassen:
