@@ -13,7 +13,7 @@
       start: "2026-06-01", end: "2026-09-15",
 
       // Budget & Performance (Kampagnen-Ebene)
-      booking: 170000,   // Budget
+      booking: 145000,   // Budget
       ad: 100000,        // Ad Spend
       impressions: 6500000,
       clicks: 120000,
@@ -97,7 +97,7 @@
       model: "CPM",
       start: "2026-07-01", end: "2026-08-31",
 
-      booking: 100000,
+      booking: 50000,
       ad: 42500,
       impressions: 3000000,
       clicks: 40000,
@@ -137,7 +137,7 @@
       model: "CPC",
       start: "2026-01-01", end: "2026-12-31",
 
-      booking: 150000,
+      booking: 225000,
       ad: 150000,
       impressions: 5500000,
       clicks: 160000,
