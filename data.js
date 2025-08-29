@@ -261,10 +261,10 @@ D.funnel = { awareness: 0.30, engagement: 0.40, performance: 0.30 };
 
   D.sov = { total: 0.17 };
   var sovCats = [
-    { category:'Wundheilung', sov:0.25, market_share:0.20, brand:'Redcare' },
-    { category:'Magen/Darm',  sov:0.10, market_share:0.12, brand:'Redcare' },
-    { category:'Allergie',    sov:0.22, market_share:0.18, brand:'Redcare' },
-    { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'Redcare' }
+    { category:'Vitamine', sov:0.25, market_share:0.20, brand:'Vitamini' },
+    { category:'Grippe',  sov:0.10, market_share:0.12, brand:'Grippi' },
+    { category:'Sonnenschutz', sov:0.22, market_share:0.18, brand:'SunPower' },
+    { category:'Immunsystem', sov:0.19, market_share:0.17, brand:'IngwerZink' }
   ];
   D.sov_categories = sovCats;
   D.sov_cats = sovCats;
