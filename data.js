@@ -1,16 +1,16 @@
 (function(){
   var D = window.DASHBOARD_DATA = window.DASHBOARD_DATA || {};
 
-  // ===== Totals (Jan–Aug 2025) =====
+  // ===== Totals (Jan–Aug 2026) =====
   // Ad: 390k, Impr: 18.0M, Clicks: 365k, Sales: 12.5k, Revenue: 810k
   // Budget gesamt (neu): 520k
   var ALL_2025 = [
     {
       name: "Super Sale",
-      brand: "Redcare",
+      brand: "Vitamini",
       site: "Onsite",
       model: "CPM",
-      start: "2025-06-01", end: "2025-09-15",
+      start: "2026-06-01", end: "2026-09-15",
 
       // Budget & Performance (Kampagnen-Ebene)
       booking: 170000,   // Budget
@@ -51,10 +51,10 @@
 
     {
       name: "Winter Push",
-      brand: "Redcare",
+      brand: "Grippi",
       site: "Offsite",
       model: "CPC",
-      start: "2025-11-15", end: "2025-12-31",
+      start: "2026-01-15", end: "2026-03-31",
 
       booking: 100000,
       ad: 97500,
@@ -92,10 +92,10 @@
 
     {
       name: "Summer Branding",
-      brand: "Redcare",
+      brand: "SunPower",
       site: "Onsite",
       model: "CPM",
-      start: "2025-07-01", end: "2025-08-31",
+      start: "2026-07-01", end: "2026-08-31",
 
       booking: 100000,
       ad: 42500,
@@ -132,10 +132,10 @@
 
     {
       name: "Always-On",
-      brand: "Redcare",
+      brand: "Multibrand",
       site: "Onsite",
       model: "CPC",
-      start: "2025-01-01", end: "2025-12-31",
+      start: "2026-01-01", end: "2026-12-31",
 
       booking: 150000,
       ad: 150000,
