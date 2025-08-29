@@ -46,11 +46,10 @@ function renderCampaignTable(list, allList){
   var expandedMode = (STATE.expanded && STATE.expanded.size > 0);
   table.classList.toggle('expanded', expandedMode);
   if (typeof window.setPlacementHeadersExpanded === 'function'){
-    // Falls du eine Header-Umschaltung nutzt (Spalten ein-/ausblenden)
     window.setPlacementHeadersExpanded(expandedMode);
   }
 
-  // Sortierung (wie gehabt)
+  // Sortierung
   var rows = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
 
   for (var i=0; i<rows.length; i++){
@@ -68,7 +67,7 @@ function renderCampaignTable(list, allList){
     tr.setAttribute('data-cid', cid);
 
     if (!expandedMode){
-      // Collapsed: keine Placement-Spalten
+      // Collapsed
       tr.innerHTML =
         '<td class="expcol">' + (hasPlacements
             ? '<button class="expander" aria-expanded="false" data-target="'+cid+'">+</button>'
@@ -90,7 +89,7 @@ function renderCampaignTable(list, allList){
         '<td class="right">' + (c.revenue != null ? fmtMoney0(c.revenue) : '') + '</td>' +
         '<td class="right">' + (roasC != null ? roasC.toFixed(2) + '×' : '') + '</td>';
     } else {
-      // Expanded: 4 leere Placement-Spalten zwischen Period und KPIs
+      // Expanded: 4 Placement-Spalten zwischen Period und KPIs
       tr.innerHTML =
         '<td class="expcol">' + (hasPlacements
             ? '<button class="expander" aria-expanded="'+(isOpen?'true':'false')+'" data-target="'+cid+'">'+(isOpen?'–':'+')+'</button>'
@@ -127,12 +126,12 @@ function renderCampaignTable(list, allList){
         sub.className = 'subrow child-of-' + cid + (isOpen ? '' : ' hidden');
         sub.innerHTML =
           '<td></td>' +
-          // WICHTIG: KEIN Placement-Text mehr in der "Campaign"-Spalte – nur Einrückung
+          // WICHTIG: KEIN Placement-Text mehr in der „Campaign“-Spalte
           '<td class="indent"></td>' +
           '<td></td>' +
           '<td>' + (p.start && p.end ? fmtPeriod(p.start, p.end) : '') + '</td>' +
 
-          // Strategy/Channel/Type/Placement (nur Subrows)
+          // Strategy/Channel/Type/Placement
           '<td>' + (p.strategy || '') + '</td>' +
           '<td>' + (p.channel  || '') + '</td>' +
           '<td>' + (p.type     || '') + '</td>' +
@@ -165,10 +164,9 @@ function renderCampaignTable(list, allList){
     var roasSum = (sum.ad ? (sum.revenue||0)/(sum.ad||1) : (sum.roas||0));
 
     var cells = ['<td></td><td><b>Gesamt (Alle)</b></td><td></td><td></td>'];
-    if (expandedMode) cells.push('<td></td><td></td><td></td><td></td>'); // Platzhalter für Strategy/Channel/Type/Placement
+    if (expandedMode) cells.push('<td></td><td></td><td></td><td></td>');
     r2.innerHTML =
       cells.join('')+
-      // NEU: Budget (booking) vor Ad Spend
       '<td class="right"><b>'+fmtMoney0(sum.booking||0)+'</b></td>'+
       '<td class="right"><b>'+fmtMoney0(sum.ad||0)+'</b></td>'+
       '<td class="right"><b>'+fmtNum(Math.round(sum.impressions||0))+'</b></td>'+
@@ -179,7 +177,7 @@ function renderCampaignTable(list, allList){
       '<td class="right"><b>'+(roasSum||0).toFixed(2)+'×</b></td>';
   }
 
-  // ===== Expand/Collapse-Handler (einmal binden) =====
+  // ===== Expand/Collapse-Handler =====
   if (!tbody.__boundExpander){
     tbody.addEventListener('click', function(e){
       var btn = e.target.closest('.expander'); if(!btn) return;
