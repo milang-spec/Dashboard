@@ -10,7 +10,7 @@ function fitStageFixed(){
 }
 
 function applyLayoutConfig(){
-  var cfg=window.DASHBOARD_LAYOUT||{mode:'scroll',columns:12,gap:18,order:[]};
+  var cfg=window.DASHBOARD_LAYOUT||{mode:'scroll',columns:12,gap:32,order:[]};
   var board=document.getElementById('board'); if(!board) return;
 
   document.documentElement.style.setProperty('--cols', String(cfg.columns||3));
