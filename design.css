@@ -177,7 +177,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   background: rgba(255,199,177,0.14);
   border: 1px solid rgba(255,199,177,0.45);
   border-radius: 18px;
-  padding: 14px 24px 18px 18px; 
+  padding: 12px 20px 12px 18px; 
 }
 
 
@@ -190,7 +190,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 /* Logo + Headline bleiben in einer Reihe */
 .brand-hero-wrap{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:14px;
   flex-wrap:nowrap;
 }
@@ -207,15 +207,17 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   text-overflow: ellipsis;
 }
 
-/* Logo-Höhe = Headline-Höhe (mit kleinem Puffer) */
 .brand-hero .brand-logo{
-  height: calc(var(--hero-size) * 1.05); /* 1.00–1.10 je nach Geschmack */
-  width: auto;                           /* behält Seitenverhältnis */
+  height: calc(var(--hero-size) * 1.05);  /* wie gehabt */
+  width: auto;
   object-fit: contain;
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
   box-shadow: none !important;
+
+  align-self: flex-start;    /* <-- am oberen Rand bleiben */
+  margin-top: 2px;           /* kleine optische Feinjustage (0–4px) */
 }
 
 /* Performance Total: Label größer, Werte etwas kleiner */
@@ -405,7 +407,7 @@ table.sales td, table.sales th { vertical-align: middle; }
   flex-wrap: wrap;
   align-items: center;
   gap: .35rem;
-  font-size: clamp(14px, 1.45vw, 22px);
+  font-size: clamp(16px, 1.45vw, 24px);
   line-height: 1.25;
 }
 .card.brand-hero .page-subtitle .sep{
