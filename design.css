@@ -488,6 +488,41 @@ table.sales td, table.sales th { vertical-align: middle; }
   box-shadow: 0 0 0 1px rgba(0,0,0,.18) inset;
 }
 
+/* ===== Campaign table: horizontal scroll & feste Spaltenbreite ===== */
+#panel-campaigns .table-scroll-x{
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+#panel-campaigns table.campaigns{
+  width: 100%;
+  min-width: 1600px;            /* -> genug Platz bis Revenue/ROAS */
+  border-collapse: separate;
+  table-layout: fixed;          /* fixiert die ColGroup-Breiten sauber */
+}
+
+#panel-campaigns table.campaigns th,
+#panel-campaigns table.campaigns td{
+  white-space: nowrap;          /* kein Zeilenumbruch in Zellen */
+}
+
+/* optionale Breiten-Finetunes über Klassen (siehe JS-ColGroup) */
+#panel-campaigns .col-campaign  { width: 220px; }
+#panel-campaigns .col-brand     { width: 120px; }
+#panel-campaigns .col-period    { width: 170px; }
+#panel-campaigns .col-strategy  { width: 140px; }
+#panel-campaigns .col-channel   { width: 110px; }
+#panel-campaigns .col-type      { width: 140px; }
+#panel-campaigns .col-placement { width: 200px; }
+#panel-campaigns .col-budget    { width: 130px; }
+#panel-campaigns .col-ad        { width: 130px; }
+#panel-campaigns .col-imp       { width: 130px; }
+#panel-campaigns .col-clicks    { width: 110px; }
+#panel-campaigns .col-ctr       { width:  90px; }
+#panel-campaigns .col-sales     { width: 110px; }
+#panel-campaigns .col-rev       { width: 150px; }
+#panel-campaigns .col-roas      { width:  90px; }
 
 
 
