@@ -177,7 +177,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   background: rgba(255,199,177,0.14);
   border: 1px solid rgba(255,199,177,0.45);
   border-radius: 18px;
-  padding: 14px 24px 24px 18px; 
+  padding: 14px 24px 18px 18px; 
 }
 
 
@@ -396,7 +396,8 @@ table.sales td, table.sales th { vertical-align: middle; }
 
 /* === Brand-Subtitle (Breadcrumb) – clean === */
 .card.brand-hero .page-subtitle{
-  margin: 8px 0 -2px 0;
+  /* dichter an die Headline / KPIs */
+  margin: 2px 0 -10px 0;           /* vorher: 8px 0 -2px 0 */
   color: rgba(255,199,177,0.98);
   font-weight: 700;
   letter-spacing: .2px;
@@ -429,36 +430,37 @@ table.sales td, table.sales th { vertical-align: middle; }
 
 /* Label größer + Abstand nach unten */
 #panel-kpi .kpi .label {
-  font-size: 18px;
+  font-size: 20px;                 /* vorher: 18px */
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: .2px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;               /* vorher: 6px */
 }
 @media (min-width: 1100px) {
-  #panel-kpi .kpi .label { font-size: 20px; }
+  #panel-kpi .kpi .label { font-size: 22px; }   /* vorher: 20px */
 }
 
 /* Werte moderat, ohne Abschneiden */
 #panel-kpi .kpi .value {
-  font-size: clamp(28px, 3.4vw, 56px);
+  font-size: clamp(24px, 2.8vw, 48px);          /* vorher: clamp(28px, 3.4vw, 56px) */
   line-height: 1.05;
   white-space: nowrap;
 }
 
-/* Delta-Zeile mit Luft und konsistenter Größe */
+/* Delta-Zeile mit mehr Präsenz */
 #panel-kpi .kpi .delta {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: .9;
+  margin-top: 12px;                              /* vorher: 10px */
+  font-size: clamp(14px, 1.05vw, 18px);          /* vorher: 14px */
+  opacity: .95;                                   /* vorher: .9 */
+  font-weight: 600;
 }
 #panel-kpi .kpi .delta .arrow {
   margin-right: 6px;
 }
 
-/* Optional: gleiches Label im Sales/Revenue-Duo */
+/* Optional: gleiches Label im Sales/Revenue-Duo (erbt jetzt die größeren Werte) */
 #panel-kpi .kpi.sales-pair .label {
-  font-size: 18px;
+  font-size: inherit;
 }
 
 /* === Above the fold: Hero + KPI sichtbar, Monthly darunter === */
@@ -467,3 +469,5 @@ table.sales td, table.sales th { vertical-align: middle; }
   #panel-kpi  { min-height: 65vh; }
   #panel-monthly { margin-top: 24px; }
 }
+
+
