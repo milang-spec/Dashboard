@@ -1,261 +1,469 @@
-/* =========================================================
-   Media Performance Dashboard – cleaned & compact design.css
-   ========================================================= */
-
-/* ---------- Theme tokens ---------- */
+/* ========== THEME (Peach) ========== */
 :root{
-  --bg: #111418;
-  --panel: #242224;              /* card background */
-  --panel-2: #1a191a;
-  --stroke: rgba(255,199,177,.45);
-  --peach: #FFC7B1;
-  --peach-ink: #F3C1AD;
-  --muted: #A9A6A4;
-  --text: #F7F2EF;
-  --text-weak: #E7DFDA;
-
-  --good: #3ddc97;
-  --bad:  #ff6b6b;
-
-  --radius: 18px;
-  --shadow: 0 0 0 1px rgba(255,199,177,.10), 0 4px 18px rgba(0,0,0,.25);
-
-  --gap: 14px;
+  --bg: #0f1115; --text:#e8e8e8; --card:#171a20; --muted:#0f1115;
+  --border: rgba(255,255,255,.18); --border-strong: rgba(255,255,255,.25);
+  --shadow: 0 10px 30px rgba(0,0,0,.25);
+  --theme:#FFC7B1; --theme-weak:rgba(255,199,177,.18);
+  --good:#6be28f; --bad:#ff6b6b; --neutral:#9aa3b2;
+  --h2:32px; --kpi-label:16px; --kpi-value:40px; --kpi-delta:16px; --table:18px;
+  --pad:24px; --gap:18px; --radius:16px; --cols:3;
 }
 
-/* ---------- Base ---------- */
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol", sans-serif;
-  line-height:1.45;
+/* Basis */
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+#stage{width:1920px;height:1080px;transform-origin:top left;position:absolute;background:var(--bg);}
+.board{width:100%;height:100%;padding:var(--pad);box-sizing:border-box;display:grid;gap:var(--gap);
+  grid-template-columns:repeat(var(--cols),1fr);grid-auto-rows:auto;grid-auto-flow:row dense;}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;
+  min-width:0;min-height:0;box-shadow:var(--shadow);outline:2px solid var(--theme-weak);}
+.card h2{margin:0 0 8px;font-weight:800;letter-spacing:.2px;font-size:var(--h2);color:var(--theme);}
+
+/* KPI Panel */
+#panel-kpi .header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.chipbar{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{font-size:16px;padding:6px 12px;border-radius:999px;cursor:pointer;background:var(--muted);
+  border:1px solid var(--border);color:var(--text);opacity:.9;}
+.chip.active{background:var(--theme);color:#1b1f2a;border-color:transparent;box-shadow:0 0 0 2px var(--theme-weak) inset;}
+
+.kpi-body{display:grid;grid-template-rows:auto 1fr;gap:12px;min-height:0;flex:1;}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;min-height:0;position:relative;}
+.kpi{background:var(--muted);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0;
+  box-shadow:0 0 0 1px var(--theme-weak) inset;}
+.kpi .label{font-size:var(--kpi-label);color:var(--theme);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .value{font-size:var(--kpi-value);font-weight:900;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .delta{font-size:var(--kpi-delta);font-weight:700;display:flex;align-items:center;gap:6px;}
+.delta.up{color:var(--good);} .delta.down{color:var(--bad);} .delta.neutral{color:var(--neutral);} .delta .arrow{font-size:18px;line-height:1;}
+
+/* Markierung: Sales-Paar (Orders + Revenue) */
+.kpi.sales-pair{box-shadow:0 0 0 2px var(--theme) inset, 0 8px 22px rgba(255,199,177,.15);}
+
+/* CTA unter den zwei Sales-KPIs, genau darunter ausgerichtet */
+.sales-cta{grid-column:5 / span 2; display:flex; justify-content:center; align-items:center; margin-top:-4px;}
+.sales-btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;background:var(--theme);color:#1b1f2a;
+  font-weight:800;letter-spacing:.2px;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.25), 0 8px 20px rgba(255,199,177,.25);}
+.sales-btn:hover{filter:brightness(1.03);} .sales-btn:active{transform:translateY(1px);}
+
+/* Chart */
+.chart-section{display:grid;grid-template-rows:auto 1fr;gap:8px;min-height:0;margin-bottom:6px;}
+.chart-header{background:var(--theme);color:#1b1f2a;font-weight:800;font-size:18px;letter-spacing:.2px;padding:8px 12px;
+  border-radius:10px;box-shadow:0 0 0 1px var(--theme-weak) inset;}
+.chart-wrap{position:relative;min-height:0;height:var(--chart-h,340px);}
+.chart-wrap canvas{position:absolute;inset:0;}
+
+/* Campaigns Overview + Filter */
+.camp-overview{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:12px;}
+.overview-box{background:rgba(255,199,177,.08);border:1px solid var(--theme-weak);border-radius:12px;padding:14px;}
+.overview-title{font-weight:800;color:var(--theme);font-size:22px;margin-bottom:10px;}
+.overview-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:10px;}
+.tile{background:rgba(255,199,177,.16);border-radius:10px;padding:10px 12px;box-shadow:0 4px 10px rgba(0,0,0,.15);}
+.tile-label{font-size:14px;opacity:.9;} .tile-value{font-size:28px;font-weight:900;line-height:1.1;}
+.overview-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.okpi{background:var(--muted);border:1px dashed var(--theme-weak);border-radius:10px;padding:10px 12px;}
+.okpi-label{font-size:14px;color:var(--theme);} .okpi-value{font-size:26px;font-weight:800;}
+
+.filter-box{background:rgba(255,199,177,.08);border:1px solid var(--theme-weak);border-radius:12px;padding:14px;}
+.filter-title{font-weight:800;color:var(--theme);font-size:18px;letter-spacing:.1px;margin-bottom:10px;text-align:center;}
+.filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.filter-tile{background:rgba(255,199,177,.16);border-radius:8px;padding:14px 8px;text-align:center;font-weight:700;color:#1b1f2a;
+  box-shadow:0 2px 0 rgba(0,0,0,.25), 0 6px 10px rgba(0,0,0,.2)}
+
+/* Tabelle */
+.table-wrap{position:relative;min-height:0;flex:1;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:var(--table);}
+thead th{text-align:left;font-weight:800;padding:8px 10px;background:rgba(255,199,177,.10);position:sticky;top:0;z-index:1;
+  box-shadow:0 -1px 0 0 var(--theme-weak) inset, 0 1px 0 0 var(--theme-weak) inset;}
+tbody td{padding:8px 10px;border-top:1px solid rgba(255,255,255,.06);}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.03);}
+tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#10141c;font-weight:800;}
+.right{text-align:right;white-space:nowrap;}
+
+/* --- SoV-KPI klickbar --- */
+.kpi.kpi-sov { border: 2px dashed var(--theme, #FFC7B1); cursor: pointer; }
+.kpi.kpi-sov .label { opacity: .85; }
+
+/* --- 3-teilige Segment-Bar --- */
+.card .segment {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 8px;
+}
+.segment-labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  font-weight: 800;
+  color: var(--theme-fore, #ffe9e0);
+  opacity: .9;
+}
+.segment-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  outline: 1px solid rgba(255,255,255,0.06);
+}
+.segment-chunk {
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px;
+  color: #111; text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.segment-aw { background: #FFC7B1; }  /* Awareness – Peach */
+.segment-en { background: #C09BBF; }  /* Engagement – Mauve */
+/* Performance (Funnel Mix) – gelb */
+.segment-pe { 
+  background: #FFE15A !important;  /* die gewünschte Gelbnuance */
+  color: #111;                      /* gute Lesbarkeit auf Gelb */
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
 }
 
-/* Links */
-a{ color:var(--peach-ink); text-decoration:none; }
-a:hover{ text-decoration:underline; }
+/* Funnel-Widget breiter machen (über 2 Spalten) */
+.kpi.kpi-funnel { grid-column: span 2; }
 
-/* Utilities */
-.right{ text-align:right; }
-.muted, .muted *{ color:var(--muted); }
-.nowrap{ white-space:nowrap; }
+/* Labels im Funnel-Widget als Einzeiler mit Trennern */
+.kpi-funnel .segment-labels {
+  display: block;
+  text-align: left;
+  font-weight: 800;
+  color: var(--theme-fore, #ffe9e0);
+  opacity: .9;
+  letter-spacing: .2px;
+}
+.kpi-funnel .segment-labels .sep { margin: 0 8px; opacity: .65; }
 
-/* ---------- Cards ---------- */
-.card{
-  background:var(--panel);
-  border:1px solid rgba(255,199,177,.22);
-  border-radius:var(--radius);
-  padding:16px;
-  box-shadow:var(--shadow);
+/* Einheitlicher Header mit Chips – auch für Campaign Performance */
+#panel-camp .header-inline,
+#panel-rerank .header-inline {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
 
-/* ---------- Brand hero (peach box) ---------- */
+/* Chips im Campaign-Header sind nur Deko */
+#panel-camp .chipbar .chip { pointer-events:none; }
+
+/* Falls der alte Filter-Kasten noch im DOM ist: ausblenden (Sicherheitsnetz) */
+#panel-camp .filters,
+#panel-camp .filter-panel { display:none !important; }
+
+/* 1) Campaign Performance: vertikal stapeln */
+#panel-camp .camp-stack{
+  display: grid;
+  grid-template-columns: 1fr;   /* immer eine Spalte */
+  gap: 16px;
+}
+#panel-camp .camp-overview,
+#panel-camp .camp-table{
+  width: 100%;
+  display: block;
+}
+
+/* 2) Sponsored-Block: nichts darf rechts überstehen */
+#panel-rerank{ overflow: hidden; }
+#panel-rerank .table-wrap{ overflow:auto; }          /* Scrollbar falls nötig */
+#panel-rerank table{ width: 100%; box-sizing:border-box; }
+
+/* 3) Einheitliche Header mit Chips */
+#panel-camp .header-inline,
+#panel-rerank .header-inline{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+
+/* Hero immer über volle Breite */
+#panel-hero { grid-column: 1 / -1; }
+
+/* ===== Dashboard Header (final) ===== */
+
+/* Peach-Box */
 .card.brand-hero{
   background: rgba(255,199,177,0.14);
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius);
-  padding: 14px 22px 16px 18px;
+  border: 1px solid rgba(255,199,177,0.45);
+  border-radius: 18px;
+  padding: 14px 24px 24px 18px; 
 }
-.brand-hero-wrap{
-  display:flex; align-items:center; gap:14px;
-}
-.brand-logo{
-  width:56px;height:56px;border-radius:12px; display:block;
-}
-.brand-text{ display:flex; flex-direction:column; gap:6px; }
 
+
+/* Eine gemeinsame Größe für Headline + Logo */
+:root{
+  /* responsive: min 28px, ideal 3.2vw, max 40px */
+  --hero-size: clamp(28px, 3.2vw, 40px);
+}
+
+/* Logo + Headline bleiben in einer Reihe */
+.brand-hero-wrap{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:nowrap;
+}
+
+/* Headline nutzt die gemeinsame Größe */
 .brand-headline{
   margin:0;
-  font-weight:800;
-  font-size: clamp(22px, 2.4vw, 36px);
-  color: var(--peach);
+  font-size: var(--hero-size);
+  line-height: 1.3;
+  font-weight: 900;
+  color: var(--theme, #FFC7B1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Subtitle / Breadcrumbs */
-.brand-subtitle{
-  display:flex; align-items:center; gap:10px;
-  color: var(--text-weak);
-  font-size: clamp(13px, 1.05vw, 16px);
-  line-height:1.2;
-}
-.brand-subtitle .crumb{
-  color: var(--text-weak);
-}
-.brand-subtitle .sep{
-  opacity:.7; margin:0 4px;
+/* Logo-Höhe = Headline-Höhe (mit kleinem Puffer) */
+.brand-hero .brand-logo{
+  height: calc(var(--hero-size) * 1.05); /* 1.00–1.10 je nach Geschmack */
+  width: auto;                           /* behält Seitenverhältnis */
+  object-fit: contain;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
-/* ---------- KPI panel ---------- */
-#panel-kpi{ scroll-margin-top:18px; }
-
-/* grid holder optional – works with your current markup */
-#panel-kpi .kpi-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--gap);
-}
-
-/* single KPI */
-#panel-kpi .kpi{
-  background:var(--panel-2);
-  border:1px solid rgba(255,199,177,.16);
-  border-radius:var(--radius);
-  padding:18px 20px;
-  display:grid;
-  row-gap:8px;        /* spacing label/value/delta */
-  min-height:112px;
-}
-
-/* larger label, but not too big */
+/* Performance Total: Label größer, Werte etwas kleiner */
 #panel-kpi .kpi .label{
-  font-size: clamp(14px, 1.2vw, 20px);
-  letter-spacing:.2px;
-  color: var(--text-weak);
+  font-size: 22px;           /* vorher kleiner */
+  font-weight: 800;
+  letter-spacing: .2px;
 }
-
-/* keep value prominent but non-clipping */
 #panel-kpi .kpi .value{
-  font-size: clamp(28px, 2.6vw, 48px); /* previously larger – trimmed to avoid cutoffs */
-  line-height:1.15;
-  font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  margin:2px 0 4px;
-  color: var(--text);
+  font-size: 40px;           /* vorher sehr groß -> kleiner für Lesbarkeit */
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-/* LY delta line */
-#panel-kpi .kpi .delta{
-  font-size: clamp(12px, .95vw, 16px);
-  color: var(--text-weak);
-  display:flex; align-items:center; gap:6px;
+/* Rerank-Panel: kein umschließender Kasten um die KPI-Gruppe */
+#panel-rerank .kpi-grid{ background: transparent; border: none; box-shadow: none; padding: 0; }
+
+/* Layout der KPIs im Rerank-Panel */
+#panel-rerank .kpi-grid.compact{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 10px;
 }
-#panel-kpi .kpi .delta.up   { color: var(--good); }
-#panel-kpi .kpi .delta.down { color: var(--bad); }
 
-/* Special KPI tiles (SoV/Funnel) can reuse .kpi. Add compact tweaks here if needed */
-.kpi.kpi-funnel .segment{ margin-top:6px; }
-.segment-labels{ font-size:12px; color:var(--text-weak); margin-bottom:6px; }
-.segment-bar{ display:flex; height:28px; border-radius:10px; overflow:hidden; background:#2a2a2a; }
-.segment-chunk{ display:flex; align-items:center; justify-content:center; font-weight:700; }
+/* Auction-Widget (lila) – darf gerne auffallen */
+#panel-rerank .kpi.auction{
+  grid-column: span 2;
+  background: rgba(192,155,191,0.16);
+  border: 1px solid rgba(192,155,191,0.45);
+  text-decoration: none;
+  color: #EDE6F1;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+#panel-rerank .kpi.auction .label{ opacity:.9; }
 
-/* ---------- Filter chips (All / Onsite / Offsite / CPM / CPC) ---------- */
-.chipbar{ display:flex; gap:8px; flex-wrap:wrap; }
-.chip{
-  padding:8px 12px; border-radius:999px;
-  background:#1e1d1e; color:var(--text);
-  border:1px solid rgba(255,199,177,.18);
+/* Gesamtzeile der Tabelle etwas hervorheben */
+#rerankTable tfoot tr{
+  background: rgba(255,199,177,0.08);
+  font-weight: 800;
+}
+@media (max-width: 1200px){
+  #panel-rerank .kpi-grid.compact{ grid-template-columns: repeat(2, minmax(190px, 1fr)); }
+  #panel-rerank .kpi.auction{ grid-column: span 2; }
+}
+
+/* Full-width CTA unter der Tabelle */
+/* ================= Rerank / Sponsored Product Ads ================= */
+
+/* KPI-GRID: nur die KPIs, kein eigener Kasten */
+#panel-rerank .kpi-grid.compact{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Tabelle stets volle Breite unter dem Grid */
+#panel-rerank .table-wrap{
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+#panel-rerank table{
+  width: 100%;
+  table-layout: auto;
+}
+
+/* Gesamtzeile optisch hervorheben */
+#rerankTable tfoot tr{
+  background: rgba(255,199,177,0.08);
+  font-weight: 800;
+}
+
+/* Badge-CTA "Auction Insights" unter der Tabelle rechts */
+#panel-rerank .auction-cta{
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;   /* links = flex-start */
+}
+#panel-rerank .auction-badge{
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 999px;        /* Pillenform */
+  background: #FF9E5E;         /* Orange */
+  color: #fff;                 /* weiße Schrift */
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-decoration: none;
+  border: 1px solid rgba(255,158,94,.6);
+  box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 -1px 0 rgba(255,255,255,.12);
+}
+#panel-rerank .auction-badge:hover{
+  filter: brightness(1.05);
+}
+
+/* Responsiv: auf kleineren Screens 2 Spalten für die KPIs */
+@media (max-width: 1200px){
+  #panel-rerank .kpi-grid.compact{
+    grid-template-columns: repeat(2, minmax(190px, 1fr));
+  }
+}
+
+/* ===== Campaign table: expandable rows ===== */
+#campaignTable th.expcol{ width: 36px; }
+
+#campaignTable .expander{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:6px;
+  background: rgba(255,199,177,0.14);
+  border: 1px solid rgba(255,199,177,0.45);
+  color: var(--theme,#FFC7B1); font-weight:900;
   cursor:pointer; user-select:none;
 }
-.chip[aria-pressed="true"],
-.chip.active{
-  background: rgba(255,199,177,.18);
-  border-color: var(--stroke);
-  color: var(--peach);
+#campaignTable .expander:hover{ filter:brightness(1.06); }
+#campaignTable .expander:focus{ outline:1px dashed rgba(255,199,177,0.6); }
+
+#campaignTable tr.subrow td{
+  background: rgba(255,199,177,0.06);
+  border-top: 1px dashed rgba(255,199,177,0.15);
+}
+#campaignTable tr.subrow td.indent{ padding-left: 24px; }
+.hidden{ display:none !important; }
+
+/* Standard: Placement-Header ausblenden */
+#campaignTable thead .placement-hdr { 
+  display: none;
 }
 
-/* ---------- Tables (generic) ---------- */
-table{ width:100%; border-collapse:separate; border-spacing:0; }
-th, td{
-  padding:14px 14px;
-  border-bottom:1px solid rgba(255,199,177,.10);
-  vertical-align:middle;
-}
-thead th{
-  background:#2a2728;
-  color:var(--text-weak);
-  font-weight:700;
-}
-tfoot td{
-  background:#1d1b1c;
-  font-weight:800;
+/* Wenn die Tabelle expandiert ist, Header sichtbar machen */
+#campaignTable.expanded thead .placement-hdr {
+  display: table-cell;
 }
 
-/* Links inside cells (e.g., Sales as link) */
+/* Sales-Links dezent stylen und *inline* halten */
 .link-cell{
-  color: var(--peach);
-  text-decoration:none;
-  border-bottom:1px dashed rgba(255,199,177,.35);
+  display: inline;               /* wichtig: kein block/inline-block */
+  text-decoration: none;         /* keine Unterstreichung */
+  color: var(--theme, #FFC7B1);  /* dein Peach */
+  border-bottom: 1px dashed rgba(255,199,177,.55);
 }
-.link-cell:hover{ text-decoration:none; border-bottom-color:transparent; }
-
-/* ---------- Expander buttons (campaign rows) ---------- */
-.expcol{ width:44px; }
-button.expander{
-  width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,199,177,.25);
-  background:#1e1d1e;color:var(--peach); font-weight:800; cursor:pointer;
-}
-button.expander:hover{ background:#242223; }
-
-/* Campaign table specifics */
-#campTable .subrow .indent{ padding-left:28px; color:var(--text-weak); }
-
-/* Keep last columns visible when many KPI columns exist */
-#campTable{ overflow:auto; display:block; }
-
-/* ---------- Monthly table ---------- */
-#monthlyTable .roas{ font-variant-numeric: tabular-nums; }
-
-/* ---------- SPA / ReRank panel (consolidated once) ---------- */
-#panel-rerank .kpi-grid.compact{
-  display:grid; gap:var(--gap);
-  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
-}
-#panel-rerank .kpi .value{ font-size: clamp(24px, 2.2vw, 42px); }
-#rerankTable tfoot tr{
-  background:#1d1b1c; font-weight:800;
+.link-cell:hover{
+  color: #FFD9C7;
+  border-bottom-color: currentColor;
 }
 
-/* ---------- Buttons ---------- */
-.btn{
-  display:inline-flex; align-items:center; gap:8px;
-  padding:10px 14px; border-radius:999px;
-  background:#1e1d1e; color:var(--text);
-  border:1px solid rgba(255,199,177,.22);
-  cursor:pointer; text-decoration:none;
-}
-.btn:hover{ background:#232223; }
-.btn.peach{
-  background: rgba(255,199,177,.18); color:var(--peach); border-color:var(--stroke);
+/* Zahlenspalten sauber halten */
+#campaignTable td.right{
+  white-space: nowrap;           /* verhindert, dass etwas umbricht */
+  position: relative;            /* sichert Layout gegen absolut positionierte Kinder */
 }
 
-/* Back / Ghost */
-.btn-ghost{
-  background:transparent; border-color:rgba(255,199,177,.32); color:var(--peach);
+/* Share of Voice Tabelle */
+.col-cat   { width: 42%; }
+.col-brand { width: 28%; }
+.col-sov   { width: 15%; }
+.col-ms    { width: 15%; }
+
+table.sov thead th.right,
+table.sov td.right { text-align: right; }
+
+/* Sales-Tabelle */
+.col-sku   { width: 16ch; }   /* Platz für "SKU-001" etc. */
+.col-item  { width: auto; }   /* füllt den Rest */
+.col-sales { width: 12%; }
+.col-rev   { width: 16%; }
+
+table.sales thead th.right,
+table.sales td.right { text-align: right; }
+
+/* Optional: etwas engeren Zeilenabstand wie auf sales.html gewünscht */
+table.sales td, table.sales th { vertical-align: middle; }
+
+
+/* === Brand-Subtitle (Breadcrumb) – clean === */
+.card.brand-hero .page-subtitle{
+  margin: 8px 0 -2px 0;
+  color: rgba(255,199,177,0.98);
+  font-weight: 700;
+  letter-spacing: .2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  font-size: clamp(14px, 1.45vw, 22px);
+  line-height: 1.25;
 }
-.btn-ghost:hover{ background:rgba(255,199,177,.10); }
-
-/* ---------- Small helpers for sections ---------- */
-.section-title{
-  margin:22px 0 10px;
-  font-size: clamp(20px, 2.0vw, 30px);
-  font-weight:800;
-  letter-spacing:.3px;
+.card.brand-hero .page-subtitle .sep{
+  opacity: .65;
+  margin: 0 .25rem;
+  transform: translateY(-1px);
 }
 
-/* Make hero + KPI comfortably “above the fold” on common laptops */
-#panel-hero{ margin-bottom: 10px; }
-#panel-kpi{ margin-bottom: 18px; }
+/* === KPI-Karten Feintuning (nur im KPI-Panel) – clean === */
 
-/* ---------- Forms (selects used on sales/share pages) ---------- */
-.select{
-  width:100%;
-  background:#1c1b1c; color:var(--text);
-  border:1px solid rgba(255,199,177,.22);
-  border-radius:12px; padding:10px 12px;
+/* Abstand zwischen den KPI-Kacheln */
+#panel-kpi #kpiGrid,
+#panel-kpi .kpi-grid {
+  gap: 18px;
 }
 
-/* ---------- Scrollbar (optional; nicer on dark) ---------- */
-::-webkit-scrollbar{ height:10px; width:10px; }
-::-webkit-scrollbar-thumb{ background:#2b292a; border-radius:10px; }
-::-webkit-scrollbar-thumb:hover{ background:#343233; }
+/* Grundpadding & Mindesthöhe */
+#panel-kpi .kpi {
+  padding: 14px 18px 16px;
+  min-height: 142px;
+}
 
-/* ---------- Print tweaks (optional safe) ---------- */
-@media print{
-  .chipbar, .btn, .brand-logo{ display:none !important; }
-  .card{ box-shadow:none; }
+/* Label größer + Abstand nach unten */
+#panel-kpi .kpi .label {
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: .2px;
+  margin-bottom: 6px;
+}
+@media (min-width: 1100px) {
+  #panel-kpi .kpi .label { font-size: 20px; }
+}
+
+/* Werte moderat, ohne Abschneiden */
+#panel-kpi .kpi .value {
+  font-size: clamp(28px, 3.4vw, 56px);
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+/* Delta-Zeile mit Luft und konsistenter Größe */
+#panel-kpi .kpi .delta {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: .9;
+}
+#panel-kpi .kpi .delta .arrow {
+  margin-right: 6px;
+}
+
+/* Optional: gleiches Label im Sales/Revenue-Duo */
+#panel-kpi .kpi.sales-pair .label {
+  font-size: 18px;
+}
+
+/* === Above the fold: Hero + KPI sichtbar, Monthly darunter === */
+@media (min-width: 1100px) {
+  #panel-hero { min-height: 18vh; }
+  #panel-kpi  { min-height: 65vh; }
+  #panel-monthly { margin-top: 24px; }
 }
