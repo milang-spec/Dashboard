@@ -32,6 +32,24 @@ function linkToSales(campaignName, placementName, val){
   return '<a class="link-cell" href="sales.html?' + qs + '">'+ fmtNum(Math.round(val||0)) +'</a>';
 }
 
+/* --- Intern: Scroll-Wrapper & Mindestbreite sicherstellen --- */
+function ensureTableScroll(table, expanded){
+  if (!table) return;
+
+  // geschätzte Spaltenanzahl (collapsed vs. expanded)
+  var cols = expanded ? 16 : 12;
+
+  // pro Spalte eine moderate Mindestbreite ansetzen
+  table.style.minWidth = (cols * 140) + 'px';
+
+  // den unmittelbaren Container horizontal scrollfähig machen
+  var wrap = table.parentElement;
+  if (wrap) {
+    wrap.classList.add('table-scroll');
+    if (!wrap.style.overflowX) wrap.style.overflowX = 'auto';
+  }
+}
+
 /* ========= Campaign Table Renderer (neu) ========= */
 function renderCampaignTable(list, allList){
   list    = list    || [];
@@ -48,6 +66,9 @@ function renderCampaignTable(list, allList){
   if (typeof window.setPlacementHeadersExpanded === 'function'){
     window.setPlacementHeadersExpanded(expandedMode);
   }
+
+  // NEU: Scroll + Mindestbreite je nach Modus
+  ensureTableScroll(table, expandedMode);
 
   // Sortierung
   var rows = list.slice().sort(function(a,b){ return (b.ad||0)-(a.ad||0); });
@@ -76,7 +97,7 @@ function renderCampaignTable(list, allList){
         '<td>' + (c.brand || '') + '</td>' +
         '<td>' + fmtPeriod(c.start, c.end) + '</td>' +
 
-        // NEU: Budget vor Ad Spend
+        // Budget vor Ad Spend
         '<td class="right">' + (getBooking(c)!=null ? fmtMoney0(getBooking(c)) : '') + '</td>' +
         '<td class="right">' + (c.ad != null ? fmtMoney0(c.ad) : '') + '</td>' +
 
@@ -99,7 +120,7 @@ function renderCampaignTable(list, allList){
         '<td>' + fmtPeriod(c.start, c.end) + '</td>' +
         '<td></td><td></td><td></td><td></td>' +
 
-        // NEU: Budget vor Ad Spend
+        // Budget vor Ad Spend
         '<td class="right">' + (getBooking(c)!=null ? fmtMoney0(getBooking(c)) : '') + '</td>' +
         '<td class="right">' + (c.ad != null ? fmtMoney0(c.ad) : '') + '</td>' +
 
@@ -126,7 +147,7 @@ function renderCampaignTable(list, allList){
         sub.className = 'subrow child-of-' + cid + (isOpen ? '' : ' hidden');
         sub.innerHTML =
           '<td></td>' +
-          // WICHTIG: KEIN Placement-Text mehr in der „Campaign“-Spalte
+          // KEIN Placement-Text mehr in der „Campaign“-Spalte
           '<td class="indent"></td>' +
           '<td></td>' +
           '<td>' + (p.start && p.end ? fmtPeriod(p.start, p.end) : '') + '</td>' +
@@ -137,7 +158,7 @@ function renderCampaignTable(list, allList){
           '<td>' + (p.type     || '') + '</td>' +
           '<td>' + (p.placement|| '') + '</td>' +
 
-          // NEU: Budget vor Ad Spend
+          // Budget vor Ad Spend
           '<td class="right">' + (getBooking(p)!=null ? fmtMoney0(getBooking(p)) : '') + '</td>' +
           '<td class="right">' + (p.ad != null ? fmtMoney0(p.ad) : '') + '</td>' +
 
