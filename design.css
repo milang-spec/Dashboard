@@ -82,69 +82,65 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 .kpi.kpi-sov { border: 2px dashed var(--theme, #FFC7B1); cursor: pointer; }
 .kpi.kpi-sov .label { opacity: .85; }
 
-/* =========================================
-   Funnel Mix (3-teilige Segment-Bar)
-   ========================================= */
+/* --- Funnel Mix: Labels zentriert über 3 Spalten, Balken ohne Abstand --- */
 
-:root{
-  /* Abstand zwischen den Balken im Funnel */
-  --funnel-gap: 10px;
-}
-
-/* Container: Labels oben, Balken unten */
-.card .segment{
-  display: grid;
-  grid-template-rows: auto auto;
-  row-gap: 12px; /* etwas mehr Luft zwischen Labels und Balken */
-}
-
-/* --- zentrierte Labels: 3 Spalten, je 1/3 Breite --- */
+/* Container der Beschriftung: 3 gleichbreite Spalten, zentriert */
 .segment-labels{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  place-items: center;            /* zentriert horizontal & vertikal */
+  place-items: center;      /* horizontal + vertikal zentriert */
+  column-gap: 16px;         /* kleiner optischer Abstand zwischen den 3 "Slots" */
   font-weight: 800;
   color: var(--theme-fore, #ffe9e0);
   opacity: .9;
-  text-align: center;
   letter-spacing: .2px;
 }
+.segment-labels .lab{
+  white-space: nowrap;
+  text-align: center;
+}
+/* alte Trenner (falls im Markup noch vorhanden) ausblenden */
+.segment-labels .sep{ display:none !important; }
 
-/* Falls noch "/"-Separatoren im Markup stehen: ausblenden */
-.segment-labels .sep{ display:none; }
-
-/* --- Balken mit sichtbaren "Gaps" zwischen den Segmenten --- */
+/* Prozentbalken: KEIN Zwischenraum zwischen den Segmenten */
 .segment-bar{
   display: flex;
-  align-items: stretch;
-  gap: var(--funnel-gap);          /* <- Abstand zwischen den Segmenten */
+  gap: 0 !important;        /* wichtig: kein Spalt */
+  padding: 0;
   height: 28px;
   border-radius: 12px;
-  /* Track-Farbe (scheint in den Gaps durch) */
-  background: rgba(255,255,255,0.06);
-  outline: 1px solid rgba(255,255,255,0.06);
-  /* kein overflow:hidden; damit die inneren Rundungen sichtbar bleiben */
+  overflow: hidden;         /* macht aus 3 Segmenten einen durchgehenden Balken */
+  background: transparent;  /* optional: ohne Hintergrundschimmer */
+  outline: 1px solid rgba(255,255,255,.08);
 }
 
-/* einzelne Segmente */
+/* Jedes Segment kommt ohne Margin daher; Breite wird (wie bisher) per style="width:30%" gesetzt */
 .segment-chunk{
-  flex: 1 1 0%;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px;
-  color: #111; text-shadow: 0 1px 0 rgba(255,255,255,.35);
-  border-radius: 8px;              /* runde Enden je Segment */
+  margin: 0 !important;
+  border-radius: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: #111;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+/* runde Enden nur außen */
+.segment-chunk:first-child{
+  border-top-left-radius: 12px !important;
+  border-bottom-left-radius: 12px !important;
+}
+.segment-chunk:last-child{
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
 }
 
-/* Farbcodierung */
-.segment-aw{ background:#FFC7B1; }            /* Awareness – Peach */
-.segment-en{ background:#C09BBF; }            /* Engagement – Mauve */
-.segment-pe{ background:#FFE15A !important; } /* Performance – Gelb */
+/* Farben (wie gehabt) */
+.segment-aw { background: #FFC7B1; }
+.segment-en { background: #C09BBF; }
+.segment-pe { background: #FFE15A !important; color:#111; text-shadow: 0 1px 0 rgba(255,255,255,.35); }
 
-/* Funnel-Karte über 2 Spalten ziehen (falls Grid genutzt) */
-.kpi.kpi-funnel{ grid-column: span 2; }
-
-/* --- Alte "Einzeiler"-Variante entfernen / neutralisieren --- */
-.kpi-funnel .segment-labels{ display: grid; }  /* Sicherstellen: Grid statt Block */
 
 
 /* Einheitlicher Header mit Chips – auch für Campaign Performance */
