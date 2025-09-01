@@ -193,16 +193,6 @@
     }
   ];
 
-// ------------------- SPA / rerank -------------------
-D.rerank = [
-  { sku:'SKU-01', name:'Zink + C Immun',     ad:32000, clicks:35556, ecpc:0.90, sales:2100, roas:4.00 }, // 128,000 €
-  { sku:'SKU-02', name:'Nasenspray Mild',    ad:28000, clicks:37333, ecpc:0.75, sales:1900, roas:3.90 }, // 109,200 €
-  { sku:'SKU-04', name:'Magnesium 400 mg',   ad:26000, clicks:21667, ecpc:1.20, sales:1700, roas:4.10 }, // 106,600 €
-  { sku:'SKU-03', name:'Allergie Antihistamin', ad:24000, clicks:21818, ecpc:1.10, sales:1000, roas:4.10 }, // 98,400 €
-  { sku:'SKU-06', name:'Vitamin C 1000',     ad:20000, clicks:25000, ecpc:0.80, sales:1000, roas:4.00 }, // 80,000 €
-  { sku:'SKU-05', name:'Probiotika Forte',   ad:20000, clicks:12500, ecpc:1.60, sales: 800, roas:3.89 }  // 77,800 €
-];
-// Summe Ad = 150.000 €, Sales = 8.500, Revenue ≈ 600.000 €, ROAS gesamt ≈ 4,00×
 
   
   // ---- 2024 automatisch ableiten (einfache ~-10% Kopie) ----
@@ -240,15 +230,17 @@ D.rerank = [
 /* Budget (Plan) fürs Widget */
 D.rerank_budget = 225000; // 225.000 € Budget
 
-/* Einzel-Items. Summe ad = 150.000 €. eCPC 0,60–2,00 €, ROAS ~3.6–4.2, Sales realistisch. */
+// ------------------- SPA / rerank -------------------
 D.rerank = [
-  { sku:"SKU-01", item:"Zink + C Immun",         ad:32000, ecpc:0.90, roas:4.00, sales:900  },
-  { sku:"SKU-02", item:"Nasenspray Mild",        ad:28000, ecpc:0.75, roas:3.90, sales:820  },
-  { sku:"SKU-03", item:"Allergie Antihistamin",  ad:26000, ecpc:1.20, roas:3.80, sales:680  },
-  { sku:"SKU-04", item:"Magnesium 400 mg",       ad:24000, ecpc:1.10, roas:4.20, sales:620  },
-  { sku:"SKU-05", item:"Probiotika Forte",       ad:20000, ecpc:1.60, roas:3.60, sales:420  },
-  { sku:"SKU-06", item:"Vitamin C 1000",         ad:20000, ecpc:0.80, roas:3.70, sales:360  }
+  { sku:'SKU-01', name:'Zink + C Immun',     ad:32000, clicks:35556, ecpc:0.90, sales:2100, roas:4.00 }, // 128,000 €
+  { sku:'SKU-02', name:'Nasenspray Mild',    ad:28000, clicks:37333, ecpc:0.75, sales:1900, roas:3.90 }, // 109,200 €
+  { sku:'SKU-04', name:'Magnesium 400 mg',   ad:26000, clicks:21667, ecpc:1.20, sales:1700, roas:4.10 }, // 106,600 €
+  { sku:'SKU-03', name:'Allergie Antihistamin', ad:24000, clicks:21818, ecpc:1.10, sales:1000, roas:4.10 }, // 98,400 €
+  { sku:'SKU-06', name:'Vitamin C 1000',     ad:20000, clicks:25000, ecpc:0.80, sales:1000, roas:4.00 }, // 80,000 €
+  { sku:'SKU-05', name:'Probiotika Forte',   ad:20000, clicks:12500, ecpc:1.60, sales: 800, roas:3.89 }  // 77,800 €
 ];
+// Summe Ad = 150.000 €, Sales = 8.500, Revenue ≈ 600.000 €, ROAS gesamt ≈ 4,00×
+
 
 /* HINWEIS: Klicks & Revenue werden im Widget aus obigen Werten berechnet:
    clicks  = ad / ecpc
