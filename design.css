@@ -435,4 +435,11 @@ table.sales td, table.sales th { vertical-align: middle; }
   font-size: clamp(12px, .95vw, 16px);
 }
 
+/* „Above the fold“: Hero + KPI so hoch, dass Monthly darunter rutscht */
+@media (min-width: 1100px) {
+  #panel-hero { min-height: 18vh; }      /* Header-Balken */
+  #panel-kpi  { min-height: 65vh; }      /* KPI-Bereich */
+  /* optional: etwas Abstand vor Monthly */
+  #panel-monthly { margin-top: 24px; }
+}
 
