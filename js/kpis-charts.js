@@ -320,27 +320,37 @@ function renderSOVandFunnel(){
     box.appendChild(k);
   }
 
-  var f = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.funnel) ? window.DASHBOARD_DATA.funnel : null;
-  if (f){
-    var aw = Math.max(0, Math.min(1, f.awareness || 0));
-    var en = Math.max(0, Math.min(1, f.engagement|| 0));
-    var pe = Math.max(0, Math.min(1, f.performance||0));
-    var sum = aw + en + pe || 1;
-    aw/=sum; en/=sum; pe/=sum;
+var f = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.funnel) ? window.DASHBOARD_DATA.funnel : null;
+if (f){
+  var aw = Math.max(0, Math.min(1, f.awareness || 0));
+  var en = Math.max(0, Math.min(1, f.engagement|| 0));
+  var pe = Math.max(0, Math.min(1, f.performance||0));
+  var sum = aw + en + pe || 1;
+  aw/=sum; en/=sum; pe/=sum;
 
-    var c = document.createElement('div');
-    c.className = 'kpi kpi-funnel';
-    c.innerHTML =
-      '<div class="label">Funnel Mix</div>'+
-      '<div class="segment">'+
-        '<div class="segment-labels">Awareness<span class="sep">/</span>Engagement<span class="sep">/</span>Performance</div>'+
-        '<div class="segment-bar">'+
-          '<div class="segment-chunk segment-aw" style="width:'+(aw*100).toFixed(0)+'%">'+(aw*100).toFixed(0)+'%</div>'+
-          '<div class="segment-chunk segment-en" style="width:'+(en*100).toFixed(0)+'%">'+(en*100).toFixed(0)+'%</div>'+
-          '<div class="segment-chunk segment-pe" style="width:'+(pe*100).toFixed(0)+'%">'+(pe*100).toFixed(0)+'%</div>'+
-        '</div>'+
-      '</div>';
-    box.appendChild(c);
+  // Prozentwerte als ganze Zahlen (für Text + width)
+  var awP = Math.round(aw*100);
+  var enP = Math.round(en*100);
+  var peP = Math.round(pe*100);
+
+  var c = document.createElement('div');
+  c.className = 'kpi kpi-funnel';
+  c.innerHTML =
+    '<div class="label">Funnel Mix</div>'+
+    '<div class="segment">'+
+      // NEU: 3 einzelne Labels statt Text + "/"
+      '<div class="segment-labels">'+
+        '<span class="lab">Awareness</span>'+
+        '<span class="lab">Engagement</span>'+
+        '<span class="lab">Performance</span>'+
+      '</div>'+
+      '<div class="segment-bar">'+
+        '<div class="segment-chunk segment-aw" style="width:'+awP+'%">'+awP+'%</div>'+
+        '<div class="segment-chunk segment-en" style="width:'+enP+'%">'+enP+'%</div>'+
+        '<div class="segment-chunk segment-pe" style="width:'+peP+'%">'+peP+'%</div>'+
+      '</div>'+
+    '</div>';
+  box.appendChild(c);
   }
 }
 
