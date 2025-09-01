@@ -1,145 +1,171 @@
-/* js/rerank.js */
-(function (w) {
+/* rerank.js – Sponsored Product Ads (SPA) overview
+   Robust gegen fehlende Felder, ergänzt Sales aus Always-On, berechnet Revenue/eCPC falls nötig. */
+
+(function () {
   'use strict';
 
-  // ---------- kleine Helfer ----------
-  const N = v => Number(v) || 0;
-  const Q = sel => document.querySelector(sel);
-  const setText = (selList, text) => {
-    (Array.isArray(selList) ? selList : [selList])
-      .filter(Boolean)
-      .forEach(sel => {
-        const el = typeof sel === 'string' ? Q(sel) : sel;
-        if (el) el.textContent = text;
-      });
+  const D = window.DASHBOARD_DATA || window.D || {};
+
+  function fmtMoney(n){ return (n||0).toLocaleString('de-DE') + ' €'; }
+  function fmtNum(n){    return (n||0).toLocaleString('de-DE'); }
+  function safe(n){      return isFinite(n) ? n : 0; }
+
+  function deriveAlwaysOnSalesBySku() {
+    // Suche die Kampagne "Always-On" und mappe SKU->Units
+    const camps = D.campaigns || [];
+    const camp = camps.find(c => (c.name||'').toLowerCase() === 'always-on');
+    const map = {};
+    if (camp && Array.isArray(camp.products)) {
+      camp.products.forEach(p => { map[p.sku] = p.units || p.sales || 0; });
+    }
+    return map;
+  }
+
+  function getSpaRows() {
+    // Datenquelle: D.rerank (erwartete Felder: sku, name, ad, clicks, ecpc, sales, roas, revenue?)
+    const src = Array.isArray(D.rerank) ? JSON.parse(JSON.stringify(D.rerank)) : [];
+    if (!src.length) return [];
+
+    // Falls Sales fehlen: aus Always-On ableiten
+    const aoSales = deriveAlwaysOnSalesBySku();
+
+    src.forEach(r => {
+      r.ad     = safe(r.ad);
+      r.clicks = safe(r.clicks);
+      r.ecpc   = (r.ecpc!=null) ? safe(r.ecpc) : (r.clicks ? r.ad / r.clicks : 0);
+      // Sales: bevorzugt aus Datensatz; sonst Always-On; sonst 0
+      r.sales  = (r.sales!=null) ? safe(r.sales) : safe(aoSales[r.sku] || 0);
+      // Revenue: bevorzugt aus Datensatz; sonst ad*roas
+      if (r.revenue==null) r.revenue = safe(r.ad) * safe(r.roas);
+      r.revenue = safe(r.revenue);
+      // ROAS: falls nicht gesetzt, aus revenue/ad ableiten
+      if (r.roas==null) r.roas = r.ad ? (r.revenue / r.ad) : 0;
+      r.roas = safe(r.roas);
+    });
+
+    return src;
+  }
+
+  function totals(rows){
+    return rows.reduce((t,r)=>{
+      t.ad      += r.ad;
+      t.clicks  += r.clicks;
+      t.sales   += r.sales;
+      t.revenue += r.revenue;
+      return t;
+    }, {ad:0, clicks:0, sales:0, revenue:0});
+  }
+
+  function renderMetricCard(parent, label, valueHtml){
+    const c = document.createElement('div');
+    c.className = 'kpi';
+    c.innerHTML = `<div class="label">${label}</div><div class="value">${valueHtml}</div>`;
+    parent.appendChild(c);
+  }
+
+  function renderTable(parent, rows, t){
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap spa-table';
+
+    const tbl = document.createElement('table');
+    tbl.className = 'table';
+
+    tbl.innerHTML = `
+      <thead>
+        <tr>
+          <th class="left">SKU / Item</th>
+          <th class="right">Ad Spend</th>
+          <th class="right">Klicks</th>
+          <th class="right">eCPC</th>
+          <th class="right">Sales</th>
+          <th class="right">Revenue</th>
+          <th class="right">ROAS</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td class="left"><b>Gesamt</b></td>
+          <td class="right"><b>${fmtMoney(t.ad)}</b></td>
+          <td class="right"><b>${fmtNum(t.clicks)}</b></td>
+          <td class="right"><b>${(t.clicks? (t.ad/t.clicks):0).toLocaleString('de-DE',{minimumFractionDigits:2, maximumFractionDigits:2})} €</b></td>
+          <td class="right"><b>${fmtNum(t.sales)}</b></td>
+          <td class="right"><b>${fmtMoney(t.revenue)}</b></td>
+          <td class="right"><b>${(t.ad? (t.revenue/t.ad):0).toFixed(2)}×</b></td>
+        </tr>
+      </tfoot>
+    `;
+
+    const tb = tbl.querySelector('tbody');
+    tb.innerHTML = rows.map(r => `
+      <tr>
+        <td class="left">${r.sku} — ${r.name}</td>
+        <td class="right">${fmtMoney(r.ad)}</td>
+        <td class="right">${fmtNum(r.clicks)}</td>
+        <td class="right">${r.ecpc.toLocaleString('de-DE',{minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
+        <td class="right">${fmtNum(r.sales)}</td>
+        <td class="right">${fmtMoney(r.revenue)}</td>
+        <td class="right">${r.roas.toFixed(2)}×</td>
+      </tr>
+    `).join('');
+
+    wrap.appendChild(tbl);
+    parent.appendChild(wrap);
+  }
+
+  // Haupt-Renderer
+  window.renderRerankOverview = function renderRerankOverview(){
+    const host = document.getElementById('panel-rerank');
+    if (!host) return;
+
+    // Container leeren
+    host.innerHTML = '';
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.innerHTML = `<h3>Sponsored Product Ads</h3>`;
+    host.appendChild(card);
+
+    const rows = getSpaRows();
+    if (!rows.length){
+      const p = document.createElement('p');
+      p.style.opacity = .8;
+      p.textContent = 'Keine Daten für Sponsored Product Ads gefunden.';
+      card.appendChild(p);
+      return;
+    }
+
+    const t = totals(rows);
+
+    const grid = document.createElement('div');
+    grid.className = 'kpi-grid';
+    card.appendChild(grid);
+
+    // Budget aus Campaign "Always-On", falls vorhanden – sonst Ad-Summe als Platzhalter
+    let budget = 0;
+    const camps = D.campaigns || [];
+    const ao = camps.find(c => (c.name||'').toLowerCase()==='always-on');
+    if (ao){
+      // Budget gesamt + Anteil Placement "Sponsored Product Ads", falls hinterlegt
+      if (typeof ao.budget_total === 'number') {
+        // Optional: falls Placement-Budget existiert, nimm dieses
+        const pla = (ao.placements||[]).find(p => (p.placement||'').toLowerCase().includes('sponsored product'));
+        budget = pla && typeof pla.budget==='number' ? pla.budget : ao.budget_total;
+      }
+    }
+    if (!budget) budget = t.ad; // Fallback
+
+    // Cards
+    renderMetricCard(grid, 'Budget Total', fmtMoney(budget));
+    renderMetricCard(grid, 'Ad Spend Total', fmtMoney(t.ad));
+    renderMetricCard(grid, 'Klicks Total', fmtNum(t.clicks));
+    renderMetricCard(grid, 'eCPC', (t.clicks? (t.ad/t.clicks):0).toLocaleString('de-DE',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €');
+    renderMetricCard(grid, '% Spend', Math.round(100 * (t.ad/(budget||1))) + '%');
+    renderMetricCard(grid, 'Sales', fmtNum(t.sales));
+    renderMetricCard(grid, 'Revenue', fmtMoney(t.revenue));
+    renderMetricCard(grid, 'ROAS', (t.ad? (t.revenue/t.ad):0).toFixed(2) + '×');
+
+    // Tabelle
+    renderTable(card, rows, t);
   };
 
-  // Finde Always-On → Sponsored Product Ads in den Kampagnen
-  function findSpaPlacementFromCampaigns() {
-    const D = w.D || {};
-    const campaigns = D.campaigns || [];
-    const camp = campaigns.find(c =>
-      /always[- ]on/i.test(c.name || c.campaign || '')
-    );
-    if (!camp) return null;
-
-    const p = (camp.placements || []).find(x =>
-      /sponsored\s*product\s*ads/i.test(
-        (x.placement || x.name || x.title || '') + ' ' + (x.type || '')
-      )
-    );
-    if (!p) return null;
-
-    return {
-      budget: N(p.budget),
-      ad: N(p.ad || p.ad_spend),
-      clicks: N(p.clicks),
-      sales: N(p.sales || p.orders || p.units),
-      revenue: N(p.revenue),
-      ecpc: (N(p.ad || p.ad_spend) && N(p.clicks))
-        ? (N(p.ad || p.ad_spend) / Math.max(1, N(p.clicks)))
-        : 0,
-      roas: (N(p.ad || p.ad_spend))
-        ? (N(p.revenue) / Math.max(1, N(p.ad || p.ad_spend)))
-        : 0
-    };
-  }
-
-  // Fallback: aus sales_details (falls du das lieber nutzt)
-  function fallbackSpaFromSalesDetails(salesDetails) {
-    const rows = Array.isArray(salesDetails) ? salesDetails : [];
-    // sehr defensiv – filter auf „Always-On“ + „Sponsored Product Ads“ wenn Felder vorhanden
-    const items = rows.filter(r => {
-      const c = (r.campaign || r.camp || '').toLowerCase();
-      const p = (r.placement || r.place || '').toLowerCase();
-      return c.includes('always') && c.includes('on') &&
-             p.includes('sponsored') && p.includes('product');
-    });
-    const sales = items.reduce((a, r) => a + N(r.units || r.sales), 0);
-    const revenue = items.reduce((a, r) => a + N(r.revenue), 0);
-    return { sales, revenue };
-  }
-
-  // ---------- OVERVIEW: Kacheln oberhalb der Tabelle ----------
-  function renderRerankOverview(rerank, salesDetails) {
-    // Container prüfen – wenn nicht vorhanden, still raus
-    const box = document.getElementById('spaOverview')
-            || document.querySelector('.spa-overview')
-            || document.getElementById('rerankOverview');
-    if (!box) return;
-
-    // Datenquelle: bevorzugt Kampagnen → SPA-Placement
-    let spa = findSpaPlacementFromCampaigns();
-    if (!spa) {
-      const fb = fallbackSpaFromSalesDetails(salesDetails || []);
-      spa = {
-        budget: 0, ad: 0, clicks: 0,
-        sales: fb.sales, revenue: fb.revenue,
-        ecpc: 0, roas: 0
-      };
-    }
-
-    // Werte ins UI schreiben (mehrere mögliche Targets unterstützt)
-    setText(['#spaBudgetVal',  Q('#spaBudget .value')],    fmtMoney0(spa.budget));
-    setText(['#spaAdVal',      Q('#spaAd .value')],        fmtMoney0(spa.ad));
-    setText(['#spaClicksVal',  Q('#spaClicks .value')],    fmtNum(spa.clicks));
-    setText(['#spaECPCVal',    Q('#spaECPC .value')],      fmtMoney2(spa.ecpc));
-    setText(['#spaROASVal',    Q('#spaROAS .value')],      (spa.roas||0).toFixed(2)+'×');
-    setText(['#spaSalesVal',   Q('#spaSales .value')],     fmtNum(spa.sales));
-    setText(['#spaRevenueVal', Q('#spaRevenue .value')],   fmtMoney0(spa.revenue));
-  }
-
-  // ---------- TABELLE: SPA Produkte (unten) ----------
-  function renderRerank(rerank) {
-    // erwartet ein Array von SKU-Zeilen; wenn keins, nichts tun
-    const tbody = document.querySelector('#spaTable tbody');
-    if (!tbody) return;
-
-    const rows = Array.isArray(rerank) ? rerank : [];
-    if (!rows.length) return;
-
-    // Render
-    let sumAd=0, sumClicks=0, sumSales=0, sumRev=0;
-    const html = rows.map(r => {
-      const ad     = N(r.ad || r.ad_spend);
-      const clicks = N(r.clicks);
-      const sales  = N(r.sales || r.units);
-      const rev    = N(r.revenue);
-      const ecpc   = clicks ? ad / clicks : 0;
-      const roas   = ad ? rev / ad : 0;
-
-      sumAd += ad; sumClicks += clicks; sumSales += sales; sumRev += rev;
-
-      return (
-        '<tr>' +
-          '<td>' + (r.sku || '') + ' — ' + (r.name || r.item || '') + '</td>' +
-          '<td class="right">' + fmtMoney0(ad)      + '</td>' +
-          '<td class="right">' + fmtNum(clicks)     + '</td>' +
-          '<td class="right">' + fmtMoney2(ecpc)    + '</td>' +
-          '<td class="right">' + fmtNum(sales)      + '</td>' +
-          '<td class="right">' + fmtMoney0(rev)     + '</td>' +
-          '<td class="right">' + (roas||0).toFixed(2) + '×</td>' +
-        '</tr>'
-      );
-    }).join('');
-
-    tbody.innerHTML = html;
-
-    // Summenzeile, falls vorhanden
-    const sumRow = document.querySelector('#spaTable tfoot tr');
-    if (sumRow) {
-      sumRow.innerHTML =
-        '<td><b>Gesamt</b></td>' +
-        '<td class="right"><b>'+fmtMoney0(sumAd)+'</b></td>' +
-        '<td class="right"><b>'+fmtNum(sumClicks)+'</b></td>' +
-        '<td class="right"><b>'+fmtMoney2(sumClicks? (sumAd/sumClicks):0)+'</b></td>' +
-        '<td class="right"><b>'+fmtNum(sumSales)+'</b></td>' +
-        '<td class="right"><b>'+fmtMoney0(sumRev)+'</b></td>' +
-        '<td class="right"><b>'+(sumAd? (sumRev/sumAd):0).toFixed(2)+'×</b></td>';
-    }
-  }
-
-  // ---- als globale Funktionen bereitstellen (wichtig für app.js) ----
-  w.renderRerankOverview = renderRerankOverview;
-  w.renderRerank = renderRerank;
-})(window);
+})();
