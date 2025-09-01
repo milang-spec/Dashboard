@@ -1,133 +1,145 @@
-/* rerank.js – SPA (Sponsored Product Ads) block
-   - liest D.rerank
-   - richtet Sales + Revenue auf Always-On / Sponsored Product Ads aus
-   - rendert Kacheln + Tabelle
-*/
+/* js/rerank.js */
+(function (w) {
+  'use strict';
 
-// ===== kleine Utils =====
-function n(v){ return Number(v) || 0; }
-function fmtInt(x){ return (Math.round(n(x))).toLocaleString('de-DE'); }
-function fmtMoney0(x){ return (n(x)||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
-function sel(q){ return document.querySelector(q); }
-function setText(q, val){ var el=sel(q); if(el) el.textContent = val; }
-
-// Ordne SPA-Totals aus Always-On zu
-function getAlwaysOnSpaTotals() {
-  const data = (window.DASHBOARD_DATA||{});
-  const camps = data.campaigns || [];
-  const c = camps.find(x => (x.name||'').toLowerCase()==='always-on');
-  if(!c) return null;
-
-  // nimm das Placement „Sponsored Product Ads“, andernfalls die Kampagnen-Totals
-  const p = (c.placements||[]).find(p => (p.placement||'').toLowerCase()==='sponsored product ads');
-  return {
-    orders : n(p ? p.orders   : c.orders),
-    revenue: n(p ? p.revenue  : c.revenue),
-    ad     : n(p ? p.ad       : c.ad),
-    clicks : n(p ? p.clicks   : c.clicks),
-    budget : n(p ? p.budget   : c.budget)
+  // ---------- kleine Helfer ----------
+  const N = v => Number(v) || 0;
+  const Q = sel => document.querySelector(sel);
+  const setText = (selList, text) => {
+    (Array.isArray(selList) ? selList : [selList])
+      .filter(Boolean)
+      .forEach(sel => {
+        const el = typeof sel === 'string' ? Q(sel) : sel;
+        if (el) el.textContent = text;
+      });
   };
-}
 
-// skaliert die Zeilen (sales, revenue) auf Soll-Totals
-function scaleRowsToTotals(rows, targetSales, targetRevenue){
-  let sumSales = rows.reduce((a,r)=>a+n(r.sales),0);
-  let sumRev   = rows.reduce((a,r)=>a+n(r.revenue),0);
+  // Finde Always-On → Sponsored Product Ads in den Kampagnen
+  function findSpaPlacementFromCampaigns() {
+    const D = w.D || {};
+    const campaigns = D.campaigns || [];
+    const camp = campaigns.find(c =>
+      /always[- ]on/i.test(c.name || c.campaign || '')
+    );
+    if (!camp) return null;
 
-  if (targetSales && sumSales>0 && Math.abs(targetSales - sumSales) > 1){
-    const k = targetSales / sumSales;
-    rows.forEach(r => r.sales = Math.round(n(r.sales) * k));
-    sumSales = rows.reduce((a,r)=>a+n(r.sales),0);
-  }
-  if (targetRevenue && sumRev>0 && Math.abs(targetRevenue - sumRev) > 1){
-    const k2 = targetRevenue / sumRev;
-    rows.forEach(r => r.revenue = Math.round(n(r.revenue) * k2));
-  }
-  return rows;
-}
+    const p = (camp.placements || []).find(x =>
+      /sponsored\s*product\s*ads/i.test(
+        (x.placement || x.name || x.title || '') + ' ' + (x.type || '')
+      )
+    );
+    if (!p) return null;
 
-function buildSpaRows(){
-  const base = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.rerank) || [];
-  const rows = base.map(x => {
-    const r = {
-      sku:   x.sku || '',
-      name:  x.name || x.item || '',
-      ad:    n(x.ad),
-      clicks:n(x.clicks),
-      ecpc:  n(x.ecpc),
-      sales: n(x.sales),
-      revenue: n(x.revenue),
-      roas:  n(x.roas)
+    return {
+      budget: N(p.budget),
+      ad: N(p.ad || p.ad_spend),
+      clicks: N(p.clicks),
+      sales: N(p.sales || p.orders || p.units),
+      revenue: N(p.revenue),
+      ecpc: (N(p.ad || p.ad_spend) && N(p.clicks))
+        ? (N(p.ad || p.ad_spend) / Math.max(1, N(p.clicks)))
+        : 0,
+      roas: (N(p.ad || p.ad_spend))
+        ? (N(p.revenue) / Math.max(1, N(p.ad || p.ad_spend)))
+        : 0
     };
-    // ableiten: eCPC, Revenue, ROAS
-    if (!r.ecpc && r.clicks) r.ecpc = r.ad / r.clicks;
-    if (!r.revenue && r.roas) r.revenue = r.ad * r.roas;
-    if (!r.roas && r.ad)      r.roas = r.revenue / r.ad;
-    return r;
-  });
-
-  // Soll-Totals (Always-On → Sponsored Product Ads) holen und ggf. ausrichten
-  const want = getAlwaysOnSpaTotals();
-  if (want){
-    scaleRowsToTotals(rows, n(want.orders), n(want.revenue));
   }
-  return rows;
-}
 
-function renderSpa(){
-  const rows = buildSpaRows();
+  // Fallback: aus sales_details (falls du das lieber nutzt)
+  function fallbackSpaFromSalesDetails(salesDetails) {
+    const rows = Array.isArray(salesDetails) ? salesDetails : [];
+    // sehr defensiv – filter auf „Always-On“ + „Sponsored Product Ads“ wenn Felder vorhanden
+    const items = rows.filter(r => {
+      const c = (r.campaign || r.camp || '').toLowerCase();
+      const p = (r.placement || r.place || '').toLowerCase();
+      return c.includes('always') && c.includes('on') &&
+             p.includes('sponsored') && p.includes('product');
+    });
+    const sales = items.reduce((a, r) => a + N(r.units || r.sales), 0);
+    const revenue = items.reduce((a, r) => a + N(r.revenue), 0);
+    return { sales, revenue };
+  }
 
-  // Totals aus Zeilen berechnen
-  const sumAd   = rows.reduce((a,r)=>a+n(r.ad),0);
-  const sumClk  = rows.reduce((a,r)=>a+n(r.clicks),0);
-  const sumSales= rows.reduce((a,r)=>a+n(r.sales),0);
-  const sumRev  = rows.reduce((a,r)=>a+n(r.revenue),0);
-  const ecpc    = sumClk ? (sumAd/sumClk) : 0;
-  const roas    = sumAd ? (sumRev/sumAd) : 0;
+  // ---------- OVERVIEW: Kacheln oberhalb der Tabelle ----------
+  function renderRerankOverview(rerank, salesDetails) {
+    // Container prüfen – wenn nicht vorhanden, still raus
+    const box = document.getElementById('spaOverview')
+            || document.querySelector('.spa-overview')
+            || document.getElementById('rerankOverview');
+    if (!box) return;
 
-  // Falls Always-On Budget/Ad/Clicks gepflegt sind, in die Kacheln übernehmen (optional)
-  const want = getAlwaysOnSpaTotals();
+    // Datenquelle: bevorzugt Kampagnen → SPA-Placement
+    let spa = findSpaPlacementFromCampaigns();
+    if (!spa) {
+      const fb = fallbackSpaFromSalesDetails(salesDetails || []);
+      spa = {
+        budget: 0, ad: 0, clicks: 0,
+        sales: fb.sales, revenue: fb.revenue,
+        ecpc: 0, roas: 0
+      };
+    }
 
-  // ===== Kacheln =====
-  setText('#spaBudget',      fmtMoney0(want && want.budget ? want.budget : sumAd)); // Budget (falls gepflegt)
-  setText('#spaAd',          fmtMoney0(sumAd));
-  setText('#spaClicks',      fmtInt(sumClk));
-  setText('#spaECPC',        (ecpc||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}));
-  setText('#spaSales',       fmtInt(sumSales));
-  setText('#spaRevenue',     fmtMoney0(sumRev));
-  setText('#spaROAS',        (roas||0).toFixed(2)+'×');
+    // Werte ins UI schreiben (mehrere mögliche Targets unterstützt)
+    setText(['#spaBudgetVal',  Q('#spaBudget .value')],    fmtMoney0(spa.budget));
+    setText(['#spaAdVal',      Q('#spaAd .value')],        fmtMoney0(spa.ad));
+    setText(['#spaClicksVal',  Q('#spaClicks .value')],    fmtNum(spa.clicks));
+    setText(['#spaECPCVal',    Q('#spaECPC .value')],      fmtMoney2(spa.ecpc));
+    setText(['#spaROASVal',    Q('#spaROAS .value')],      (spa.roas||0).toFixed(2)+'×');
+    setText(['#spaSalesVal',   Q('#spaSales .value')],     fmtNum(spa.sales));
+    setText(['#spaRevenueVal', Q('#spaRevenue .value')],   fmtMoney0(spa.revenue));
+  }
 
-  // ===== Tabelle =====
-  const tbody = sel('#spaTableBody');
-  if (tbody){
-    tbody.innerHTML = rows.map(r => (
-      `<tr>
-        <td>${(r.sku||'')+' — '+(r.name||'')}</td>
-        <td class="right">${fmtMoney0(r.ad)}</td>
-        <td class="right">${fmtInt(r.clicks)}</td>
-        <td class="right">${(n(r.ecpc)||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-        <td class="right">${fmtInt(r.sales)}</td>
-        <td class="right">${fmtMoney0(r.revenue)}</td>
-        <td class="right">${(r.ad? (r.revenue/r.ad):0).toFixed(2)}×</td>
-      </tr>`
-    )).join('');
+  // ---------- TABELLE: SPA Produkte (unten) ----------
+  function renderRerank(rerank) {
+    // erwartet ein Array von SKU-Zeilen; wenn keins, nichts tun
+    const tbody = document.querySelector('#spaTable tbody');
+    if (!tbody) return;
 
-    // Fußzeile „Gesamt“
-    const tfoot = sel('#spaTableFoot');
-    if (tfoot){
-      tfoot.innerHTML =
-        `<td><b>Gesamt</b></td>
-         <td class="right"><b>${fmtMoney0(sumAd)}</b></td>
-         <td class="right"><b>${fmtInt(sumClk)}</b></td>
-         <td class="right"><b>${(ecpc||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2})}</b></td>
-         <td class="right"><b>${fmtInt(sumSales)}</b></td>
-         <td class="right"><b>${fmtMoney0(sumRev)}</b></td>
-         <td class="right"><b>${(roas||0).toFixed(2)}×</b></td>`;
+    const rows = Array.isArray(rerank) ? rerank : [];
+    if (!rows.length) return;
+
+    // Render
+    let sumAd=0, sumClicks=0, sumSales=0, sumRev=0;
+    const html = rows.map(r => {
+      const ad     = N(r.ad || r.ad_spend);
+      const clicks = N(r.clicks);
+      const sales  = N(r.sales || r.units);
+      const rev    = N(r.revenue);
+      const ecpc   = clicks ? ad / clicks : 0;
+      const roas   = ad ? rev / ad : 0;
+
+      sumAd += ad; sumClicks += clicks; sumSales += sales; sumRev += rev;
+
+      return (
+        '<tr>' +
+          '<td>' + (r.sku || '') + ' — ' + (r.name || r.item || '') + '</td>' +
+          '<td class="right">' + fmtMoney0(ad)      + '</td>' +
+          '<td class="right">' + fmtNum(clicks)     + '</td>' +
+          '<td class="right">' + fmtMoney2(ecpc)    + '</td>' +
+          '<td class="right">' + fmtNum(sales)      + '</td>' +
+          '<td class="right">' + fmtMoney0(rev)     + '</td>' +
+          '<td class="right">' + (roas||0).toFixed(2) + '×</td>' +
+        '</tr>'
+      );
+    }).join('');
+
+    tbody.innerHTML = html;
+
+    // Summenzeile, falls vorhanden
+    const sumRow = document.querySelector('#spaTable tfoot tr');
+    if (sumRow) {
+      sumRow.innerHTML =
+        '<td><b>Gesamt</b></td>' +
+        '<td class="right"><b>'+fmtMoney0(sumAd)+'</b></td>' +
+        '<td class="right"><b>'+fmtNum(sumClicks)+'</b></td>' +
+        '<td class="right"><b>'+fmtMoney2(sumClicks? (sumAd/sumClicks):0)+'</b></td>' +
+        '<td class="right"><b>'+fmtNum(sumSales)+'</b></td>' +
+        '<td class="right"><b>'+fmtMoney0(sumRev)+'</b></td>' +
+        '<td class="right"><b>'+(sumAd? (sumRev/sumAd):0).toFixed(2)+'×</b></td>';
     }
   }
-}
 
-// Auto-Boot
-document.addEventListener('DOMContentLoaded', function(){
-  try { renderSpa(); } catch(e){ console.error('SPA render error', e); }
-});
+  // ---- als globale Funktionen bereitstellen (wichtig für app.js) ----
+  w.renderRerankOverview = renderRerankOverview;
+  w.renderRerank = renderRerank;
+})(window);
