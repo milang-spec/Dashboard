@@ -82,54 +82,70 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 .kpi.kpi-sov { border: 2px dashed var(--theme, #FFC7B1); cursor: pointer; }
 .kpi.kpi-sov .label { opacity: .85; }
 
-/* --- 3-teilige Segment-Bar --- */
-.card .segment {
+/* =========================================
+   Funnel Mix (3-teilige Segment-Bar)
+   ========================================= */
+
+:root{
+  /* Abstand zwischen den Balken im Funnel */
+  --funnel-gap: 10px;
+}
+
+/* Container: Labels oben, Balken unten */
+.card .segment{
   display: grid;
   grid-template-rows: auto auto;
-  gap: 8px;
+  row-gap: 12px; /* etwas mehr Luft zwischen Labels und Balken */
 }
-.segment-labels {
+
+/* --- zentrierte Labels: 3 Spalten, je 1/3 Breite --- */
+.segment-labels{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  place-items: center;            /* zentriert horizontal & vertikal */
   font-weight: 800;
   color: var(--theme-fore, #ffe9e0);
   opacity: .9;
+  text-align: center;
+  letter-spacing: .2px;
 }
-.segment-bar {
+
+/* Falls noch "/"-Separatoren im Markup stehen: ausblenden */
+.segment-labels .sep{ display:none; }
+
+/* --- Balken mit sichtbaren "Gaps" zwischen den Segmenten --- */
+.segment-bar{
   display: flex;
+  align-items: stretch;
+  gap: var(--funnel-gap);          /* <- Abstand zwischen den Segmenten */
   height: 28px;
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 12px;
+  /* Track-Farbe (scheint in den Gaps durch) */
   background: rgba(255,255,255,0.06);
   outline: 1px solid rgba(255,255,255,0.06);
+  /* kein overflow:hidden; damit die inneren Rundungen sichtbar bleiben */
 }
-.segment-chunk {
+
+/* einzelne Segmente */
+.segment-chunk{
+  flex: 1 1 0%;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 14px;
   color: #111; text-shadow: 0 1px 0 rgba(255,255,255,.35);
-}
-.segment-aw { background: #FFC7B1; }  /* Awareness – Peach */
-.segment-en { background: #C09BBF; }  /* Engagement – Mauve */
-/* Performance (Funnel Mix) – gelb */
-.segment-pe { 
-  background: #FFE15A !important;  /* die gewünschte Gelbnuance */
-  color: #111;                      /* gute Lesbarkeit auf Gelb */
-  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  border-radius: 8px;              /* runde Enden je Segment */
 }
 
-/* Funnel-Widget breiter machen (über 2 Spalten) */
-.kpi.kpi-funnel { grid-column: span 2; }
+/* Farbcodierung */
+.segment-aw{ background:#FFC7B1; }            /* Awareness – Peach */
+.segment-en{ background:#C09BBF; }            /* Engagement – Mauve */
+.segment-pe{ background:#FFE15A !important; } /* Performance – Gelb */
 
-/* Labels im Funnel-Widget als Einzeiler mit Trennern */
-.kpi-funnel .segment-labels {
-  display: block;
-  text-align: left;
-  font-weight: 800;
-  color: var(--theme-fore, #ffe9e0);
-  opacity: .9;
-  letter-spacing: .2px;
-}
-.kpi-funnel .segment-labels .sep { margin: 0 8px; opacity: .65; }
+/* Funnel-Karte über 2 Spalten ziehen (falls Grid genutzt) */
+.kpi.kpi-funnel{ grid-column: span 2; }
+
+/* --- Alte "Einzeiler"-Variante entfernen / neutralisieren --- */
+.kpi-funnel .segment-labels{ display: grid; }  /* Sicherstellen: Grid statt Block */
+
 
 /* Einheitlicher Header mit Chips – auch für Campaign Performance */
 #panel-camp .header-inline,
