@@ -553,4 +553,22 @@ table.sales td, table.sales th { vertical-align: middle; }
 #panel-campaigns .col-roas      { width:  90px; }
 
 
+/* Abstand UNTER der Campaign-Tabelle */
+#panel-campaigns .table-wrap.camp-table,
+.table-wrap.camp-table {
+  margin-bottom: 24px;            /* Platz nach außen */
+}
+
+/* und etwas Innenabstand, falls der Wrapper scrollt */
+#panel-campaigns .table-wrap.camp-table.table-scroll,
+.table-wrap.camp-table.table-scroll {
+  padding-bottom: 14px;           /* Platz innen, letzte Zeile atmet */
+}
+
+@media (min-width: 1100px) {
+  #panel-campaigns .table-wrap.camp-table,
+  .table-wrap.camp-table {
+    margin-bottom: 32px;          /* auf großen Screens etwas mehr */
+  }
+}
 
