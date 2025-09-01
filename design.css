@@ -468,7 +468,7 @@ table.sales td, table.sales th { vertical-align: middle; }
 /* === Above the fold: Hero + KPI sichtbar, Monthly darunter === */
 @media (min-width: 1100px) {
   #panel-hero { min-height: 12vh; }
-  #panel-kpi  { min-height: 65vh; }
+  #panel-kpi  { min-height: 60vh; }
   #panel-monthly { margin-top: 24px; }
 }
 
