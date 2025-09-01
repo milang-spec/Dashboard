@@ -177,7 +177,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   background: rgba(255,199,177,0.14);
   border: 1px solid rgba(255,199,177,0.45);
   border-radius: 18px;
-  padding: 14px 24px 18px 18px; 
+  padding: 14px 24px 32px 18px; 
 }
 
 
@@ -393,21 +393,46 @@ table.sales td.right { text-align: right; }
 /* Optional: etwas engeren Zeilenabstand wie auf sales.html gewünscht */
 table.sales td, table.sales th { vertical-align: middle; }
 
+
 .card.brand-hero .page-subtitle{
-  margin: 6px 0 -2px 0;
-  color: rgba(255,199,177,0.95);   /* Peach */
-  font-weight: 600;
+  margin: 8px 0 -2px 0;
+  color: rgba(255,199,177,0.98);
+  font-weight: 700;
   letter-spacing: .2px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: .35rem;
-  font-size: clamp(12px, 1.15vw, 18px);
+  /* Größer als zuvor */
+  font-size: clamp(14px, 1.45vw, 22px);
+  line-height: 1.25;
 }
 .card.brand-hero .page-subtitle .sep{
   opacity: .65;
   margin: 0 .25rem;
   transform: translateY(-1px);
+}
+
+/* Mehr Raum zwischen Kacheln */
+#kpiGrid, .kpi-grid { gap: 16px; }
+
+/* Karten etwas „luftiger“ */
+#panel-kpi .kpi { padding: 20px 22px; }
+
+/* Labels etwas größer */
+#panel-kpi .kpi .label { 
+  font-size: clamp(13px, 1.05vw, 18px);
+  letter-spacing: .2px;
+}
+
+/* Primärwerte deutlich größer */
+#panel-kpi .kpi .value { 
+  font-size: clamp(30px, 3.4vw, 60px);
+}
+
+/* Delta-Zeile minimal größer */
+#panel-kpi .kpi .delta { 
+  font-size: clamp(12px, .95vw, 16px);
 }
 
 
