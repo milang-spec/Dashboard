@@ -22,6 +22,14 @@ __guard('monthly table',      function(){ renderMonthlyTable(months, t25); });
 }
 
 
+// ---- Layout-Konfig VOR dem Boot setzen ----
+window.DASHBOARD_LAYOUT = Object.assign(
+  { mode: 'scroll', columns: 12, order: [] },   // Defaults
+  window.DASHBOARD_LAYOUT || {},                // evtl. vorhandenes beibehalten
+  { gap: 28 }                                   // <— HIER deinen gewünschten Abstand
+);
+
+
 /* ========= Boot ========= */
 window.addEventListener('resize',function(){
   var cfg=window.DASHBOARD_LAYOUT||{};
