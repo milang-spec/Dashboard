@@ -552,6 +552,17 @@ table.sales td, table.sales th { vertical-align: middle; }
 #panel-campaigns .col-rev       { width: 150px; }
 #panel-campaigns .col-roas      { width:  90px; }
 
+/* Globale Steuerung: Abstand unter Abschnitts-Überschriften */
+:root{
+  --section-title-gap: 14px;          /* hier den gewünschten Abstand einstellen */
+}
+
+/* greift für alle Cards/Panels */
+.card h2,
+.card .section-title,
+.panel h2{
+  margin-bottom: var(--section-title-gap);
+}
 
 
 
