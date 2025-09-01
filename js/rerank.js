@@ -1,3 +1,68 @@
+function computeSpaFromAlwaysOn() {
+  var D = window.DASHBOARD_DATA || {};
+  var camps = D.campaigns || [];
+
+  // 1) Always-On campaign suchen
+  var camp = camps.find(function (c) {
+    return /always[-\s]?on/i.test(String(c.name||''));
+  });
+  if (!camp) return null;
+
+  // 2) SPA-Placement in Always-On
+  var spa = (camp.placements || []).find(function (p) {
+    var nm = String(p.placement || p.name || '');
+    return /sponsored\s*product\s*ads/i.test(nm);
+  });
+
+  // 3) Basis = Kampagnen-Produkte (wie sales.html)
+  var base = (camp.products || []).map(function (p) {
+    return {
+      sku:      p.sku,
+      name:     p.name,
+      ad:       +p.ad       || 0,   // falls vorhanden
+      clicks:   +p.clicks   || 0,
+      units:    +p.units    || 0,   // “Sales” in products
+      revenue:  +p.revenue  || 0
+    };
+  });
+
+  // Fallback: keine Produkte -> nichts tun
+  if (!base.length) return null;
+
+  // 4) Wenn Always-On NUR SPA hat, ist der Anteil = 1
+  //    Wenn mehrere Placements existieren, skaliere wie sales.html
+  var rows = base.slice(0);
+  var topSales, topRevenue;
+
+  if (spa && (camp.placements || []).length > 1) {
+    var totUnits = (camp.placements || []).reduce(function (a,p){ return a + (+p.orders||0); }, 0) || 1;
+    var totRev   = (camp.placements || []).reduce(function (a,p){ return a + (+p.revenue||0);}, 0) || 1;
+    var uShare   = (+spa.orders||0)   / totUnits;
+    var rShare   = (+spa.revenue||0)  / totRev;
+
+    rows = rows.map(function (r) {
+      return {
+        sku: r.sku,
+        name: r.name,
+        ad: r.ad,
+        clicks: r.clicks,
+        units: Math.round((r.units||0)    * uShare),
+        revenue: Math.round((r.revenue||0)* rShare)
+      };
+    });
+
+    topSales   = Math.round(+spa.orders  || rows.reduce((a,x)=>a+(x.units||0),0));
+    topRevenue = Math.round(+spa.revenue || rows.reduce((a,x)=>a+(x.revenue||0),0));
+  } else {
+    // Nur SPA-Placement vorhanden → 1:1 Always-On
+    topSales   = rows.reduce(function (a,x){ return a + (+x.units||0);    }, 0);
+    topRevenue = rows.reduce(function (a,x){ return a + (+x.revenue||0); }, 0);
+  }
+
+  return { rows: rows, sales: topSales, revenue: topRevenue };
+}
+
+
 /* ========= Re-Rank (Sponsored Product Ads) ========= */
 /* Nutzt sales_details (sales.html) – fällt sonst auf D.rerank.sales zurück. */
 
