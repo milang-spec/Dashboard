@@ -7,7 +7,7 @@
 
 /* ========= KPIs ========= */
 var KPI_DEF = [
-  { key:'ad',          label:'Ad Spend Total',     fmt: fmtMoney0,                   better:'higher' },
+  { key:'ad',          label:'Ad Spend Total',     fmt: fmtNum,                   better:'higher' },
   { key:'impressions', label:'Impressions Total',  fmt: function(v){ return fmtCompactDE(v,1); }, better:'higher' },
   { key:'clicks',      label:'Klicks Total',       fmt: fmtNum,                      better:'higher' },
   { key:'ctr',         label:'CTR',                fmt: function(v){ return fmtPct1(v); }, better:'higher' },
