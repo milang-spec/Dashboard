@@ -141,6 +141,22 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
 .segment-en { background: #C09BBF; }
 .segment-pe { background: #FFE15A !important; color:#111; text-shadow: 0 1px 0 rgba(255,255,255,.35); }
 
+/* Funnel widget: 2 Spalten breit im KPI-Grid */
+#panel-kpi .kpi.kpi-funnel{
+  grid-column: span 2;
+  min-width: 0;
+}
+
+/* Abstand Label ↔ Balken innerhalb der Funnel-Kachel */
+#panel-kpi .kpi.kpi-funnel .segment{
+  display: grid;
+  grid-template-rows: auto auto;
+  row-gap: 12px;         /* <-- mehr Abstand */
+}
+
+#panel-kpi .kpi.kpi-funnel .segment-labels{
+  margin-bottom: 4px;    /* kleine Zusatzluft */
+}
 
 
 /* Einheitlicher Header mit Chips – auch für Campaign Performance */
