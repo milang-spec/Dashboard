@@ -393,3 +393,21 @@ table.sales td.right { text-align: right; }
 /* Optional: etwas engeren Zeilenabstand wie auf sales.html gewünscht */
 table.sales td, table.sales th { vertical-align: middle; }
 
+.card.brand-hero .page-subtitle{
+  margin: 6px 0 -2px 0;
+  color: rgba(255,199,177,0.95);   /* Peach */
+  font-weight: 600;
+  letter-spacing: .2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  font-size: clamp(12px, 1.15vw, 18px);
+}
+.card.brand-hero .page-subtitle .sep{
+  opacity: .65;
+  margin: 0 .25rem;
+  transform: translateY(-1px);
+}
+
+
