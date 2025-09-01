@@ -434,7 +434,7 @@ table.sales td, table.sales th { vertical-align: middle; }
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: .2px;
-  margin-bottom: 8px;               /* vorher: 6px */
+  margin-bottom: 8px;              /* vorher: 6px */
 }
 @media (min-width: 1100px) {
   #panel-kpi .kpi .label { font-size: 22px; }   /* vorher: 20px */
@@ -451,7 +451,7 @@ table.sales td, table.sales th { vertical-align: middle; }
 #panel-kpi .kpi .delta {
   margin-top: 12px;                              /* vorher: 10px */
   font-size: clamp(14px, 1.05vw, 18px);          /* vorher: 14px */
-  opacity: .95;                                   /* vorher: .9 */
+  opacity: .95;                                  /* vorher: .9 */
   font-weight: 600;
 }
 #panel-kpi .kpi .delta .arrow {
@@ -469,5 +469,6 @@ table.sales td, table.sales th { vertical-align: middle; }
   #panel-kpi  { min-height: 65vh; }
   #panel-monthly { margin-top: 24px; }
 }
+
 
 
