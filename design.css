@@ -553,7 +553,7 @@ table.sales td, table.sales th { vertical-align: middle; }
 /* Abstand UNTER der Campaign-Tabelle */
 #panel-campaigns .table-wrap.camp-table,
 .table-wrap.camp-table {
-  margin-bottom: 101px;            /* Platz nach außen */
+  margin-bottom: 50px;            /* Platz nach außen */
 }
 
 /* und etwas Innenabstand, falls der Wrapper scrollt */
@@ -565,7 +565,7 @@ table.sales td, table.sales th { vertical-align: middle; }
 @media (min-width: 1100px) {
   #panel-campaigns .table-wrap.camp-table,
   .table-wrap.camp-table {
-    margin-bottom: 32px;          /* auf großen Screens etwas mehr */
+    margin-bottom: 100px;          /* auf großen Screens etwas mehr */
   }
 }
 
