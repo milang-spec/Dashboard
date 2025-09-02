@@ -12,7 +12,7 @@ var KPI_DEF = [
   { key:'clicks',      label:'Klicks',       fmt: fmtNum,                      better:'higher' },
   { key:'ctr',         label:'CTR',                fmt: function(v){ return fmtPct1(v); }, better:'higher' },
   { key:'orders',      label:'Media Sales',  fmt: fmtNum,                      better:'higher' },
-  { key:'revenue',     label:'Media Revenue €',fmt: fmtNum,                      better:'higher' },
+  { key:'revenue',     label:'Media Rev €',fmt: fmtNum,                      better:'higher' },
   { key:'roas',        label:'ROAS',               fmt: function(v){ return (v||0).toFixed(2)+'×'; }, better:'higher' },
   { key:'cpm',         label:'CPM',                fmt: fmtMoney2,                   better:'lower' },
   { key:'cpc',         label:'CPC',                fmt: fmtMoney2,                   better:'lower' }
