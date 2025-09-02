@@ -469,7 +469,7 @@ table.sales td, table.sales th { vertical-align: middle; }
   margin-bottom: 8px;              /* vorher: 6px */
 }
 @media (min-width: 1100px) {
-  #panel-kpi .kpi .label { font-size: 22px; }   /* vorher: 20px */
+  #panel-kpi .kpi .label { font-size: 27px; }   /* vorher: 20px */
 }
 
 /* Werte moderat, ohne Abschneiden */
@@ -495,7 +495,6 @@ table.sales td, table.sales th { vertical-align: middle; }
 @media (min-width: 1100px) {
   #panel-hero { min-height: 12vh; }
   #panel-kpi  { min-height: 60vh; }
-  #panel-monthly { margin-top: 24px; }
 }
 
 /* Breadcrumb-Chips */
