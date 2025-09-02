@@ -1,144 +1,144 @@
-// js/rerank.js — Rendert Sponsored Product Ads (Always-On) anhand der data.js
+/* ===== Sponsored Product Ads (SPA/Rerank) — rein statisch aus data.js =====
+   Erwartet in data.js:
+     D.rerank_budget : number        // z.B. 225000
+     D.rerank : Array<{ sku, name, ad, clicks?, ecpc?, sales?, roas?, revenue? }>
+   IDs in index.html:
+     #rr-budget #rr-ad #rr-clicks #rr-ecpc #rr-pct #rr-sales #rr-revenue #rr-roas
+     Tabelle: #rerankTable (tbody) + #rerankTotalRow
+*/
 
-(function () {
-  // ===== Helpers (mit Fallbacks, falls utils.js nicht alles liefert) =====
-  const $ = (s) => document.querySelector(s);
-  const fmtNum    = window.fmtNum    || (n => Intl.NumberFormat('de-DE').format(Math.round(n||0)));
-  const fmtMoney0 = window.fmtMoney0 || (n => Intl.NumberFormat('de-DE',
-                             {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0));
-  const fmtMoney2 = window.fmtMoney2 || (n => Intl.NumberFormat('de-DE',
-                             {style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0));
-  const fmtPct0   = (v) => `${Math.round((v||0)*100)}%`;
-  const log       = (...a) => (window.__report ? __report('[rerank]', a.join(' ')) : console.log('[rerank]', ...a));
-  const safeTxt   = (t) => String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+(function (w) {
+  'use strict';
 
-  function setTxt(id, val){
-    const n = typeof id === 'string' ? document.getElementById(id) : id;
-    if (n) n.textContent = val;
+  function byId(id){ return document.getElementById(id); }
+  function txt(id, s){ const el=byId(id); if(el) el.textContent = s; }
+
+  function asNum(x){ const v = Number(x); return isFinite(v) ? v : 0; }
+
+  // aus einer Zeile alle KPIs berechnen (Clicks/Revenue/Ecpc/Roas ggf. ableiten)
+  function normalizeRow(r){
+    const out = Object.assign({}, r);
+    out.ad      = asNum(out.ad);
+    // Clicks ggf. aus Ad/eCPC ableiten
+    if (out.clicks == null) {
+      out.ecpc = asNum(out.ecpc);
+      out.clicks = out.ecpc ? (out.ad / out.ecpc) : 0;
+    } else {
+      out.clicks = asNum(out.clicks);
+    }
+    // Revenue ggf. aus Ad*ROAS ableiten
+    if (out.revenue == null) {
+      out.roas = asNum(out.roas);
+      out.revenue = out.roas ? (out.ad * out.roas) : 0;
+    } else {
+      out.revenue = asNum(out.revenue);
+    }
+    // eCPC ggf. aus Ad/Clicks ableiten
+    if (out.ecpc == null) {
+      out.ecpc = out.clicks ? (out.ad / out.clicks) : 0;
+    } else {
+      out.ecpc = asNum(out.ecpc);
+    }
+    // ROAS ggf. aus Revenue/Ad ableiten
+    if (out.roas == null) {
+      out.roas = out.ad ? (out.revenue / out.ad) : 0;
+    } else {
+      out.roas = asNum(out.roas);
+    }
+    // Sales als Zahl (falls vorhanden)
+    out.sales = asNum(out.sales);
+    return out;
   }
 
-  // ===== Daten aus data.js holen =====
-  function getAlwaysOnSPA() {
-    const D   = window.DASHBOARD_DATA || {};
-    const ALL = D.ALL || window.ALL || [];
-    // Kampagne "Always-On"
-    const camp = ALL.find(c => c && c.name === 'Always-On');
-    if (!camp) { log('Keine Kampagne "Always-On" gefunden.'); return null; }
-    // Placement "Sponsored Product Ads" (exakt, wie in data.js)
-    const spa = (camp.placements || []).find(p =>
-      p?.type === 'Sponsored Product Ads' || p?.placement === 'Sponsored Product Ads'
-    );
-    if (!spa) { log('Kein Placement "Sponsored Product Ads" innerhalb Always-On gefunden.'); return null; }
-    return { camp, spa };
+  function computeTotals(rows){
+    return rows.reduce((t, r) => {
+      t.ad      += r.ad;
+      t.clicks  += r.clicks;
+      t.sales   += r.sales;
+      t.revenue += r.revenue;
+      return t;
+    }, {ad:0, clicks:0, sales:0, revenue:0});
   }
 
-  // ===== KPI-Kacheln =====
-  function renderRerankOverview() {
-    const pair = getAlwaysOnSPA(); if (!pair) return;
-    const { camp, spa } = pair;
-
-    const budget  = Number(spa.booking ?? camp.booking ?? 0);
-    const spend   = Number(spa.ad      ?? camp.ad      ?? 0);
-    const clicks  = Number(spa.clicks  ?? camp.clicks  ?? 0);
-    const sales   = Number(spa.orders  ?? camp.orders  ?? 0);
-    const revenue = Number(spa.revenue ?? camp.revenue ?? 0);
-
-    const ecpc = clicks ? (spend / clicks) : 0;
-    const roas = spend  ? (revenue / spend) : 0;
-    const pct  = budget ? (spend / budget) : 0;
-
-    setTxt('rr-budget',  fmtMoney0(budget));
-    setTxt('rr-ad',      fmtMoney0(spend));
-    setTxt('rr-clicks',  fmtNum(clicks));
-    setTxt('rr-ecpc',    fmtMoney2(ecpc));
-    setTxt('rr-pct',     fmtPct0(pct));
-    setTxt('rr-sales',   fmtNum(sales));
-    setTxt('rr-revenue', fmtMoney0(revenue));
-    setTxt('rr-roas',    (roas||0).toFixed(2) + '×');
-
-    log('KPI ok', { budget, spend, clicks, sales, revenue, roas: roas.toFixed(2) });
+  function renderKPIs(budget, totals){
+    txt('rr-budget',  fmtMoney0(budget));
+    txt('rr-ad',      fmtMoney0(totals.ad));
+    txt('rr-clicks',  fmtNum(Math.round(totals.clicks)));
+    txt('rr-ecpc',    fmtMoney2(safeDiv(totals.ad, totals.clicks)));
+    txt('rr-pct',     fmtPct1(safeDiv(totals.ad, budget)));
+    txt('rr-sales',   fmtNum(Math.round(totals.sales)));
+    txt('rr-revenue', fmtMoney0(totals.revenue));
+    const roas = safeDiv(totals.revenue, totals.ad);
+    txt('rr-roas', roas ? roas.toFixed(2) + '×' : '—');
   }
 
-  // ===== Tabelle (SKU-Liste) =====
-  function renderRerankTable() {
-    const pair = getAlwaysOnSPA(); if (!pair) return;
-    const { camp, spa } = pair;
+  function renderTable(rows){
+    const tbody = document.querySelector('#rerankTable tbody');
+    const trow  = byId('rerankTotalRow');
+    if (!tbody || !trow) return;
 
-    const table = $('#rerankTable');
-    const tbody = table && table.querySelector('tbody');
-    if (!tbody) return;
-
-    const spend   = Number(spa.ad      ?? camp.ad      ?? 0);
-    const clicks  = Number(spa.clicks  ?? camp.clicks  ?? 0);
-    const revenue = Number(spa.revenue ?? camp.revenue ?? 0);
-
-    const prods = Array.isArray(camp.products) ? camp.products : [];
-    const sumRev   = prods.reduce((a,p)=>a+Number(p.revenue||0),0) || 1;
-
-    // Proportionale Verteilung von Ad/Clicks nach Revenue-Anteil
-    const rows = prods.map(p => {
-      const r = Number(p.revenue||0);
-      const share = r / sumRev;
-      const ad_i   = share * spend;
-      const clk_i  = share * clicks;
-      const ecpc_i = clk_i ? ad_i/clk_i : 0;
-      const roas_i = ad_i  ? r/ad_i     : 0;
-
-      return {
-        sku:  p.sku || '',
-        name: p.name || '',
-        ad:   ad_i,
-        clicks: clk_i,
-        ecpc: ecpc_i,
-        sales: Number(p.units||0),
-        revenue: r,
-        roas: roas_i
-      };
-    });
-
-    // Render Rows
-    tbody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${safeTxt(`${r.sku} — ${r.name}`)}</td>
+    const html = rows.map(r => {
+      return `<tr>
+        <td>${(r.sku||'')}${r.name ? ' — '+r.name : ''}</td>
         <td class="right">${fmtMoney0(r.ad)}</td>
-        <td class="right">${fmtNum(r.clicks)}</td>
+        <td class="right">${fmtNum(Math.round(r.clicks))}</td>
         <td class="right">${fmtMoney2(r.ecpc)}</td>
-        <td class="right">${fmtNum(r.sales)}</td>
+        <td class="right">${fmtNum(Math.round(r.sales))}</td>
         <td class="right">${fmtMoney0(r.revenue)}</td>
         <td class="right">${(r.roas||0).toFixed(2)}×</td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = html;
 
-    // Summenzeile
-    const trow = $('#rerankTotalRow');
-    if (trow) {
-      const sumAd   = rows.reduce((a,r)=>a+r.ad,0);
-      const sumClk  = rows.reduce((a,r)=>a+r.clicks,0);
-      const sumEcpc = sumClk ? (sumAd/sumClk) : 0;
-      const sumSales= rows.reduce((a,r)=>a+r.sales,0);
-      const sumRev2 = rows.reduce((a,r)=>a+r.revenue,0);
-      const sumRoas = sumAd ? (sumRev2/sumAd) : 0;
+    const totals = computeTotals(rows);
+    const totEcpc = safeDiv(totals.ad, totals.clicks);
+    const totRoas = safeDiv(totals.revenue, totals.ad);
 
-      trow.innerHTML = `
-        <td><b>Gesamt</b></td>
-        <td class="right"><b>${fmtMoney0(sumAd)}</b></td>
-        <td class="right"><b>${fmtNum(sumClk)}</b></td>
-        <td class="right"><b>${fmtMoney2(sumEcpc)}</b></td>
-        <td class="right"><b>${fmtNum(sumSales)}</b></td>
-        <td class="right"><b>${fmtMoney0(sumRev2)}</b></td>
-        <td class="right"><b>${(sumRoas||0).toFixed(2)}×</b></td>
-      `;
+    trow.innerHTML = `
+      <td><b>Gesamt</b></td>
+      <td class="right"><b>${fmtMoney0(totals.ad)}</b></td>
+      <td class="right"><b>${fmtNum(Math.round(totals.clicks))}</b></td>
+      <td class="right"><b>${fmtMoney2(totEcpc)}</b></td>
+      <td class="right"><b>${fmtNum(Math.round(totals.sales))}</b></td>
+      <td class="right"><b>${fmtMoney0(totals.revenue)}</b></td>
+      <td class="right"><b>${totRoas ? totRoas.toFixed(2)+'×' : '—'}</b></td>
+    `;
+  }
+
+  // ===== Öffentliche Render-Funktion =====
+  function renderRerank(){
+    try{
+      const D = w.D || w.DASHBOARD_DATA || {};
+      const budget = asNum(D.rerank_budget);
+      const rowsRaw = Array.isArray(D.rerank) ? D.rerank : [];
+
+      if (!rowsRaw.length){
+        __report('rerank', 'Keine D.rerank Daten gefunden.');
+        // UI sauber leeren
+        ['rr-budget','rr-ad','rr-clicks','rr-ecpc','rr-pct','rr-sales','rr-revenue','rr-roas']
+          .forEach(id => txt(id, '—'));
+        const tbody = document.querySelector('#rerankTable tbody');
+        const trow  = byId('rerankTotalRow');
+        if (tbody) tbody.innerHTML = '';
+        if (trow)  trow.innerHTML = '<td colspan="7" class="right muted">—</td>';
+        return;
+      }
+
+      // Normalisieren + Totals
+      const rows = rowsRaw.map(normalizeRow);
+      const totals = computeTotals(rows);
+
+      renderKPIs(budget, totals);
+      renderTable(rows);
+
+      // Debug-Hinweis (hilfreich in der Konsole)
+      console.log('[rerank] gerendert:', {budget, rows, totals});
+    }catch(e){
+      __report('rerank', e);
     }
-
-    log('Table ok', { rows: rows.length });
   }
 
-  // ===== Export & Autorun =====
-  window.renderRerankOverview = renderRerankOverview;
-  window.renderRerank         = renderRerankTable;
+  // global verfügbar machen – wird in app.js aufgerufen
+  w.renderRerank = renderRerank;
 
-  if (document.getElementById('panel-rerank')) {
-    try { renderRerankOverview(); renderRerankTable(); }
-    catch(e){ (window.__report||console.error)('[rerank boot]', e); }
-  }
-})();
+})(window);
