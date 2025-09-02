@@ -5,7 +5,7 @@
   --shadow: 0 10px 30px rgba(0,0,0,.25);
   --theme:#FFC7B1; --theme-weak:rgba(255,199,177,.18);
   --good:#6be28f; --bad:#ff6b6b; --neutral:#9aa3b2;
-  --h2:32px; --kpi-label:16px; --kpi-value:clamp(18px,2vw,34px); --kpi-delta:clamp(16px,1.15vw,20px); --table:18px;
+  --h2:32px; --kpi-label:clamp(16px,1.3vw,20px); --kpi-value:clamp(18px,2vw,34px); --kpi-delta:clamp(16px,1.15vw,20px); --table:18px;
   --pad:24px; --gap:32px !important; --radius:16px; --cols:3;
 }
 
