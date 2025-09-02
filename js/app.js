@@ -30,7 +30,7 @@ __guard('Sponsored Product Ads', function () {
 window.DASHBOARD_LAYOUT = Object.assign(
   { mode: 'scroll', columns: 12, order: [] },   // Defaults
   window.DASHBOARD_LAYOUT || {},                // evtl. vorhandenes beibehalten
-  { gap: 28 }                                   // <— HIER deinen gewünschten Abstand
+  { gap: 36 }                                   // <— HIER deinen gewünschten Abstand
 );
 
 
