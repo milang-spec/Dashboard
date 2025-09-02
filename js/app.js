@@ -12,13 +12,15 @@ function renderAll(){
 __guard('monthly table',      function(){ renderMonthlyTable(months, t25); });
   __guard('overview campaigns', function(){ renderCampaignOverview(ALL_2025); });
 
-  if (document.getElementById('panel-rerank')) renderRerankOverview();
+ 
 
   // HIER WICHTIG: nur den NEUEN Call stehen lassen:
   __guard('table campaigns',    function(){ renderCampaignTable(list25, ALL_2025); });
+  
+__guard('Sponsored Product Ads', function () {
+  if (window.renderRerank) window.renderRerank();
+});
 
-  __guard('rerank overview',    function(){ renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[]); });
-  __guard('rerank table',       function(){ renderRerank((D||{}).rerank||[]); });
 
   window.__appRendered = true;
 }
