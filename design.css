@@ -94,6 +94,7 @@ tfoot td{padding:10px;border-top:2px solid var(--border-strong);background:#1014
   color: var(--theme-fore, #ffe9e0);
   opacity: .9;
   letter-spacing: .2px;
+  font-size: 20px;
 }
 .segment-labels .lab{
   white-space: nowrap;
