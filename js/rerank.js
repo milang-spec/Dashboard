@@ -1,238 +1,144 @@
-/* =================== rerank.js (SPA: Always-On / Sponsored Product Ads) =================== */
+// js/rerank.js — Rendert Sponsored Product Ads (Always-On) anhand der data.js
 
-/* --- sanfte Fallbacks, falls deine utils schon vorhanden sind --- */
-(function(){
-  if (typeof window.findOne !== 'function') {
-    window.findOne = function(sel){ return document.querySelector(sel); };
-  }
-  if (typeof window.setText !== 'function') {
-    window.setText = function(el, txt){ if(el){ el.textContent = txt; } };
-  }
-  if (typeof window.fmtMoney0 !== 'function') {
-    window.fmtMoney0 = function(v){ return (v||0).toLocaleString('de-DE') + ' €'; };
-  }
-  if (typeof window.fmtMoney2 !== 'function') {
-    window.fmtMoney2 = function(v){ return (v||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; };
-  }
-  if (typeof window.fmtNum !== 'function') {
-    window.fmtNum = function(v){ return (v||0).toLocaleString('de-DE'); };
-  }
-  if (typeof window.__report !== 'function') {
-    window.__report = function(where, err){ console && console.error && console.error('[Dashboard] '+where, err); };
-  }
-})();
+(function () {
+  // ===== Helpers (mit Fallbacks, falls utils.js nicht alles liefert) =====
+  const $ = (s) => document.querySelector(s);
+  const fmtNum    = window.fmtNum    || (n => Intl.NumberFormat('de-DE').format(Math.round(n||0)));
+  const fmtMoney0 = window.fmtMoney0 || (n => Intl.NumberFormat('de-DE',
+                             {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0));
+  const fmtMoney2 = window.fmtMoney2 || (n => Intl.NumberFormat('de-DE',
+                             {style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0));
+  const fmtPct0   = (v) => `${Math.round((v||0)*100)}%`;
+  const log       = (...a) => (window.__report ? __report('[rerank]', a.join(' ')) : console.log('[rerank]', ...a));
+  const safeTxt   = (t) => String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
-/* --------------------------- Helpers --------------------------- */
-
-function _norm(s){
-  return (s||'')
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[_\-]+/g,'')
-    .replace(/\s+/g,'');
-}
-function _sum(arr, key){
-  return (arr||[]).reduce((a,b)=> a + (Number(b?.[key])||0), 0);
-}
-
-/** Suche die Always-On / SPA-Kombi in window.DASHBOARD_DATA oder window.ALL */
-function pickSpa(D){
-  D = D || window.DASHBOARD_DATA || {};
-  const all =
-    D.ALL ||
-    D.campaigns ||
-    window.ALL ||
-    [];
-
-  // 1) Always-On finden (robust gegen Varianten/Bindestrich/Unterstrich)
-  let camp = all.find(c => {
-    const n = _norm(c?.name||'');
-    return n.includes('alwayson') || n.includes('always on');
-  });
-
-  if (!camp) {
-    __report('SPA pick', 'Keine Kampagne "Always-On" gefunden.');
-    return {camp:null, spa:null, budget:0, spend:0, clicks:0, orders:0, revenue:0};
+  function setTxt(id, val){
+    const n = typeof id === 'string' ? document.getElementById(id) : id;
+    if (n) n.textContent = val;
   }
 
-  // 2) SPA-Placement finden: by placement/type
-  const placs = camp.placements || [];
-  let spa = placs.find(p => {
-    const pl = _norm(p?.placement||'');
-    const ty = _norm(p?.type||'');
-    return pl.includes('sponsoredproductads') || pl === 'spa' || ty.includes('sponsoredproductads');
-  });
-
-  // Notfall: durchsuche alle Kampagnen, falls im Always-On kein passender placement gefunden
-  if (!spa){
-    outer:
-    for (const c of all){
-      for (const p of (c.placements||[])){
-        const pl = _norm(p?.placement||'');
-        const ty = _norm(p?.type||'');
-        if (pl.includes('sponsoredproductads') || pl === 'spa' || ty.includes('sponsoredproductads')){
-          camp = c; spa = p; break outer;
-        }
-      }
-    }
+  // ===== Daten aus data.js holen =====
+  function getAlwaysOnSPA() {
+    const D   = window.DASHBOARD_DATA || {};
+    const ALL = D.ALL || window.ALL || [];
+    // Kampagne "Always-On"
+    const camp = ALL.find(c => c && c.name === 'Always-On');
+    if (!camp) { log('Keine Kampagne "Always-On" gefunden.'); return null; }
+    // Placement "Sponsored Product Ads" (exakt, wie in data.js)
+    const spa = (camp.placements || []).find(p =>
+      p?.type === 'Sponsored Product Ads' || p?.placement === 'Sponsored Product Ads'
+    );
+    if (!spa) { log('Kein Placement "Sponsored Product Ads" innerhalb Always-On gefunden.'); return null; }
+    return { camp, spa };
   }
 
-  if (!spa){
-    __report('SPA pick', 'Kein Placement "Sponsored Product Ads" gefunden.');
+  // ===== KPI-Kacheln =====
+  function renderRerankOverview() {
+    const pair = getAlwaysOnSPA(); if (!pair) return;
+    const { camp, spa } = pair;
+
+    const budget  = Number(spa.booking ?? camp.booking ?? 0);
+    const spend   = Number(spa.ad      ?? camp.ad      ?? 0);
+    const clicks  = Number(spa.clicks  ?? camp.clicks  ?? 0);
+    const sales   = Number(spa.orders  ?? camp.orders  ?? 0);
+    const revenue = Number(spa.revenue ?? camp.revenue ?? 0);
+
+    const ecpc = clicks ? (spend / clicks) : 0;
+    const roas = spend  ? (revenue / spend) : 0;
+    const pct  = budget ? (spend / budget) : 0;
+
+    setTxt('rr-budget',  fmtMoney0(budget));
+    setTxt('rr-ad',      fmtMoney0(spend));
+    setTxt('rr-clicks',  fmtNum(clicks));
+    setTxt('rr-ecpc',    fmtMoney2(ecpc));
+    setTxt('rr-pct',     fmtPct0(pct));
+    setTxt('rr-sales',   fmtNum(sales));
+    setTxt('rr-revenue', fmtMoney0(revenue));
+    setTxt('rr-roas',    (roas||0).toFixed(2) + '×');
+
+    log('KPI ok', { budget, spend, clicks, sales, revenue, roas: roas.toFixed(2) });
   }
 
-  // Zahlen robust lesen (Budget kann booking heißen)
-  const budget = Number(spa?.booking ?? camp.booking ?? camp.budget ?? 0);
-  const spend  = Number(spa?.ad      ?? camp.ad      ?? 0);
-  const clicks = Number(spa?.clicks  ?? camp.clicks  ?? 0);
-  const orders = Number(spa?.orders  ?? camp.orders  ?? 0);
-  const revenue= Number(spa?.revenue ?? camp.revenue ?? 0);
+  // ===== Tabelle (SKU-Liste) =====
+  function renderRerankTable() {
+    const pair = getAlwaysOnSPA(); if (!pair) return;
+    const { camp, spa } = pair;
 
-  return { camp, spa, budget, spend, clicks, orders, revenue };
-}
-
-/** sales.js-Äquivalent: Produkte skalieren, falls Placement keine eigene Liste hat */
-function scaleProducts(list, shareUnits, shareRevenue){
-  return (list||[]).map(p => ({
-    sku     : p.sku || p.SKU || p.id || '',
-    name    : p.name || p.item || p.title || '',
-    units   : Math.round((Number(p.units||p.sales||0)) * (shareUnits||0)),
-    revenue : Math.round((Number(p.revenue||0)) * (shareRevenue||0))
-  }));
-}
-
-function deriveSpaProductsWithScaling(camp, spa){
-  // 1) Placement hat eigene Produkte → direkt nutzen
-  if (spa?.products?.length) {
-    return spa.products.map(p => ({
-      sku     : p.sku || p.SKU || p.id || '',
-      name    : p.name || p.item || p.title || '',
-      units   : Number(p.units || p.sales || 0),
-      revenue : Number(p.revenue || 0)
-    }));
-  }
-
-  // 2) Sonst Kampagnenliste (falls vorhanden) proportional runterskalieren
-  const base = (camp?.products || []).map(p => ({
-    sku     : p.sku || p.SKU || p.id || '',
-    name    : p.name || p.item || p.title || '',
-    units   : Number(p.units || p.sales || 0),
-    revenue : Number(p.revenue || 0)
-  }));
-  if (!base.length) return [];
-
-  const totU = _sum(camp?.placements, 'orders')  || 1;
-  const totR = _sum(camp?.placements, 'revenue') || 1;
-  const shareU = (Number(spa?.orders)||0)   / totU;
-  const shareR = (Number(spa?.revenue)||0)  / totR;
-
-  return scaleProducts(base, shareU, shareR);
-}
-
-/* --------------------------- Renderers --------------------------- */
-
-/**
- * Kacheln + Tabelle im "Sponsored Product Ads"-Block (Overview-Panel)
- * App ruft diese Funktion auf mit renderRerankOverview((D||{}).rerank||[], (D||{}).sales_details||[])
- * Die Parameter werden hier nicht benötigt; wir lesen direkt aus window.DASHBOARD_DATA,
- * lassen sie aber in der Signatur, damit app.js unverändert bleiben kann.
- */
-function renderRerankOverview(/*rerankArray, salesDetails*/){
-  try{
-    const pick = pickSpa(window.DASHBOARD_DATA);
-    if (!pick || !pick.camp || !pick.spa){
-      __report('rerank overview', 'Keine Always-On / Sponsored Product Ads Daten gefunden.');
-      return;
-    }
-
-    // Produkte wie in sales.js ableiten
-    const products = deriveSpaProductsWithScaling(pick.camp, pick.spa);
-
-    // Totals aus Produkten
-    const totalUnits   = products.reduce((a,b)=>a+(b.units||0), 0);
-    const totalRevenue = products.reduce((a,b)=>a+(b.revenue||0), 0);
-    const eCPC         = pick.clicks ? (pick.spend / pick.clicks) : 0;
-    const roas         = pick.spend ? (totalRevenue / pick.spend) : 0;
-
-    // Kacheln
-    setText(findOne('#spaBudget'),  fmtMoney0(pick.budget));
-    setText(findOne('#spaSpend'),   fmtMoney0(pick.spend));
-    setText(findOne('#spaClicks'),  fmtNum(pick.clicks));
-    setText(findOne('#spaECPC'),    fmtMoney2(eCPC));
-    setText(findOne('#spaSales'),   fmtNum(totalUnits));
-    setText(findOne('#spaRevenue'), fmtMoney0(totalRevenue));
-    setText(findOne('#spaROAS'),    roas.toFixed(2)+'×');
-
-    // Tabelle
-    const tbody = findOne('#spaTBody') || findOne('#spaTable tbody');
-    if (tbody){
-      tbody.innerHTML = products.map(p => `
-        <tr>
-          <td>${p.sku ? (String(p.sku).toUpperCase()) : ''}</td>
-          <td>${p.name||''}</td>
-          <td class="right">${fmtNum(p.units)}</td>
-          <td class="right">${fmtMoney0(p.revenue)}</td>
-        </tr>
-      `).join('');
-
-      // Fußzeile, falls vorhanden
-      const sumRow = findOne('#spaSumRow');
-      if (sumRow){
-        sumRow.innerHTML =
-          `<td><b>Gesamt</b></td>
-           <td></td>
-           <td class="right"><b>${fmtNum(totalUnits)}</b></td>
-           <td class="right"><b>${fmtMoney0(totalRevenue)}</b></td>`;
-      }
-    }
-  }catch(e){
-    __report('rerank overview', e);
-  }
-}
-
-/**
- * Tabellen-Renderer (falls du noch eine separate Rerank-Tabelle nutzt).
- * Hier verwenden wir dieselbe Logik, um Konsistenz zu wahren.
- */
-function renderRerank(/*rerankList*/){
-  try{
-    // identisch zur Overview-Logik
-    const pick = pickSpa(window.DASHBOARD_DATA);
-    if (!pick || !pick.camp || !pick.spa){
-      __report('rerank table', 'Keine Always-On / Sponsored Product Ads Daten gefunden.');
-      return;
-    }
-
-    const products = deriveSpaProductsWithScaling(pick.camp, pick.spa);
-    const tbody = findOne('#spaTBody') || findOne('#spaTable tbody');
+    const table = $('#rerankTable');
+    const tbody = table && table.querySelector('tbody');
     if (!tbody) return;
 
-    const totalUnits   = products.reduce((a,b)=>a+(b.units||0), 0);
-    const totalRevenue = products.reduce((a,b)=>a+(b.revenue||0), 0);
+    const spend   = Number(spa.ad      ?? camp.ad      ?? 0);
+    const clicks  = Number(spa.clicks  ?? camp.clicks  ?? 0);
+    const revenue = Number(spa.revenue ?? camp.revenue ?? 0);
 
-    tbody.innerHTML = products.map(p => `
+    const prods = Array.isArray(camp.products) ? camp.products : [];
+    const sumRev   = prods.reduce((a,p)=>a+Number(p.revenue||0),0) || 1;
+
+    // Proportionale Verteilung von Ad/Clicks nach Revenue-Anteil
+    const rows = prods.map(p => {
+      const r = Number(p.revenue||0);
+      const share = r / sumRev;
+      const ad_i   = share * spend;
+      const clk_i  = share * clicks;
+      const ecpc_i = clk_i ? ad_i/clk_i : 0;
+      const roas_i = ad_i  ? r/ad_i     : 0;
+
+      return {
+        sku:  p.sku || '',
+        name: p.name || '',
+        ad:   ad_i,
+        clicks: clk_i,
+        ecpc: ecpc_i,
+        sales: Number(p.units||0),
+        revenue: r,
+        roas: roas_i
+      };
+    });
+
+    // Render Rows
+    tbody.innerHTML = rows.map(r => `
       <tr>
-        <td>${p.sku ? (String(p.sku).toUpperCase()) : ''}</td>
-        <td>${p.name||''}</td>
-        <td class="right">${fmtNum(p.units)}</td>
-        <td class="right">${fmtMoney0(p.revenue)}</td>
+        <td>${safeTxt(`${r.sku} — ${r.name}`)}</td>
+        <td class="right">${fmtMoney0(r.ad)}</td>
+        <td class="right">${fmtNum(r.clicks)}</td>
+        <td class="right">${fmtMoney2(r.ecpc)}</td>
+        <td class="right">${fmtNum(r.sales)}</td>
+        <td class="right">${fmtMoney0(r.revenue)}</td>
+        <td class="right">${(r.roas||0).toFixed(2)}×</td>
       </tr>
     `).join('');
 
-    const sumRow = findOne('#spaSumRow');
-    if (sumRow){
-      sumRow.innerHTML =
-        `<td><b>Gesamt</b></td>
-         <td></td>
-         <td class="right"><b>${fmtNum(totalUnits)}</b></td>
-         <td class="right"><b>${fmtMoney0(totalRevenue)}</b></td>`;
-    }
-  }catch(e){
-    __report('rerank table', e);
-  }
-}
+    // Summenzeile
+    const trow = $('#rerankTotalRow');
+    if (trow) {
+      const sumAd   = rows.reduce((a,r)=>a+r.ad,0);
+      const sumClk  = rows.reduce((a,r)=>a+r.clicks,0);
+      const sumEcpc = sumClk ? (sumAd/sumClk) : 0;
+      const sumSales= rows.reduce((a,r)=>a+r.sales,0);
+      const sumRev2 = rows.reduce((a,r)=>a+r.revenue,0);
+      const sumRoas = sumAd ? (sumRev2/sumAd) : 0;
 
-/* Expose globals (für app.js) */
-window.renderRerankOverview = renderRerankOverview;
-window.renderRerank         = renderRerank;
+      trow.innerHTML = `
+        <td><b>Gesamt</b></td>
+        <td class="right"><b>${fmtMoney0(sumAd)}</b></td>
+        <td class="right"><b>${fmtNum(sumClk)}</b></td>
+        <td class="right"><b>${fmtMoney2(sumEcpc)}</b></td>
+        <td class="right"><b>${fmtNum(sumSales)}</b></td>
+        <td class="right"><b>${fmtMoney0(sumRev2)}</b></td>
+        <td class="right"><b>${(sumRoas||0).toFixed(2)}×</b></td>
+      `;
+    }
+
+    log('Table ok', { rows: rows.length });
+  }
+
+  // ===== Export & Autorun =====
+  window.renderRerankOverview = renderRerankOverview;
+  window.renderRerank         = renderRerankTable;
+
+  if (document.getElementById('panel-rerank')) {
+    try { renderRerankOverview(); renderRerankTable(); }
+    catch(e){ (window.__report||console.error)('[rerank boot]', e); }
+  }
+})();
