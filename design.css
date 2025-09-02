@@ -481,7 +481,7 @@ table.sales td, table.sales th { vertical-align: middle; }
 /* Delta-Zeile mit mehr Präsenz */
 #panel-kpi .kpi .delta {
   margin-top: 12px;                              /* vorher: 10px */
-  font-size: clamp(14px, 1.05vw, 18px);          /* vorher: 14px */
+  font-size: clamp(18px, 1.3vw, 24px);          /* vorher: 14px */
   opacity: .95;                                  /* vorher: .9 */
   font-weight: 600;
 }
