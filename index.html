@@ -232,17 +232,28 @@
     })();
   </script>
 
-  <!-- SCRIPTS: minimal & in richtiger Reihenfolge -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script defer src="js/utils.js?v=14"></script>
-  <script src="layout.js?v=14"></script>
-  <script src="data.js?v=14"></script>   
+<!-- Charts zuerst, aber auch gerne mit defer (blockiert dann nicht) -->
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Werkzeuge zuerst -->
+<script defer src="js/utils.js?v=14"></script>
+
+<!-- Daten vor allem, was rendert -->
+<script defer src="data.js?v=14"></script>
+<script defer src="js/data-core.js?v=14"></script>
+
+<!-- SPA/Always-On Renderer: muss vor app.js da sein -->
 <script defer src="js/rerank.js?v=2"></script>
-<script defer src="js/layout.js"></script>
-<script defer src="js/data-core.js"></script>
-<script defer src="js/campaign.js"></script>
-<script defer src="js/kpis-charts.js"></script>
-<script defer src="js/app.js"></script>
+
+<!-- KPI & Campaign Rendering, die Chart.js nutzen -->
+<script defer src="js/kpis-charts.js?v=14"></script>
+<script defer src="js/campaign.js?v=14"></script>
+
+<!-- Layout (applyLayoutConfig etc.) – vor app.js okay -->
+<script defer src="js/layout.js?v=14"></script>
+
+<!-- Boot – ruft renderAll() auf -->
+<script defer src="js/app.js?v=14"></script>
 
   <!-- kleines Health-Banner -->
  <script>
