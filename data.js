@@ -51,10 +51,10 @@
       // Produkte (für sales.html; Summe ~ 2 000 Units, ~ 60k €)
       products: [
         { sku:"SKU-01", name:"Zink + C Immun",        units:600,  revenue:18000 },
-        { sku:"SKU-02", name:"Nasenspray Mild",       units:400,  revenue:12000 },
-        { sku:"SKU-03", name:"Allergie Antihistamin", units:380,  revenue:11000 },
-        { sku:"SKU-04", name:"Magnesium 400 mg",      units:320,  revenue: 9000 },
-        { sku:"SKU-05", name:"Probiotika Forte",      units:300,  revenue:10000 }
+        { sku:"SKU-02", name:"Supervitamini 20St",       units:400,  revenue:12000 },
+        { sku:"SKU-03", name:"Immun Kombi Pro", units:380,  revenue:11000 },
+        { sku:"SKU-04", name:"Supervitamini 50St",      units:320,  revenue: 9000 },
+        { sku:"SKU-05", name:"Vitamin 36",      units:300,  revenue:10000 }
       ]
     },
 
